@@ -18,6 +18,7 @@ public class HuDunApplication {
 
     public void setApplication(Application application) {
         mApplication = application;
+
     }
 
     public Application getApplication() {

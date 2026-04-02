@@ -62,22 +62,22 @@ class HuDunManager private constructor() {
 
 
     //申请/检查VPN启动权限
-    fun prepareVpn(activity: FragmentActivity, callBack: PrepareVpnCallBack) {
+    fun prepareVpn(activity: FragmentActivity, callBack: PrepareVpnCallBack?) {
         val intent = VpnService.prepare(activity)
         if (null != intent) {
             activity.startActivityForResult(intent, ErrorCode.REQUEST_START_VPN)
         } else {
-            callBack.onPrepareIntentNull()
+            callBack?.onPrepareIntentNull()
         }
     }
 
-    fun start(callBack: StartCallBack) {
+    fun start(callBack: StartCallBack?) {
         ITVAPI.getMInstance(HuDunApplication.getInstance().application).start { code, message ->
             XLog.e("start  " + "code" + code + ":messgae" + message)
             if (ErrorCode.SUCCESS == code) {
-                callBack.onStartFinish()
+                callBack?.onStartFinish()
             } else {
-                callBack.onStartError(code, message)
+                callBack?.onStartError(code, message)
             }
         }
     }
