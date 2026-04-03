@@ -1,12 +1,14 @@
 package com.zhuowei.polling.contract.model
 
 import com.chenming.common.base.BaseModel
+import com.chenming.httprequest.XLog
 import com.chenming.httprequest.http.RetrofitUtil
 import com.chenming.httprequest.http.bean.BaseBean
 import com.chenming.httprequest.http.listener.OnHttpCallBack
 import com.zhuowei.polling.beans.LoginResult
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.MainContract.IMainModel
+import java.util.Objects
 
 
 class MainModel : BaseModel(), IMainModel {
@@ -37,6 +39,25 @@ class MainModel : BaseModel(), IMainModel {
 
                 }, HttpConstants.HD_BASE_URL)
         )
+    }
+
+    override fun testGetInfo(callBack: OnHttpCallBack<Objects>?) {
+        addDisposable(  RetrofitUtil.Builder("hyt-aqsc/prod-api/api/admin/user/front/info")
+            .build()
+            .get(Objects::class.java, object : OnHttpCallBack<BaseBean<Objects>> {
+                override fun onSuccessful(t: BaseBean<Objects>?) {
+                    XLog.e("testGetInfo:" + "onSuccessful")
+                }
+
+                override fun onDataError(errorMsg: String?, t: BaseBean<Objects>?) {
+                    XLog.e("onDataError:" + "onDataError")
+                }
+
+                override fun onRequestError(errorMsg: String?, throwable: Throwable?) {
+                    XLog.e("onRequestError:" + "onRequestError")
+                }
+
+            }))
     }
 
 

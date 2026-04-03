@@ -22,14 +22,14 @@ android {
 
         defaultConfig {
             ndk {
-                abiFilters "armeabi", "armeabi-v7a", "arm64-v8a", "x86","x86_64"
+                abiFilters "armeabi", "armeabi-v7a", "arm64-v8a"
             }
         }
     }
 
     applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "chuancheng_${variant.versionName}.apk"
+            outputFileName = "polling_${variant.versionName}.apk"
         }
     }
 
@@ -105,12 +105,11 @@ dependencies {
 
     implementation 'io.github.yuweiguocn:GreenDaoUpgradeHelper:v2.2.1'
     implementation 'org.greenrobot:greendao:3.3.0'
-    implementation 'com.tencent.bugly:crashreport:4.1.9' //bugly
+    implementation 'com.tencent.bugly:crashreport:latest.release'//bugly
     implementation 'com.android.support:multidex:1.0.2'
 
     implementation 'io.github.h07000223:flycoTabLayout:3.0.0'
     implementation 'com.kyleduo.switchbutton:library:2.1.0'
-    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
     implementation("com.github.chenlx761:project_common:v1.0.5")
 

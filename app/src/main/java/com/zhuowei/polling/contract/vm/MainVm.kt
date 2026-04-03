@@ -8,6 +8,7 @@ import com.zhuowei.polling.contract.MainContract.IMainModel
 import com.zhuowei.polling.contract.MainContract.IMainVm
 import com.zhuowei.polling.contract.model.MainModel
 import com.zhuowei.polling.utils.SpManager
+import java.util.Objects
 
 class MainVm : BaseViewModel<IMainModel>(), IMainVm {
     val mLoginResult: MutableLiveData<LoginResult> = MutableLiveData()
@@ -28,5 +29,13 @@ class MainVm : BaseViewModel<IMainModel>(), IMainVm {
                     }
                 }
             })
+    }
+
+    override fun testGetInfo() {
+        mModel.testGetInfo( object : BaseCallBack<Objects>("") {
+            override fun onSuccessful(t: Objects?) {
+
+            }
+        })
     }
 }

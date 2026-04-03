@@ -6,13 +6,14 @@ import com.chenming.httprequest.http.listener.OnHttpCallBack;
 import com.zhuowei.polling.beans.LoginResult;
 
 import java.util.List;
+import java.util.Objects;
 
 public class MainContract {
 
     public interface IMainVm extends IBaseViewModel {
         void getTsId(String userName, String pwd);
 
-
+        void testGetInfo();
     }
 
     /**
@@ -21,5 +22,7 @@ public class MainContract {
     public interface IMainModel extends IBaseModel {
         void getTsId(String userName, String pwd, OnHttpCallBack<LoginResult> callBack);
 
+
+        void testGetInfo(OnHttpCallBack<Objects> callBack);
     }
 }

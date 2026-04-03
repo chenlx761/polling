@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">polling</string>
+    <string name="permission_tip">软件正常使用需要以下权限</string>
 </resources>

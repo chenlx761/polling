@@ -10,11 +10,6 @@ import com.zhuowei.hudun.HuDunApplication
 import com.zhuowei.polling.beans.LoginResult
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.utils.SpManager
-import okhttp3.Interceptor
-import okhttp3.Response
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 /**
@@ -53,25 +48,29 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+
+
+
         HuDunApplication.getInstance().application = this
         CommApplication.setInstance(this)
-       // HttpManager.setBaseUrl(HttpConstants.BASE_URL)
-//        HttpManager.addInterceptor(Interceptor { chain ->
-//            val originalRequest = chain.request()
-//            val requestPath = originalRequest.url.encodedPath
-//            if (requestPath.contains(HttpConstants.GET_TS_ID_URL)) {
-//                chain.proceed(originalRequest)
-//            } else {
-//                val token = SpManager.getToken()
-//                if (token.isNotEmpty()) {
-//                    val newRequest =
-//                        originalRequest.newBuilder().addHeader("Authorization", token).build()
-//                    chain.proceed(newRequest)
-//                } else {
-//                    chain.proceed(originalRequest)
-//                }
-//            }
-//        })
+        HttpManager.setBaseUrl(HttpConstants.BASE_URL)
+        //添加请求头拦截器
+        HttpManager.addInterceptor { chain ->
+            val originalRequest = chain.request()
+            val requestPath = originalRequest.url.encodedPath
+            if (requestPath.contains(HttpConstants.GET_TS_ID_URL)) {
+                chain.proceed(originalRequest)
+            } else {
+                val token = SpManager.getToken()
+                if (token.isNotEmpty()) {
+                    val newRequest =
+                        originalRequest.newBuilder().addHeader("Authorization", token).build()
+                    chain.proceed(newRequest)
+                } else {
+                    chain.proceed(originalRequest)
+                }
+            }
+        }
 
 //        HttpManager.addInterceptor(Interceptor { chain ->
 //            val response = chain.proceed(chain.request())
