@@ -10,67 +10,106 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/tv_start_location"
-            android:gravity="center"
-            android:text="测试定位"
-            android:textColor="@color/white"
-            android:layout_marginBottom="20dp"
-            android:background="@color/red_color"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/tv_start"
-            android:layout_width="100dp"
-            android:layout_height="100dp"/>
-        <TextView
-            android:id="@+id/tv_start"
-            android:gravity="center"
-            android:text="启动通道"
-            android:textColor="@color/white"
-            android:layout_marginBottom="20dp"
-            android:background="@color/red_color"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/tv_init"
-            android:layout_width="100dp"
-            android:layout_height="100dp"/>
-        <TextView
-            android:id="@+id/tv_init"
-            android:gravity="center"
-            android:text="初始化并激活"
-            android:textColor="@color/white"
-            android:background="@color/red_color"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:layout_width="100dp"
-            android:layout_height="100dp"/>
 
-        <TextView
-            android:id="@+id/tv_get_tsid"
-            android:gravity="center"
-            android:text="获取tsid"
-            android:textColor="@color/white"
-            android:layout_marginTop="20dp"
-            android:background="@color/red_color"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_init"
-            android:layout_width="100dp"
-            android:layout_height="100dp"/>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tv_get_info"
-            android:gravity="center"
-            android:text="测试接口"
-            android:textColor="@color/white"
-            android:layout_marginTop="20dp"
-            android:background="@color/red_color"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_get_tsid"
-            android:layout_width="100dp"
-            android:layout_height="100dp"/>
+            <FrameLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_above="@+id/main_tab">
+
+            </FrameLayout>
+
+            <View
+                android:id="@+id/line"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_above="@+id/main_tab"
+                android:background="@drawable/navigation_bar_shadow" />
+
+            <com.flyco.tablayout.CommonTabLayout
+                android:id="@+id/main_tab"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_alignParentBottom="true"
+                android:background="@color/white"
+                app:tl_iconHeight="32dp"
+                app:tl_iconMargin="0dp"
+                app:tl_iconWidth="48dp"
+                app:tl_indicator_width="20dp"
+                app:tl_textSelectColor="@color/blueJeans"
+                app:tl_textUnselectColor="#A7AEB6"
+                app:tl_textsize="10sp">
+
+
+            </com.flyco.tablayout.CommonTabLayout>
+
+        </RelativeLayout>
+        <!--        <TextView-->
+        <!--            android:id="@+id/tv_start_location"-->
+        <!--            android:gravity="center"-->
+        <!--            android:text="测试定位"-->
+        <!--            android:textColor="@color/white"-->
+        <!--            android:layout_marginBottom="20dp"-->
+        <!--            android:background="@color/red_color"-->
+        <!--            app:layout_constraintRight_toRightOf="parent"-->
+        <!--            app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--            app:layout_constraintBottom_toTopOf="@+id/tv_start"-->
+        <!--            android:layout_width="100dp"-->
+        <!--            android:layout_height="100dp"/>-->
+        <!--        <TextView-->
+        <!--            android:id="@+id/tv_start"-->
+        <!--            android:gravity="center"-->
+        <!--            android:text="启动通道"-->
+        <!--            android:textColor="@color/white"-->
+        <!--            android:layout_marginBottom="20dp"-->
+        <!--            android:background="@color/red_color"-->
+        <!--            app:layout_constraintRight_toRightOf="parent"-->
+        <!--            app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--            app:layout_constraintBottom_toTopOf="@+id/tv_init"-->
+        <!--            android:layout_width="100dp"-->
+        <!--            android:layout_height="100dp"/>-->
+        <!--        <TextView-->
+        <!--            android:id="@+id/tv_init"-->
+        <!--            android:gravity="center"-->
+        <!--            android:text="初始化并激活"-->
+        <!--            android:textColor="@color/white"-->
+        <!--            android:background="@color/red_color"-->
+        <!--            app:layout_constraintRight_toRightOf="parent"-->
+        <!--            app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--            app:layout_constraintBottom_toBottomOf="parent"-->
+        <!--            app:layout_constraintTop_toTopOf="parent"-->
+        <!--            android:layout_width="100dp"-->
+        <!--            android:layout_height="100dp"/>-->
+
+        <!--        <TextView-->
+        <!--            android:id="@+id/tv_get_tsid"-->
+        <!--            android:gravity="center"-->
+        <!--            android:text="获取tsid"-->
+        <!--            android:textColor="@color/white"-->
+        <!--            android:layout_marginTop="20dp"-->
+        <!--            android:background="@color/red_color"-->
+        <!--            app:layout_constraintRight_toRightOf="parent"-->
+        <!--            app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--            app:layout_constraintTop_toBottomOf="@+id/tv_init"-->
+        <!--            android:layout_width="100dp"-->
+        <!--            android:layout_height="100dp"/>-->
+
+        <!--        <TextView-->
+        <!--            android:id="@+id/tv_get_info"-->
+        <!--            android:gravity="center"-->
+        <!--            android:text="测试接口"-->
+        <!--            android:textColor="@color/white"-->
+        <!--            android:layout_marginTop="20dp"-->
+        <!--            android:background="@color/red_color"-->
+        <!--            app:layout_constraintRight_toRightOf="parent"-->
+        <!--            app:layout_constraintLeft_toLeftOf="parent"-->
+        <!--            app:layout_constraintTop_toBottomOf="@+id/tv_get_tsid"-->
+        <!--            android:layout_width="100dp"-->
+        <!--            android:layout_height="100dp"/>    -->
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

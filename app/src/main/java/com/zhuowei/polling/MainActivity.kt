@@ -1,12 +1,16 @@
 package com.zhuowei.polling
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
+import android.os.Bundle
+import androidx.fragment.app.Fragment
 import cn.tigersec.android.sdk.utils.ErrorCode
 import com.chenming.common.base.BaseActivity
+import com.chenming.common.beans.DiscountTab
+import com.chenming.common.manager.MyFragmentManager
 import com.chenming.common.utils.PermissionXUtil
-import com.chenming.httprequest.XLog
+import com.flyco.tablayout.listener.CustomTabEntity
+import com.flyco.tablayout.listener.OnTabSelectListener
 import com.tencent.bugly.crashreport.CrashReport
 import com.zhuowei.hudun.HuDunManager
 import com.zhuowei.hudun.callback.InitFinishCallBack
@@ -15,50 +19,100 @@ import com.zhuowei.hudun.callback.PrepareVpnCallBack
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.vm.MainVm
 import com.zhuowei.polling.databinding.ActivityMainBinding
-import com.zhuowei.polling.location.BaiDuLocationManager
-import com.zhuowei.polling.location.LocationCallBack
-import com.zhuowei.polling.location.LocationResult
+import com.zhuowei.polling.ui.fragment.MyFragment
+import com.zhuowei.polling.ui.fragment.TicketFragment
 import com.zhuowei.polling.utils.AppCrashHandleCallback
 
 
 class MainActivity : BaseActivity<MainVm, ActivityMainBinding>() {
+
+    private var mFragmentManager: MyFragmentManager? = null
+    private var mFragments: Array<Fragment>? = null
+    private var mTags: Array<String>? = null
+    private var mTitles: Array<String>? = null
+    private val mTabEntities = ArrayList<CustomTabEntity>()
+
     override fun getLayoutId(): Int {
         return R.layout.activity_main
     }
 
     override fun setListener() {
-        mBinding!!.tvGetTsid.setOnClickListener {
-            mViewModel.getTsId("sysadmin", "123456")
-        }
 
+        mBinding!!.mainTab.setOnTabSelectListener(object : OnTabSelectListener {
+            override fun onTabSelect(position: Int) {
 
-        mBinding!!.tvInit.setOnClickListener {
-            // 初始化崩溃捕获
-            throw Exception("哈哈哈 测试")
-        }
+                mFragmentManager!!.switchFragment(this@MainActivity, position)
+            }
 
-        mBinding!!.tvGetInfo.setOnClickListener {
+            override fun onTabReselect(position: Int) {
+            }
+        })
 
-            mViewModel.testGetInfo()
-        }
-
-        mBinding!!.tvStartLocation.setOnClickListener {
-
-            BaiDuLocationManager.instance.requestLocation(this, object : LocationCallBack {
-                override fun onLocationSuccess(result: LocationResult) {
-
-                    XLog.e("定位成功", result.toString())
-                }
-
-                override fun onLocationError(errorCode: Int, errorMessage: String) {
-                    XLog.e("定位失败", "$errorCode $errorMessage")
-                }
-
-            })
-        }
+//        mBinding!!.tvGetTsid.setOnClickListener {
+//            mViewModel.getTsId("sysadmin", "123456")
+//        }
+//
+//
+//        mBinding!!.tvInit.setOnClickListener {
+//            // 初始化崩溃捕获
+//            throw Exception("哈哈哈 测试")
+//        }
+//
+//        mBinding!!.tvGetInfo.setOnClickListener {
+//
+//            mViewModel.testGetInfo()
+//        }
+//
+//        mBinding!!.tvStartLocation.setOnClickListener {
+//
+//            BaiDuLocationManager.instance.requestLocation(this, object : LocationCallBack {
+//                override fun onLocationSuccess(result: LocationResult) {
+//
+//                    XLog.e("定位成功", result.toString())
+//                }
+//
+//                override fun onLocationError(errorCode: Int, errorMessage: String) {
+//                    XLog.e("定位失败", "$errorCode $errorMessage")
+//                }
+//
+//            })
+//        }
 
 
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        //使用show和hide控制显示和隐藏界面重叠问题；
+        if (mFragmentManager != null)
+            outState.putString("CurrentFragment", mFragmentManager!!.getCurrentFragmentByTag());
+        super.onSaveInstanceState(outState);
+
+
+    }
+
+
+    private fun initTab() {
+        mTitles = arrayOf(getString(R.string.main_ticket), getString(R.string.main_my))
+        val mTicketTab = DiscountTab(mTitles!![0], R.mipmap.ticket_select, R.mipmap.ticket_normal)
+        val mMyTab = DiscountTab(mTitles!![1], R.mipmap.my_select, R.mipmap.my_normal)
+
+        mTabEntities.add(mTicketTab)
+        mTabEntities.add(mMyTab)
+        mBinding!!.mainTab.setTabData(mTabEntities)
+
+    }
+
+    private fun initFragmentAndTag() {
+        val ticketFragment = TicketFragment.newInstance()
+        val myFragment = MyFragment.newInstance()
+
+        mFragments = arrayOf(
+            ticketFragment, myFragment
+        )
+        mTags = arrayOf("TICKET", "MY")
+
+    }
+
 
     /**
      * 用于判断VPN服务权限有没有申请成功如果申请成功则调用start接口
@@ -84,7 +138,8 @@ class MainActivity : BaseActivity<MainVm, ActivityMainBinding>() {
             if (it != null) {
                 HuDunManager.instance.login(it.tsid, object : LoginFinishCallBack {
                     override fun onLoginFinish() {
-                        HuDunManager.instance.prepareVpn(this@MainActivity,
+                        HuDunManager.instance.prepareVpn(
+                            this@MainActivity,
                             object : PrepareVpnCallBack {
                                 override fun onPrepareIntentNull() {
                                     onActivityResult(ErrorCode.REQUEST_START_VPN, RESULT_OK, null)
@@ -104,6 +159,13 @@ class MainActivity : BaseActivity<MainVm, ActivityMainBinding>() {
     override fun initData() {
 
 
+    }
+
+    override fun initView(savedInstanceState: Bundle?) {
+        initTab()
+        initFragmentAndTag()
+        mFragmentManager =
+            MyFragmentManager(this@MainActivity, savedInstanceState, mFragments, mTags)
     }
 
     override fun initViewModel(): MainVm {

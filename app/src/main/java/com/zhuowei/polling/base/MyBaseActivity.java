@@ -26,7 +26,8 @@ public abstract class MyBaseActivity<VM extends BaseViewModel, VB extends ViewDa
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
-        hideNavKey(this);
+
+        //hideNavKey(this);
         //        overridePendingTransition(
         //                com.chenming.common.R.anim.slide_left_in,
         //                com.chenming.common.R.anim.slide_right_out
@@ -61,12 +62,7 @@ public abstract class MyBaseActivity<VM extends BaseViewModel, VB extends ViewDa
     }
 
 
-    @Override
-    protected void onResume() {
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        super.onResume();
-        hideNavKey(this);
-    }
+
 
 
 }
