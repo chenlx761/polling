@@ -10,21 +10,19 @@ import android.view.WindowManager;
 
 import com.chenming.common.base.BaseActivity;
 import com.chenming.common.base.BaseViewModel;
+import com.chenming.common.dialog.CommonLoadingDialog;
+import com.zhuowei.polling.dialog.MyCommonLoadingDialog;
 
 import androidx.annotation.Nullable;
 import androidx.databinding.ViewDataBinding;
 
 public abstract class MyBaseActivity<VM extends BaseViewModel, VB extends ViewDataBinding> extends BaseActivity<VM, VB> {
 
+    private MyCommonLoadingDialog mDialogLoading;
 
-    @Override
-    protected void hideSoftInputFinish() {
-        hideNavKey(this);
-    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
 
         //hideNavKey(this);
@@ -42,26 +40,35 @@ public abstract class MyBaseActivity<VM extends BaseViewModel, VB extends ViewDa
     }
 
 
+    @Override
+    public void showLoading() {
+        super.showLoading();
+    }
+
+    protected void showLoading(boolean canCancel) {
+        showLoading(null, canCancel);
+    }
+
+    protected void showLoading(Runnable listener, boolean canCancel) {
+        if (mDialogLoading != null && mDialogLoading.isShowing()) {
+            return;
+        }
+        mDialogLoading = new MyCommonLoadingDialog(this, listener, canCancel);
+        mDialogLoading.show();
+    }
 
 
-    public static void hideNavKey(Context context) {
+    @Override
+    public void dismissDialog() {
         try {
-            if (Build.VERSION.SDK_INT > 11 && Build.VERSION.SDK_INT < 19) {
-                View v = ((Activity) context).getWindow().getDecorView();
-                v.setSystemUiVisibility(View.GONE);
-            } else if (Build.VERSION.SDK_INT >= 19) {
-                //for new api versions.
-                View decorView = ((Activity) context).getWindow().getDecorView();
-                int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-                decorView.setSystemUiVisibility(uiOptions);
+            if (mDialogLoading != null) {
+                mDialogLoading.dismiss();
+                mDialogLoading = null;
             }
         } catch (Exception e) {
 
         }
-
     }
-
-
 
 
 

@@ -1,36 +1,38 @@
 package com.zhuowei.polling
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import cn.tigersec.android.sdk.utils.ErrorCode
 import com.chenming.common.base.BaseActivity
+import com.chenming.common.base.empty.EmptyViewModel
 import com.chenming.common.beans.DiscountTab
 import com.chenming.common.manager.MyFragmentManager
 import com.chenming.common.utils.PermissionXUtil
 import com.flyco.tablayout.listener.CustomTabEntity
 import com.flyco.tablayout.listener.OnTabSelectListener
-import com.tencent.bugly.crashreport.CrashReport
-import com.zhuowei.hudun.HuDunManager
-import com.zhuowei.hudun.callback.InitFinishCallBack
-import com.zhuowei.hudun.callback.LoginFinishCallBack
-import com.zhuowei.hudun.callback.PrepareVpnCallBack
-import com.zhuowei.polling.constants.HttpConstants
-import com.zhuowei.polling.contract.vm.MainVm
 import com.zhuowei.polling.databinding.ActivityMainBinding
 import com.zhuowei.polling.ui.fragment.MyFragment
 import com.zhuowei.polling.ui.fragment.TicketFragment
-import com.zhuowei.polling.utils.AppCrashHandleCallback
+import com.zhuowei.polling.ui.fragment.TreeDemoFragment
 
 
-class MainActivity : BaseActivity<MainVm, ActivityMainBinding>() {
+class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
 
     private var mFragmentManager: MyFragmentManager? = null
     private var mFragments: Array<Fragment>? = null
     private var mTags: Array<String>? = null
     private var mTitles: Array<String>? = null
     private val mTabEntities = ArrayList<CustomTabEntity>()
+
+    companion object {
+        fun newInstance(context: Context) {
+            val intent = Intent(context, MainActivity::class.java)
+            context.startActivity(intent)
+        }
+    }
+
 
     override fun getLayoutId(): Int {
         return R.layout.activity_main
@@ -48,36 +50,6 @@ class MainActivity : BaseActivity<MainVm, ActivityMainBinding>() {
             }
         })
 
-//        mBinding!!.tvGetTsid.setOnClickListener {
-//            mViewModel.getTsId("sysadmin", "123456")
-//        }
-//
-//
-//        mBinding!!.tvInit.setOnClickListener {
-//            // 初始化崩溃捕获
-//            throw Exception("哈哈哈 测试")
-//        }
-//
-//        mBinding!!.tvGetInfo.setOnClickListener {
-//
-//            mViewModel.testGetInfo()
-//        }
-//
-//        mBinding!!.tvStartLocation.setOnClickListener {
-//
-//            BaiDuLocationManager.instance.requestLocation(this, object : LocationCallBack {
-//                override fun onLocationSuccess(result: LocationResult) {
-//
-//                    XLog.e("定位成功", result.toString())
-//                }
-//
-//                override fun onLocationError(errorCode: Int, errorMessage: String) {
-//                    XLog.e("定位失败", "$errorCode $errorMessage")
-//                }
-//
-//            })
-//        }
-
 
     }
 
@@ -92,12 +64,14 @@ class MainActivity : BaseActivity<MainVm, ActivityMainBinding>() {
 
 
     private fun initTab() {
-        mTitles = arrayOf(getString(R.string.main_ticket), getString(R.string.main_my))
+        mTitles = arrayOf(getString(R.string.main_ticket), getString(R.string.main_my), getString(R.string.main_tree))
         val mTicketTab = DiscountTab(mTitles!![0], R.mipmap.ticket_select, R.mipmap.ticket_normal)
         val mMyTab = DiscountTab(mTitles!![1], R.mipmap.my_select, R.mipmap.my_normal)
+        val mTreeTab = DiscountTab(mTitles!![2], R.mipmap.ticket_select, R.mipmap.ticket_normal)
 
         mTabEntities.add(mTicketTab)
         mTabEntities.add(mMyTab)
+        mTabEntities.add(mTreeTab)
         mBinding!!.mainTab.setTabData(mTabEntities)
 
     }
@@ -105,55 +79,21 @@ class MainActivity : BaseActivity<MainVm, ActivityMainBinding>() {
     private fun initFragmentAndTag() {
         val ticketFragment = TicketFragment.newInstance()
         val myFragment = MyFragment.newInstance()
+        val treeDemoFragment = TreeDemoFragment.newInstance()
 
         mFragments = arrayOf(
-            ticketFragment, myFragment
+            ticketFragment, myFragment, treeDemoFragment
         )
-        mTags = arrayOf("TICKET", "MY")
+        mTags = arrayOf("TICKET", "MY", "TREE")
 
     }
 
 
-    /**
-     * 用于判断VPN服务权限有没有申请成功如果申请成功则调用start接口
-     *
-     * @param requestCode
-     * @param resultCode
-     * @param data
-     */
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == ErrorCode.REQUEST_START_VPN) {
-            if (resultCode == RESULT_OK) {
-                HuDunManager.instance.start(null)
-            } else {
 
-            }
-        }
-    }
 
 
     override fun setObserveListener() {
-        mViewModel.mLoginResult.observe(this) {
-            if (it != null) {
-                HuDunManager.instance.login(it.tsid, object : LoginFinishCallBack {
-                    override fun onLoginFinish() {
-                        HuDunManager.instance.prepareVpn(
-                            this@MainActivity,
-                            object : PrepareVpnCallBack {
-                                override fun onPrepareIntentNull() {
-                                    onActivityResult(ErrorCode.REQUEST_START_VPN, RESULT_OK, null)
-                                }
 
-                            })
-                    }
-
-                    override fun onLoginError(errorCode: Int, errorMsg: String?) {
-                    }
-
-                })
-            }
-        }
     }
 
     override fun initData() {
@@ -168,32 +108,15 @@ class MainActivity : BaseActivity<MainVm, ActivityMainBinding>() {
             MyFragmentManager(this@MainActivity, savedInstanceState, mFragments, mTags)
     }
 
-    override fun initViewModel(): MainVm {
-        return createViewModel(MainVm::class.java)
+    override fun initViewModel(): EmptyViewModel {
+        return createViewModel(EmptyViewModel::class.java)
     }
 
     override fun setData() {
 
 
         requestPermission()
-        HuDunManager.instance.initSDK(object : InitFinishCallBack {
-            override fun onInitFinish(hudunBaseUrl: String?) {
-                HttpConstants.HD_BASE_URL = hudunBaseUrl
-                //虎盾初始化不知道为什么会把我的全部异常拦截覆盖了,只能在这里初始化
-                initCrash()
-            }
 
-            override fun onInitError(type: Int, errorCode: Int, errorMsg: String?) {
-            }
-
-        })
-    }
-
-    private fun initCrash() {
-        val strategy = CrashReport.UserStrategy(this)
-        strategy.setAppReportDelay(20000)
-        strategy.setCrashHandleCallback(AppCrashHandleCallback())
-        CrashReport.initCrashReport(MyApplication.getInstance(), "37dc0727ad", false, strategy)
     }
 
 

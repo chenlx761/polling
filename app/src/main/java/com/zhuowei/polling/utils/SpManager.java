@@ -6,8 +6,8 @@ import com.zhuowei.polling.MyApplication;
 public class SpManager {
     public static final String SP_TOKEN_KEY = "acc_token";
     public static final String SP_REFRESH_TOKEN_KEY = "refresh_token";
-
-
+    public static final String SP_USER_NAME_KEY = "user_name";
+    public static final String SP_USER_PWD_KEY = "user_pwd";
     public static String getToken() {
         return (String) SpUtils.getParam(MyApplication.getInstance(), SP_TOKEN_KEY, "");
     }
@@ -31,6 +31,28 @@ public class SpManager {
             refreshToken = "";
         }
         SpUtils.setParam(MyApplication.getInstance(), SP_REFRESH_TOKEN_KEY, refreshToken);
+    }
+
+    public static String getUserName() {
+        return (String) SpUtils.getParam(MyApplication.getInstance(), SP_USER_NAME_KEY, "");
+    }
+
+    public static void setUserName(String userName) {
+        if (userName == null) {
+            userName = "";
+        }
+        SpUtils.setParam(MyApplication.getInstance(), SP_USER_NAME_KEY, userName);
+    }
+
+    public static String getUserPwd() {
+        return (String) SpUtils.getParam(MyApplication.getInstance(), SP_USER_PWD_KEY, "");
+    }
+
+    public static void setUserPwd(String userPwd) {
+        if (userPwd == null) {
+            userPwd = "";
+        }
+        SpUtils.setParam(MyApplication.getInstance(), SP_USER_PWD_KEY, userPwd);
     }
 
 }

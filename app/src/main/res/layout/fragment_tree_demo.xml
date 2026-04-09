@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/background"
+        android:orientation="vertical">
+
+        <com.chenming.common.base.widget.MyTitleBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fitsSystemWindows="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:titleBarBackground="@color/white"
+            app:titleBarTitle="组织架构" />
+
+        <!-- 统计信息 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:background="@color/white">
+
+            <TextView
+                android:id="@+id/tv_total_nodes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="总节点: 0"
+                android:textColor="@color/gray_600"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tv_max_depth"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="最大深度: 0"
+                android:textColor="@color/gray_600"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tv_leaf_nodes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="叶子节点: 0"
+                android:textColor="@color/gray_600"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- 操作按钮 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:background="@color/white"
+            android:layout_marginTop="1dp">
+
+            <Button
+                android:id="@+id/btn_expand_all"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="全部展开"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btn_collapse_all"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="全部折叠"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btn_generate"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="生成新数据"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btn_test_collapsible"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:text="折叠页面"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- 树形列表 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_tree"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="8dp"
+            android:background="@color/white" />
+
+    </LinearLayout>
+</layout>

@@ -7,4 +7,22 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- 登录界面主题色 -->
+    <color name="primary">#4A90E2</color>
+    <color name="primary_dark">#3A7BC8</color>
+    <color name="primary_light">#6BA3E9</color>
+    
+    <!-- 灰色系 -->
+    <color name="gray_200">#FFEEEEEE</color>
+    <color name="gray_400">#FFBDBDBD</color>
+    <color name="gray_600">#FF757575</color>
+    <color name="gray_700">#FF616161</color>
+    
+    <!-- 背景色 -->
+    <color name="background">#F5F7FA</color>
+    <color name="card_background">#FFFFFF</color>
+
+    <!-- 树形图连接线颜色 -->
+    <color name="tree_line_color">#CCCCCC</color>
 </resources>
