@@ -4,14 +4,10 @@ import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chenming.common.base.BaseFragment
 import com.chenming.common.listener.OnItemClickListener
-import com.chenming.httprequest.XLog
 import com.zhuowei.polling.R
 import com.zhuowei.polling.adapter.MainOrderAdapter
 import com.zhuowei.polling.contract.vm.MainVm
 import com.zhuowei.polling.databinding.FragmentTicketBinding
-import com.zhuowei.polling.location.BaiDuLocationManager
-import com.zhuowei.polling.location.LocationCallBack
-import com.zhuowei.polling.location.LocationResult
 import com.zhuowei.polling.ui.activitys.ticket.TicketDetailActivity
 
 class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
@@ -64,17 +60,5 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
     }
 
 
-    private fun test() {
-        BaiDuLocationManager.instance.requestLocation(requireActivity(), object : LocationCallBack {
-            override fun onLocationSuccess(result: LocationResult) {
 
-                XLog.e("定位成功", result.toString())
-            }
-
-            override fun onLocationError(errorCode: Int, errorMessage: String) {
-                XLog.e("定位失败", "$errorCode $errorMessage")
-            }
-
-        })
-    }
 }

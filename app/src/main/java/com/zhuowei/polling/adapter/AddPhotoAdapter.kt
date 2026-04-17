@@ -1,16 +1,26 @@
 package com.zhuowei.polling.adapter
 
 import android.content.Context
+import android.view.View
 import androidx.databinding.ObservableArrayList
+import com.bumptech.glide.Glide
 import com.example.hudundemo.base.NormalAdapter
+import com.zhuowei.polling.MyApplication
 import com.zhuowei.polling.R
 import com.zhuowei.polling.databinding.AdapterAddPhotoBinding
 
 class AddPhotoAdapter(
     context: Context,
     datas: ObservableArrayList<String>,
+    private val maxCount: Int = 9,
     resId: Int = R.layout.adapter_add_photo
 ) : NormalAdapter<String, AdapterAddPhotoBinding>(context, resId, datas) {
+
+    private var onDeleteClickListener: ((Int) -> Unit)? = null
+
+    fun setOnDeleteClickListener(listener: (Int) -> Unit) {
+        onDeleteClickListener = listener
+    }
 
 
     override fun onBindOtherViewHolder(
@@ -18,11 +28,29 @@ class AddPhotoAdapter(
     ) {
         super.onBindOtherViewHolder(holder, position, adapterPosition)
 
+        if (position < mDatas.size - 1) {
+            holder.ivPhoto.visibility = View.VISIBLE
+            holder.ivDelete.visibility = View.VISIBLE
+            holder.ivAdd.visibility = View.GONE
 
-        holder.cvItem.setOnClickListener {
-            mOnItemClickListener?.onClick(position, mDatas[position], it)
+            Glide.with(MyApplication.getInstance())
+                .load(mDatas[position])
+                .centerCrop()
+                .into(holder.ivPhoto)
+
+            holder.ivDelete.setOnClickListener {
+                onDeleteClickListener?.invoke(position)
+            }
+
+            holder.cvItem.setOnClickListener(null)
+        } else {
+            holder.ivPhoto.visibility = View.GONE
+            holder.ivDelete.visibility = View.GONE
+            holder.ivAdd.visibility = View.VISIBLE
+
+            holder.cvItem.setOnClickListener {
+                mOnItemClickListener?.onClick(position, "", it)
+            }
         }
     }
-
-
 }

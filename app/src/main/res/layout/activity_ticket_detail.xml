@@ -16,6 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fitsSystemWindows="true"
+            app:titleBarLeftImg="@mipmap/top_back"
             app:layout_constraintTop_toTopOf="parent"
             app:titleBarBackground="@color/white"
             app:titleBarTitle="@string/illegal_backfill_title" />
@@ -27,7 +28,9 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/my_title_bar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_marginBottom="10dp"
+            app:layout_constraintBottom_toTopOf="@+id/ll_bottom"
+            android:layout_height="0dp">
 
             <LinearLayout
                 android:orientation="vertical"
@@ -215,6 +218,7 @@
                             android:textSize="14sp" />
 
                         <androidx.recyclerview.widget.RecyclerView
+
                             android:id="@+id/rv_photo"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"

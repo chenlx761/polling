@@ -31,6 +31,14 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
         }
     }
 
+    override fun setStatusBarStyle() {
+
+        setStatusBarThemeBackground(true)
+    }
+
+
+
+
     override fun getLayoutId(): Int {
         return R.layout.activity_login
     }
