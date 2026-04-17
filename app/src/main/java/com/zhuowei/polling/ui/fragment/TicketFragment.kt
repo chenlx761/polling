@@ -1,15 +1,22 @@
 package com.zhuowei.polling.ui.fragment
 
+import android.view.View
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.chenming.common.base.BaseFragment
+import com.chenming.common.listener.OnItemClickListener
 import com.chenming.httprequest.XLog
 import com.zhuowei.polling.R
+import com.zhuowei.polling.adapter.MainOrderAdapter
 import com.zhuowei.polling.contract.vm.MainVm
 import com.zhuowei.polling.databinding.FragmentTicketBinding
 import com.zhuowei.polling.location.BaiDuLocationManager
 import com.zhuowei.polling.location.LocationCallBack
 import com.zhuowei.polling.location.LocationResult
+import com.zhuowei.polling.ui.activitys.ticket.TicketDetailActivity
 
 class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
+
+    private var mMainOrderAdapter: MainOrderAdapter? = null
 
     companion object {
         fun newInstance(): TicketFragment {
@@ -22,6 +29,14 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
     }
 
     override fun initData() {
+        mViewModel!!.mTicketDatas.add("11")
+        mViewModel!!.mTicketDatas.add("11")
+        mViewModel!!.mTicketDatas.add("11")
+        mViewModel!!.mTicketDatas.add("11")
+        mViewModel!!.mTicketDatas.add("11")
+        mViewModel!!.mTicketDatas.add("11")
+        mViewModel!!.mTicketDatas.add("11")
+        mViewModel!!.mTicketDatas.add("11")
     }
 
     override fun initViewModel(): MainVm {
@@ -29,43 +44,37 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
     }
 
     override fun setData() {
+        mMainOrderAdapter = MainOrderAdapter(requireActivity(), mViewModel!!.mTicketDatas)
+
+        mBinding!!.rvTicket.apply {
+            adapter = mMainOrderAdapter
+            layoutManager = LinearLayoutManager(requireActivity())
+        }
     }
 
     override fun setListener() {
+        mMainOrderAdapter?.setOnItemClickListener(object : OnItemClickListener {
+            override fun onClick(position: Int, i: Any, view: View) {
+
+                TicketDetailActivity.newInstance(requireActivity())
+            }
+
+        })
+
+    }
 
 
+    private fun test() {
+        BaiDuLocationManager.instance.requestLocation(requireActivity(), object : LocationCallBack {
+            override fun onLocationSuccess(result: LocationResult) {
 
+                XLog.e("定位成功", result.toString())
+            }
 
+            override fun onLocationError(errorCode: Int, errorMessage: String) {
+                XLog.e("定位失败", "$errorCode $errorMessage")
+            }
 
-        mBinding!!.tvGetTsid.setOnClickListener {
-            mViewModel!!.getTsId("sysadmin", "123456")
-        }
-
-
-        mBinding!!.tvInit.setOnClickListener {
-            // 初始化崩溃捕获
-            throw Exception("哈哈哈 测试")
-        }
-
-        mBinding!!.tvGetInfo.setOnClickListener {
-
-            mViewModel!!.testGetInfo()
-        }
-
-        mBinding!!.tvStartLocation.setOnClickListener {
-
-            BaiDuLocationManager.instance.requestLocation(requireActivity(), object : LocationCallBack {
-                override fun onLocationSuccess(result: LocationResult) {
-
-                    XLog.e("定位成功", result.toString())
-                }
-
-                override fun onLocationError(errorCode: Int, errorMessage: String) {
-                    XLog.e("定位失败", "$errorCode $errorMessage")
-                }
-
-            })
-        }
-
+        })
     }
 }

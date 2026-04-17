@@ -12,7 +12,7 @@ import java.util.Objects
 
 
 class MainModel : BaseModel(), IMainModel {
-    override fun getTsId(userName: String?, pwd: String?, callBack: OnHttpCallBack<LoginResult>?) {
+    override fun getTsId(userName: String?, pwd: String?, callBack: OnHttpCallBack<BaseBean<LoginResult>>?) {
         addDisposable(
             RetrofitUtil.Builder(HttpConstants.GET_TS_ID_URL)
                 .addPara("username", userName)
@@ -26,11 +26,11 @@ class MainModel : BaseModel(), IMainModel {
                 .build()
                 .postForm(LoginResult::class.java, object : OnHttpCallBack<BaseBean<LoginResult>> {
                     override fun onSuccessful(t: BaseBean<LoginResult>?) {
-                        callBack?.onSuccessful(t?.data)
+                        callBack?.onSuccessful(t)
                     }
 
                     override fun onDataError(errorMsg: String?, t: BaseBean<LoginResult>?) {
-                        callBack?.onDataError(errorMsg!!, t?.data)
+                        callBack?.onDataError(errorMsg!!, t)
                     }
 
                     override fun onRequestError(errorMsg: String?, throwable: Throwable?) {
@@ -41,7 +41,7 @@ class MainModel : BaseModel(), IMainModel {
         )
     }
 
-    override fun testGetInfo(callBack: OnHttpCallBack<Objects>?) {
+    override fun testGetInfo(callBack: OnHttpCallBack<BaseBean<Objects>>?) {
         addDisposable(  RetrofitUtil.Builder("hyt-aqsc/prod-api/api/admin/user/front/info")
             .build()
             .get(Objects::class.java, object : OnHttpCallBack<BaseBean<Objects>> {

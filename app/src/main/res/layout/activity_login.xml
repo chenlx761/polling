@@ -24,35 +24,6 @@
                 android:orientation="vertical"
                 android:padding="32dp">
 
-                <!-- Logo区域 -->
-                <ImageView
-                    android:id="@+id/ivLogo"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    android:layout_marginTop="48dp"
-                    android:contentDescription="@string/app_name"
-                    android:src="@drawable/ic_logo" />
-
-                <!-- 应用名称 -->
-                <TextView
-                    android:id="@+id/tvAppName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/app_name"
-                    android:textColor="@color/black"
-                    android:textSize="28sp"
-                    android:textStyle="bold" />
-
-                <!-- 副标题 -->
-                <TextView
-                    android:id="@+id/tvSubtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/login_subtitle"
-                    android:textColor="@color/gray_600"
-                    android:textSize="14sp" />
 
                 <!-- 登录卡片 -->
                 <com.google.android.material.card.MaterialCardView
@@ -72,24 +43,6 @@
                         android:orientation="vertical"
                         android:padding="24dp">
 
-                        <!-- 欢迎回来 -->
-                        <TextView
-                            android:id="@+id/tvWelcome"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/welcome_back"
-                            android:textColor="@color/black"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvWelcomeHint"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/login_hint"
-                            android:textColor="@color/gray_600"
-                            android:textSize="14sp" />
 
                         <!-- 用户名/手机号输入框 -->
                         <com.google.android.material.textfield.TextInputLayout

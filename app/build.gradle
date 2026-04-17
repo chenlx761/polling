@@ -145,4 +145,8 @@ dependencies {
 
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Location:9.6.4'
     implementation project(path: ':hudun')
+
+    implementation  'io.github.scwang90:refresh-layout-kernel:3.0.0-alpha'      //核心必须依赖
+    implementation  'io.github.scwang90:refresh-header-material:3.0.0-alpha'    //谷歌刷新头
+    implementation  'io.github.scwang90:refresh-footer-ball:3.0.0-alpha'        //球脉冲加载
 }

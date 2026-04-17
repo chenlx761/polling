@@ -26,6 +26,7 @@ class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
     private var mTitles: Array<String>? = null
     private val mTabEntities = ArrayList<CustomTabEntity>()
 
+
     companion object {
         fun newInstance(context: Context) {
             val intent = Intent(context, MainActivity::class.java)
@@ -35,11 +36,12 @@ class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
 
 
     override fun getLayoutId(): Int {
+
+
         return R.layout.activity_main
     }
 
     override fun setListener() {
-
         mBinding!!.mainTab.setOnTabSelectListener(object : OnTabSelectListener {
             override fun onTabSelect(position: Int) {
 
@@ -64,7 +66,11 @@ class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
 
 
     private fun initTab() {
-        mTitles = arrayOf(getString(R.string.main_ticket), getString(R.string.main_my), getString(R.string.main_tree))
+        mTitles = arrayOf(
+            getString(R.string.main_ticket),
+            getString(R.string.main_my),
+            getString(R.string.main_tree)
+        )
         val mTicketTab = DiscountTab(mTitles!![0], R.mipmap.ticket_select, R.mipmap.ticket_normal)
         val mMyTab = DiscountTab(mTitles!![1], R.mipmap.my_select, R.mipmap.my_normal)
         val mTreeTab = DiscountTab(mTitles!![2], R.mipmap.ticket_select, R.mipmap.ticket_normal)
@@ -87,9 +93,6 @@ class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
         mTags = arrayOf("TICKET", "MY", "TREE")
 
     }
-
-
-
 
 
     override fun setObserveListener() {
@@ -139,6 +142,11 @@ class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
         )
+    }
+
+
+    override fun onBackPressed() {
+        moveTaskToBack(true)
     }
 
 }

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">polling</string>
     <string name="permission_tip">软件正常使用需要以下权限</string>
-    <string name="main_ticket">工单</string>
+    <string name="main_ticket">两违待办</string>
     <string name="main_my">我的</string>
     <string name="main_tree">树形图</string>
 
@@ -18,6 +18,19 @@
     <string name="register_now">立即注册</string>
 
     <string name="username_or_password_empty">用户名称或密码不能为空</string>
+    <string name="user_name_label">户名</string>
+    <string name="account_number">户号</string>
+    <string name="belonging_area">所属区域</string>
+    <string name="dispatch_time">派工时间:</string>
+    <string name="illegal_backfill_title">两违回填</string>
+    <string name="illegal_info">两违信息</string>
+    <string name="user_address">用户地址</string>
+    <string name="scene_info">现场信息</string>
+    <string name="illegal_building_location">违章建筑定位</string>
+    <string name="take_photo_hint">请对现场进行拍照</string>
+    <string name="location_click_hint">请点击进行违章建筑定位</string>
+    <string name="submit">提交</string>
+
 
     <!-- 可折叠页面 -->
     <string name="collapsible_pager_title">个人中心</string>
@@ -25,5 +38,6 @@
     <string name="tab_dynamic">动态</string>
     <string name="tab_settings">设置</string>
     <string name="tab_about">关于</string>
+
 
 </resources>
