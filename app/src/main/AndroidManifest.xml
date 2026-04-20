@@ -44,7 +44,9 @@
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:name=".ui.activitys.ticket.TicketDetailActivity"
-            android:theme="@style/MyAppTheme" />
+            android:theme="@style/MyAppTheme"
+            android:windowSoftInputMode="adjustNothing" />
+
 
         <provider
             android:name="androidx.core.content.FileProvider"

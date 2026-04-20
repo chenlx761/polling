@@ -15,13 +15,12 @@ import androidx.core.content.FileProvider
 import androidx.databinding.ObservableArrayList
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
-import com.chenming.common.base.BaseActivity
-import com.chenming.common.base.empty.EmptyViewModel
 import com.chenming.common.listener.OnItemClickListener
 import com.chenming.httprequest.XLog
 import com.zhuowei.polling.R
 import com.zhuowei.polling.adapter.AddPhotoAdapter
 import com.zhuowei.polling.base.MyBaseActivity
+import com.zhuowei.polling.contract.vm.TicketDetailVm
 import com.zhuowei.polling.databinding.ActivityTicketDetailBinding
 import com.zhuowei.polling.location.BaiDuLocationManager
 import com.zhuowei.polling.location.LocationCallBack
@@ -32,7 +31,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class TicketDetailActivity : MyBaseActivity<EmptyViewModel, ActivityTicketDetailBinding>() {
+class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetailBinding>() {
     private val mAllPhotos = ObservableArrayList<String>()
     private var mAddPhotoAdapter: AddPhotoAdapter? = null
     private var mCurrentPhotoPath: String? = null
@@ -108,8 +107,8 @@ class TicketDetailActivity : MyBaseActivity<EmptyViewModel, ActivityTicketDetail
     override fun initData() {
     }
 
-    override fun initViewModel(): EmptyViewModel {
-        return createViewModel(EmptyViewModel::class.java)
+    override fun initViewModel(): TicketDetailVm {
+        return createViewModel(TicketDetailVm::class.java)
     }
 
     override fun onResume() {
