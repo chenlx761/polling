@@ -21,6 +21,7 @@ import com.chenming.httprequest.XLog
 import com.zhuowei.polling.R
 import com.zhuowei.polling.adapter.AddPhotoAdapter
 import com.zhuowei.polling.base.MyBaseActivity
+import com.zhuowei.polling.beans.UploadFileResult
 import com.zhuowei.polling.contract.vm.TicketDetailVm
 import com.zhuowei.polling.databinding.ActivityTicketDetailBinding
 import com.zhuowei.polling.location.BaiDuLocationManager
@@ -108,7 +109,18 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
 
         mBinding!!.btnSubmit.setOnClickListener {
-            UploadFileManager.uploadFile(mAllPhotos.filter { it.isNotEmpty() })
+            UploadFileManager.uploadFile(mAllPhotos.filter { it.isNotEmpty() },object :UploadFileManager.OnUploadAllCallBack{
+                override fun onAllSuccessful(results: List<UploadFileResult>) {
+                    XLog.e("完成咯")
+                }
+
+                override fun onError(
+                    errorMsg: String,
+                    failedPaths: List<String>
+                ) {
+                }
+
+            })
         }
     }
 
