@@ -199,6 +199,7 @@
                                 android:textSize="14sp" />
 
                             <ImageView
+                                android:src="@mipmap/icon_location"
                                 android:layout_width="20dp"
                                 android:layout_height="20dp" />
                         </LinearLayout>

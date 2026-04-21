@@ -30,6 +30,11 @@
     <string name="take_photo_hint">请对现场进行拍照</string>
     <string name="location_click_hint">请点击进行违章建筑定位</string>
     <string name="submit">提交</string>
+    <string name="max_photo_count">最多只能选择%d张图片</string>
+    <string name="take_photo">拍照</string>
+    <string name="select_photo">从相册选择</string>
+    <string name="select_photo_title">选择图片</string>
+
 
 
     <!-- 可折叠页面 -->
@@ -38,6 +43,8 @@
     <string name="tab_dynamic">动态</string>
     <string name="tab_settings">设置</string>
     <string name="tab_about">关于</string>
+
+
 
 
 </resources>

@@ -57,6 +57,11 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
 
         })
 
+
+        mBinding!!.srlFlash.setOnLoadMoreListener {
+
+        }
+
     }
 
 

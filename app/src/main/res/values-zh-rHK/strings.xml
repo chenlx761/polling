@@ -30,7 +30,10 @@
     <string name="take_photo_hint">請對現場進行拍照</string>
     <string name="location_click_hint">請點擊進行違章建築定位</string>
     <string name="submit">提交</string>
-
+    <string name="max_photo_count">最多只能選擇%d張圖片</string>
+    <string name="take_photo">拍照</string>
+    <string name="select_photo">從相冊選擇</string>
+    <string name="select_photo_title">選擇圖片</string>
 
     <!-- 可摺疊頁面 -->
     <string name="collapsible_pager_title">個人中心</string>

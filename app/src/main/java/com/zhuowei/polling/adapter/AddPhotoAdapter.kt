@@ -1,11 +1,11 @@
 package com.zhuowei.polling.adapter
 
 import android.content.Context
+import android.text.TextUtils
 import android.view.View
 import androidx.databinding.ObservableArrayList
-import com.bumptech.glide.Glide
+import com.chenming.common.utils.ImageLoaderUtil
 import com.example.hudundemo.base.NormalAdapter
-import com.zhuowei.polling.MyApplication
 import com.zhuowei.polling.R
 import com.zhuowei.polling.databinding.AdapterAddPhotoBinding
 
@@ -28,16 +28,13 @@ class AddPhotoAdapter(
     ) {
         super.onBindOtherViewHolder(holder, position, adapterPosition)
 
-        if (position < mDatas.size - 1) {
+        if (!TextUtils.isEmpty(mDatas[position])) {
             holder.ivPhoto.visibility = View.VISIBLE
             holder.ivDelete.visibility = View.VISIBLE
             holder.ivAdd.visibility = View.GONE
 
-            Glide.with(MyApplication.getInstance())
-                .load(mDatas[position])
-                .centerCrop()
-                .into(holder.ivPhoto)
 
+            ImageLoaderUtil.getInstance().loadImg(holder.ivPhoto,mDatas[position])
             holder.ivDelete.setOnClickListener {
                 onDeleteClickListener?.invoke(position)
             }

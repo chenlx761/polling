@@ -42,7 +42,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private fun flashAdapter(path: String) {
         mAllPhotos.removeAt(mAllPhotos.size - 1)
         mAllPhotos.add(path)
-        if (mAllPhotos.size < maxPhotoCount - 1) {
+        if (mAllPhotos.size < maxPhotoCount) {
             mAllPhotos.add("")
         }
     }
@@ -122,7 +122,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             override fun onLocationSuccess(result: LocationResult) {
 
                 XLog.e("定位成功", result.toString())
-                mBinding.tvLocation.text= result.address
+                mBinding.tvLocation.text = result.address
                 dismissDialog()
             }
 
@@ -156,18 +156,30 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
         mAddPhotoAdapter?.setOnDeleteClickListener { position ->
             if (position < mAllPhotos.size) {
-                mAllPhotos.removeAt(position)
+                // 获取被移除的图片路径
+                val removedPath = mAllPhotos.removeAt(position)
+
+                // 如果移除的不是占位的空字符串，则删除本地物理文件
+                if (removedPath.isNotEmpty()) {
+                    val file = File(removedPath)
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                }
+                // 没有空值时，添加一个""的值，保证"添加照片"按钮始终显示
+                if (!mAllPhotos.contains("")) {
+                    mAllPhotos.add("")
+                }
             }
         }
+
     }
 
     private fun checkPermissionAndShowDialog() {
-        if (mAllPhotos.size >= maxPhotoCount) {
-            Toast.makeText(this, "最多只能选择${maxPhotoCount}张图片", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             showPhotoChoiceDialog()
         } else {
@@ -176,16 +188,14 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun showPhotoChoiceDialog() {
-        val options = arrayOf("拍照", "从相册选择")
+        val options = arrayOf(getString(R.string.take_photo), getString(R.string.select_photo))
         androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("选择图片")
-            .setItems(options) { _, which ->
+            .setTitle(getString(R.string.select_photo_title)).setItems(options) { _, which ->
                 when (which) {
                     0 -> takePhoto()
                     1 -> pickFromGallery()
                 }
-            }
-            .show()
+            }.show()
     }
 
     private fun takePhoto() {
@@ -194,9 +204,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             val photoFile = createImageFile()
             photoFile?.let {
                 val photoUri = FileProvider.getUriForFile(
-                    this,
-                    "${packageName}.fileprovider",
-                    it
+                    this, "${packageName}.fileprovider", it
                 )
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri)
                 takePictureLauncher.launch(takePictureIntent)
@@ -208,7 +216,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         return try {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-            File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir).apply {
+            File.createTempFile("PNG_${timeStamp}_", ".png", storageDir).apply {
                 mCurrentPhotoPath = absolutePath
             }
         } catch (e: Exception) {
