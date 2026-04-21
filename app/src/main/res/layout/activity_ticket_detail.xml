@@ -79,12 +79,13 @@
                                 android:textSize="16sp" />
 
                             <EditText
+                                android:clickable="false"
+                                android:enabled="false"
                                 android:id="@+id/et_address"
                                 android:background="@null"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="上佳市居委会吉林街13巷7号"
                                 android:textColor="@color/text_color333"
                                 android:textSize="16sp" />
                         </LinearLayout>
@@ -109,11 +110,12 @@
                                 android:textSize="16sp" />
 
                             <EditText
+                                android:clickable="false"
+                                android:enabled="false"
                                 android:id="@+id/et_name"
                                 android:background="@null"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="张三"
                                 android:textColor="@color/text_color333"
                                 android:textSize="16sp" />
                         </LinearLayout>
@@ -138,11 +140,12 @@
                                 android:textSize="16sp" />
 
                             <EditText
+                                android:clickable="false"
+                                android:enabled="false"
                                 android:id="@+id/et_account"
                                 android:background="@null"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="0306130259304586"
                                 android:textColor="@color/text_color333"
                                 android:textSize="16sp" />
                         </LinearLayout>

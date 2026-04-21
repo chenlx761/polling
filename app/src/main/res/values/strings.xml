@@ -29,6 +29,8 @@
     <string name="illegal_building_location">违章建筑定位</string>
     <string name="take_photo_hint">请对现场进行拍照</string>
     <string name="location_click_hint">请点击进行违章建筑定位</string>
+    <string name="location_hint">请先进行定位</string>
+    <string name="please_take_photo_hint">请先拍照</string>
     <string name="submit">提交</string>
     <string name="max_photo_count">最多只能选择%d张图片</string>
     <string name="take_photo">拍照</string>
@@ -41,6 +43,10 @@
     <string name="photo_select_failed">图片选取失败</string>
     <string name="no_camera_app">未找到相机应用</string>
     <string name="create_image_file_failed">创建图片文件失败</string>
+    <string name="upload_file_progress_title">上传文件(%1$d/%2$d)</string>
+    <string name="upload_file_success">上传完成</string>
+    <string name="upload_file_completed">上传完成(成功%1$d个，失败%2$d个)</string>
+    <string name="percent_format">%1$d%%</string>
 
     <!-- 可折叠页面 -->
     <string name="collapsible_pager_title">个人中心</string>

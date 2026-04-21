@@ -10,7 +10,7 @@ public class SpManager {
     public static final String SP_USER_PWD_KEY = "user_pwd";
     public static String getToken() {
         //return (String) SpUtils.getParam(MyApplication.getInstance(), SP_TOKEN_KEY, "");
-        return "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImxvZ2luX3VzZXJfa2V5IjoiNWYxY2JjY2QtZDE2NC00MmU5LWFhNTEtZDA1ZjEyN2FmNTZiIn0.k_XtP1n62yIBBqoF2CMUsFFj6yah4twCHpv1ieBWHOUsGpA_QFxjspH-CHYS6FHe2hqYqd-xIKmEIc3QL3Cd6w";
+        return "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImxvZ2luX3VzZXJfa2V5IjoiODc5OTY2ZmUtYzBkZC00MDI3LWFkOTItMmEyYTMyYmZkMGM0In0.zGcU4xKLg_HiaoyrCcqjU5THGU07d_cSYiE1UPRlCaM72h7iKQnQXRQqiyQidbtshf3NFZvHyBZrfUYCNhBY-A";
     }
 
 

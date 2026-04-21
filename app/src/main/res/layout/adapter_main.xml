@@ -42,7 +42,6 @@
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="2"
-                    android:text="广东省深圳市南山区粤海街道高新区社区高新南七道206号"
                     android:textColor="@color/black"
                     android:textSize="18sp" />
 
@@ -78,7 +77,6 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="张三"
                         android:textColor="@color/black"
                         android:textSize="16sp" />
 
@@ -104,7 +102,6 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="440305123456"
                         android:textColor="@color/black"
                         android:textSize="16sp" />
 
@@ -130,7 +127,6 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="1"
-                        android:text="南山区"
                         android:textColor="@color/black"
                         android:textSize="16sp" />
 
@@ -140,6 +136,7 @@
 
             <!-- 时间戳 -->
             <LinearLayout
+                android:visibility="invisible"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"

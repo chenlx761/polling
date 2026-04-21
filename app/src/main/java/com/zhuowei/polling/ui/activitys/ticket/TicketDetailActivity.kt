@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
+import android.text.TextUtils
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -17,10 +18,13 @@ import androidx.databinding.ObservableArrayList
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.chenming.common.listener.OnItemClickListener
+import com.chenming.common.utils.AppManager
+import com.chenming.common.utils.ToastUtil
 import com.chenming.httprequest.XLog
 import com.zhuowei.polling.R
 import com.zhuowei.polling.adapter.AddPhotoAdapter
 import com.zhuowei.polling.base.MyBaseActivity
+import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.beans.UploadFileResult
 import com.zhuowei.polling.contract.vm.TicketDetailVm
 import com.zhuowei.polling.databinding.ActivityTicketDetailBinding
@@ -38,16 +42,33 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     companion object {
         private const val MAX_PHOTO_COUNT = 9
+        private const val BEAN_KEY = "bean"
 
-        fun newInstance(context: Context) {
+        fun newInstance(context: Context, bean: TicketListBean.RowsDTO) {
             val intent = Intent(context, TicketDetailActivity::class.java)
+            intent.putExtra(BEAN_KEY, bean)
             context.startActivity(intent)
+        }
+
+
+        @JvmStatic
+        fun newIntent(
+            myActivityLauncher: ActivityResultLauncher<Intent>,
+            context: Context,
+            bean: TicketListBean.RowsDTO
+        ) {
+            val intent = Intent(context, TicketDetailActivity::class.java)
+            intent.putExtra(BEAN_KEY, bean)
+            //context.startActivity(intent)
+            myActivityLauncher.launch(intent)
         }
     }
 
+    private var mBean: TicketListBean.RowsDTO? = null
     private val mAllPhotos = ObservableArrayList<String>()
     private var mAddPhotoAdapter: AddPhotoAdapter? = null
     private var mCurrentPhotoPath: String? = null
+    private var mLocationResult: LocationResult? = null
 
     // ========== ActivityResultLaunchers ==========
 
@@ -99,6 +120,14 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     override fun getLayoutId(): Int = R.layout.activity_ticket_detail
 
+
+    override fun setObserveListener() {
+        mViewModel.mUpdateFinish.observe(this) {
+            setResult(RESULT_OK, Intent())
+            finish()
+        }
+    }
+
     override fun setListener() {
         mBinding!!.myTitleBar.setLeftLayoutClickListener {
             finish()
@@ -109,22 +138,44 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
 
         mBinding!!.btnSubmit.setOnClickListener {
-            UploadFileManager.uploadFile(mAllPhotos.filter { it.isNotEmpty() },object :UploadFileManager.OnUploadAllCallBack{
-                override fun onAllSuccessful(results: List<UploadFileResult>) {
-                    XLog.e("完成咯")
-                }
 
-                override fun onError(
-                    errorMsg: String,
-                    failedPaths: List<String>
-                ) {
-                }
+            if (mLocationResult == null) {
+                ToastUtil.showShortToast(getString(R.string.location_hint))
+                return@setOnClickListener
+            }
+            if (mAllPhotos.filter { it.isNotEmpty() }.isEmpty()) {
+                ToastUtil.showShortToast(getString(R.string.please_take_photo_hint))
 
-            })
+                return@setOnClickListener
+            }
+
+            UploadFileManager.uploadFileWithProgress(
+                AppManager.getAppManager().topActivity,
+                mAllPhotos.filter { it.isNotEmpty() },
+                object : UploadFileManager.OnUploadAllCallBack {
+                    override fun onAllSuccessful(results: List<UploadFileResult>) {
+                        XLog.e("完成咯")
+                        mBean?.let { bean ->
+                            bean.images = TextUtils.join(",", results.map { it.url })
+                            bean.buildLocation = mLocationResult!!.address
+                            bean.buildLocationCoord =
+                                "${mLocationResult!!.latitude},${mLocationResult!!.longitude}"
+                            mViewModel!!.postTicketDetail(bean)
+                        }
+                    }
+
+                    override fun onError(
+                        errorMsg: String, failedPaths: List<String>
+                    ) {
+                    }
+
+                })
         }
     }
 
-    override fun initData() {}
+    override fun initData() {
+        mBean = intent.getSerializableExtra(BEAN_KEY) as? TicketListBean.RowsDTO
+    }
 
     override fun initViewModel(): TicketDetailVm = createViewModel(TicketDetailVm::class.java)
 
@@ -133,6 +184,14 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     override fun setData() {
+
+        mBean?.let {
+            mBinding!!.etAddress.setText(it.userAddress)
+            mBinding!!.etName.setText(it.userName)
+            mBinding!!.etAccount.setText(it.userNo)
+        }
+
+
         // 初始添加一个占位项（"添加照片"按钮）
         mAllPhotos.add("")
         mAddPhotoAdapter = AddPhotoAdapter(this, mAllPhotos, MAX_PHOTO_COUNT)
@@ -167,11 +226,13 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             override fun onLocationSuccess(result: LocationResult) {
                 XLog.e("定位成功", result.toString())
                 mBinding.tvLocation.text = result.address
+                mLocationResult = result
                 dismissDialog()
             }
 
             override fun onLocationError(errorCode: Int, errorMessage: String) {
                 XLog.e("定位失败", "$errorCode $errorMessage")
+                ToastUtil.showShortToast(errorMessage)
                 dismissDialog()
             }
         })

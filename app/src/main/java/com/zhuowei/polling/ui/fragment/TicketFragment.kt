@@ -1,11 +1,15 @@
 package com.zhuowei.polling.ui.fragment
 
+import android.app.Activity
 import android.view.View
+import androidx.activity.result.ActivityResult
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chenming.common.base.BaseFragment
+import com.chenming.common.listener.OnActivityResultListener
 import com.chenming.common.listener.OnItemClickListener
 import com.zhuowei.polling.R
 import com.zhuowei.polling.adapter.MainOrderAdapter
+import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.contract.vm.MainVm
 import com.zhuowei.polling.databinding.FragmentTicketBinding
 import com.zhuowei.polling.ui.activitys.ticket.TicketDetailActivity
@@ -25,14 +29,6 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
     }
 
     override fun initData() {
-        mViewModel!!.mTicketDatas.add("11")
-        mViewModel!!.mTicketDatas.add("11")
-        mViewModel!!.mTicketDatas.add("11")
-        mViewModel!!.mTicketDatas.add("11")
-        mViewModel!!.mTicketDatas.add("11")
-        mViewModel!!.mTicketDatas.add("11")
-        mViewModel!!.mTicketDatas.add("11")
-        mViewModel!!.mTicketDatas.add("11")
     }
 
     override fun initViewModel(): MainVm {
@@ -49,21 +45,46 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
     }
 
     override fun setListener() {
+
+        mViewModel!!.mStopFlash.observe(this) {
+            mBinding!!.srlFlash.finishRefresh()
+        }
+
+        mViewModel!!.mStopLoadMore.observe(this) {
+            mBinding!!.srlFlash.finishLoadMore()
+        }
+
         mMainOrderAdapter?.setOnItemClickListener(object : OnItemClickListener {
             override fun onClick(position: Int, i: Any, view: View) {
 
-                TicketDetailActivity.newInstance(requireActivity())
+
+                TicketDetailActivity.newIntent(
+                    getActivityLauncher(object : OnActivityResultListener {
+                        override fun onActivityResult(result: ActivityResult?) {
+                            if (result != null && result.resultCode == Activity.RESULT_OK) {
+                                mViewModel!!.flashTicketList()
+                            }
+                        }
+
+                    })!!,
+                    requireActivity(), i as TicketListBean.RowsDTO
+                )
             }
 
         })
 
 
-        mBinding!!.srlFlash.setOnLoadMoreListener {
-
+        mBinding!!.srlFlash.setOnRefreshListener {
+            mViewModel!!.flashTicketList()
         }
 
-    }
+        mBinding!!.srlFlash.setOnLoadMoreListener {
+            mViewModel!!.loadMoreTicketList()
+        }
+        mViewModel!!.flashTicketList()
 
+
+    }
 
 
 }
