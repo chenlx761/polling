@@ -3,9 +3,9 @@
     android:shape="rectangle">
 
     <!-- 设置背景颜色，你可以根据需要替换颜色值 -->
-    <solid android:color="#2666FA" />
+    <solid android:color="#f5f9ff" />
 
     <!-- 设置圆角 -->
-    <corners android:radius="10dp" />
+    <corners android:radius="5dp" />
 
 </shape>

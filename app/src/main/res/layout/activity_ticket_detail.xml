@@ -19,6 +19,7 @@
             app:titleBarLeftImg="@mipmap/top_back"
             app:layout_constraintTop_toTopOf="parent"
             app:titleBarBackground="@color/white"
+            app:titleBarTitleColor="#232323"
             app:titleBarTitle="@string/illegal_backfill_title" />
 
         <!-- ================= 两连信息 ================= -->
@@ -41,6 +42,8 @@
                     android:id="@+id/layout_user_info"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    app:cardElevation="1dp"
+                    app:cardCornerRadius="10dp"
                     android:layout_margin="16dp">
 
 
@@ -49,21 +52,22 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:paddingHorizontal="16dp">
 
                         <!-- 标题 -->
                         <TextView
+                            android:gravity="center"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="61dp"
                             android:text="@string/illegal_info"
-                            android:textColor="#333333"
-                            android:textSize="23sp"
+                            android:textColor="#232323"
+                            android:textSize="21sp"
                             android:textStyle="bold" />
 
                         <!-- 用户地址 -->
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="48dp"
+                            android:layout_height="64dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
@@ -93,7 +97,7 @@
                         <!-- 户名 -->
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="48dp"
+                            android:layout_height="64dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
@@ -122,7 +126,7 @@
                         <!-- 户号 -->
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="48dp"
+                            android:layout_height="64dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
@@ -154,8 +158,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginBottom="12dp"
+                    app:cardElevation="1dp"
+                    app:cardCornerRadius="10dp"
                     android:layout_marginEnd="16dp">
 
                     <LinearLayout
@@ -164,21 +170,22 @@
                         android:layout_height="wrap_content"
 
                         android:orientation="vertical"
-                        android:padding="16dp">
+                        android:paddingHorizontal="16dp">
 
                         <!-- 标题 -->
                         <TextView
+                            android:gravity="center"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="61dp"
                             android:text="@string/scene_info"
-                            android:textColor="#333333"
-                            android:textSize="23sp"
+                            android:textColor="#232323"
+                            android:textSize="21sp"
                             android:textStyle="bold" />
 
                         <!-- 定位 -->
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="48dp"
+                            android:layout_height="64dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
@@ -187,21 +194,23 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/illegal_building_location"
                                 android:textColor="@color/text_color333"
-                                android:textSize="14sp" />
+                                android:textSize="19sp" />
 
                             <TextView
                                 android:id="@+id/tv_location"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:gravity="end"
                                 android:text="@string/location_click_hint"
                                 android:textColor="@color/text_color666"
-                                android:textSize="14sp" />
+                                android:textSize="16sp" />
 
                             <ImageView
+                                android:layout_marginLeft="5dp"
                                 android:src="@mipmap/icon_location"
-                                android:layout_width="20dp"
-                                android:layout_height="20dp" />
+                                android:layout_width="17dp"
+                                android:layout_height="17dp" />
                         </LinearLayout>
 
                         <View
@@ -216,10 +225,10 @@
                             android:layout_marginTop="12dp"
                             android:text="@string/take_photo_hint"
                             android:textColor="@color/text_color333"
-                            android:textSize="14sp" />
+                            android:textSize="19sp" />
 
                         <androidx.recyclerview.widget.RecyclerView
-
+                            android:layout_marginBottom="10dp"
                             android:id="@+id/rv_photo"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"

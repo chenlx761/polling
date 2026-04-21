@@ -1,5 +1,6 @@
 package com.zhuowei.polling.contract.model
 
+import android.text.TextUtils
 import com.chenming.common.base.BaseModel
 import com.chenming.httprequest.http.RetrofitUtil
 import com.chenming.httprequest.http.bean.BaseBean
@@ -9,8 +10,18 @@ import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.LoginContract.ILoginModel
 
 
-class LoginModel : BaseModel(),ILoginModel {
-    override fun getTsId(userName: String?, pwd: String?, callBack: OnHttpCallBack<BaseBean<LoginResult>>?) {
+class LoginModel : BaseModel(), ILoginModel {
+    override fun getTsId(
+        userName: String?,
+        pwd: String?,
+        callBack: OnHttpCallBack<BaseBean<LoginResult>>?
+    ) {
+
+        if (TextUtils.isEmpty(HttpConstants.HD_BASE_URL)) {
+            callBack?.onRequestError("请先设置虎盾的baseUrl", null)
+            return
+        }
+
         addDisposable(
             RetrofitUtil.Builder(HttpConstants.GET_TS_ID_URL)
                 .addPara("username", userName)
@@ -38,8 +49,6 @@ class LoginModel : BaseModel(),ILoginModel {
                 }, HttpConstants.HD_BASE_URL)
         )
     }
-
-
 
 
 }

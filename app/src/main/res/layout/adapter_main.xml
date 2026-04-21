@@ -30,10 +30,9 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:src="@drawable/ic_location"
-                    app:tint="@color/primary" />
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@mipmap/icon_location_gray" />
 
                 <TextView
                     android:id="@+id/tv_address"
@@ -49,17 +48,12 @@
 
             </LinearLayout>
 
-            <!-- 分隔线 -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginVertical="10dp"
-                android:background="@color/gray_200" />
 
             <!-- 用户信息表格区域 -->
             <LinearLayout
+                android:layout_marginTop="13dp"
                 android:padding="10dp"
-                android:background="#F4F7FE"
+                android:background="@drawable/bg_f5f9ff_radius_5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
