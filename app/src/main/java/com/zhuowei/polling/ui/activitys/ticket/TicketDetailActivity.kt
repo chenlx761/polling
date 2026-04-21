@@ -26,6 +26,7 @@ import com.zhuowei.polling.databinding.ActivityTicketDetailBinding
 import com.zhuowei.polling.location.BaiDuLocationManager
 import com.zhuowei.polling.location.LocationCallBack
 import com.zhuowei.polling.location.LocationResult
+import com.zhuowei.polling.manager.UploadFileManager
 import com.zhuowei.polling.utils.GetPhotoUtils.Companion.getPathFromUri
 import java.io.File
 import java.text.SimpleDateFormat
@@ -75,7 +76,8 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                     if (path != null) {
                         addPhotoToList(path)
                     } else {
-                        Toast.makeText(this, R.string.photo_select_failed, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, R.string.photo_select_failed, Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             }
@@ -103,6 +105,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
         mBinding!!.tvLocation.setOnClickListener {
             getLocation()
+        }
+
+        mBinding!!.btnSubmit.setOnClickListener {
+            UploadFileManager.uploadFile(mAllPhotos.filter { it.isNotEmpty() })
         }
     }
 
@@ -202,7 +208,8 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             // 仅删除本应用外部存储目录下的临时文件，不删除相册原文件
             try {
                 val file = File(removedPath)
-                val appStorageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath
+                val appStorageDir =
+                    getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath
                 if (appStorageDir != null && removedPath.startsWith(appStorageDir) && file.exists()) {
                     file.delete()
                 }
@@ -230,8 +237,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             return
         }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            == PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
             showPhotoChoiceDialog()
         } else {
@@ -242,14 +250,12 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private fun showPhotoChoiceDialog() {
         val options = arrayOf(getString(R.string.take_photo), getString(R.string.select_photo))
         androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle(getString(R.string.select_photo_title))
-            .setItems(options) { _, which ->
+            .setTitle(getString(R.string.select_photo_title)).setItems(options) { _, which ->
                 when (which) {
                     0 -> takePhoto()
                     1 -> pickFromGallery()
                 }
-            }
-            .show()
+            }.show()
     }
 
     // ========== 拍照 ==========

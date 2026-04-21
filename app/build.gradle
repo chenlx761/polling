@@ -54,6 +54,10 @@ android {
                                     orientation: "portrait"]
         }
 
+        locationTest{
+            signingConfig signingConfigs.normalConfig
+        }
+
 
     }
 

@@ -44,7 +44,9 @@ class MyApplication : Application() {
         MultiDex.install(this)
     }
 
-
+    fun isLocationTest(): Boolean {
+        return BuildConfig.FLAVOR.equals("locationTest")
+    }
     override fun onCreate() {
         super.onCreate()
         instance = this

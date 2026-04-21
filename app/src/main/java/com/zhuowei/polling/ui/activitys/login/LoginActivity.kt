@@ -37,8 +37,6 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
     }
 
 
-
-
     override fun getLayoutId(): Int {
         return R.layout.activity_login
     }
@@ -49,6 +47,12 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
         mBinding.btnLogin.setOnClickListener {
             if (mBinding.etUsername.text.isNullOrEmpty() || mBinding.etPassword.text.isNullOrEmpty()) {
                 showInfo(R.string.username_or_password_empty)
+                return@setOnClickListener
+            }
+
+            if (MyApplication.getInstance().isLocationTest()) {
+                MainActivity.newInstance(this@LoginActivity)
+                finish()
                 return@setOnClickListener
             }
 
@@ -71,6 +75,13 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
     override fun setObserveListener() {
         mViewModel.mLoginResult.observe(this) {
             if (it != null) {
+
+                if (MyApplication.getInstance().isLocationTest()) {
+                    MainActivity.newInstance(this@LoginActivity)
+                    finish()
+                    return@observe
+                }
+
                 HuDunManager.instance.login(it.tsid, object : LoginFinishCallBack {
                     override fun onLoginFinish() {
                         HuDunManager.instance.prepareVpn(
