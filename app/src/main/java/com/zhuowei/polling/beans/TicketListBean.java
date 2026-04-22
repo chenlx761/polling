@@ -26,7 +26,7 @@ public class TicketListBean {
     }
 
     public static class RowsDTO implements Serializable {
-        private int id;
+        private String id;
         private String surveyStatus;
         private String userNo;
         private String userName;
@@ -80,11 +80,11 @@ public class TicketListBean {
             this.address = address;
         }
 
-        public int getId() {
+        public String getId() {
             return id;
         }
 
-        public void setId(int id) {
+        public void setId(String id) {
             this.id = id;
         }
 

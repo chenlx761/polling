@@ -23,8 +23,7 @@ class LoginVm : BaseViewModel<LoginContract.ILoginModel>(), LoginContract.ILogin
             object : BaseCallBack<BaseBean<LoginResult>>(HttpConstants.GET_TS_ID_URL) {
                 override fun onSuccessful(t: BaseBean<LoginResult>?) {
                     if (t != null && t.data != null) {
-                        SpManager.setToken(t.data.access_token)
-                        SpManager.setRefreshToken(t.data.refresh_token)
+                        SpManager.setToken(t.data.token)
                         mLoginResult.postValue(t.data)
                     }
                 }

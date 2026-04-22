@@ -23,14 +23,9 @@ class LoginModel : BaseModel(), ILoginModel {
 
         addDisposable(
             RetrofitUtil.Builder(HttpConstants.GET_TS_ID_URL).addPara("username", userName)
-                .addPara("password", "h1rm5WMo1azQ1FQLTtmH9E2GBCAOlrI9cUqJJQ/wOGg=")
-//                .addPara("password", AES.getPasswordByEncrypt(userName,pwd))
-                .addPara("grant_type", "password")
-                .addPara("captchaUUID", "captcha:login_bdb7d162-a170-43aa-8-")
-                .addPara("equipmentCoding", "13690777388")
+                .addPara("password", pwd)
                 .addHeader("Host", HttpConstants.BASE_HOST)
-//            .addHeader("Authorization","Basic Q0ESUENhZTZkZTQ4XZRlZWQwNThmODUOMDRiZmQZZDVkMmMSNTk1N2UxNmRkNQ==")
-                .build().postForm(
+                .build().postJson(
                     LoginResult::class.java, object : OnHttpCallBack<BaseBean<LoginResult>> {
                         override fun onSuccessful(t: BaseBean<LoginResult>?) {
                             callBack?.onSuccessful(t)

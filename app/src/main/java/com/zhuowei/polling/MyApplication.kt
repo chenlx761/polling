@@ -5,9 +5,7 @@ import android.content.Context
 import androidx.multidex.MultiDex
 import com.chenming.common.utils.CommApplication
 import com.chenming.httprequest.http.HttpManager
-import com.chenming.httprequest.http.RetrofitUtil
 import com.zhuowei.hudun.HuDunApplication
-import com.zhuowei.polling.beans.LoginResult
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.utils.SpManager
 
@@ -26,17 +24,17 @@ class MyApplication : Application() {
             return instance!!
         }
 
-        private fun refreshTokenSync(): String {
-
-            val postSync = RetrofitUtil.Builder(HttpConstants.GET_TS_ID_URL)
-                .addPara("refresh_token", SpManager.getRefreshToken())
-                .addPara("grant_type", "refresh_token").addHeader("Host", HttpConstants.BASE_HOST)
-                .build().postFormSync(LoginResult::class.java, HttpConstants.HD_BASE_URL)
-            val accessToken = postSync.data.access_token
-            SpManager.setToken(accessToken)
-            SpManager.setRefreshToken(postSync.data.refresh_token)
-            return accessToken
-        }
+//        private fun refreshTokenSync(): String {
+//
+//            val postSync = RetrofitUtil.Builder(HttpConstants.GET_TS_ID_URL)
+//                .addPara("refresh_token", SpManager.getRefreshToken())
+//                .addPara("grant_type", "refresh_token").addHeader("Host", HttpConstants.BASE_HOST)
+//                .build().postFormSync(LoginResult::class.java, HttpConstants.HD_BASE_URL)
+//            val accessToken = postSync.data.access_token
+//            SpManager.setToken(accessToken)
+//            SpManager.setRefreshToken(postSync.data.refresh_token)
+//            return accessToken
+//        }
     }
 
     override fun attachBaseContext(base: Context?) {

@@ -8,9 +8,9 @@ public class SpManager {
     public static final String SP_REFRESH_TOKEN_KEY = "refresh_token";
     public static final String SP_USER_NAME_KEY = "user_name";
     public static final String SP_USER_PWD_KEY = "user_pwd";
+    public static final String SP_USER_REMEMBER= "sp_user_remember";
     public static String getToken() {
-        //return (String) SpUtils.getParam(MyApplication.getInstance(), SP_TOKEN_KEY, "");
-        return "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImxvZ2luX3VzZXJfa2V5IjoiODc5OTY2ZmUtYzBkZC00MDI3LWFkOTItMmEyYTMyYmZkMGM0In0.zGcU4xKLg_HiaoyrCcqjU5THGU07d_cSYiE1UPRlCaM72h7iKQnQXRQqiyQidbtshf3NFZvHyBZrfUYCNhBY-A";
+        return (String) SpUtils.getParam(MyApplication.getInstance(), SP_TOKEN_KEY, "");
     }
 
 
@@ -54,6 +54,14 @@ public class SpManager {
             userPwd = "";
         }
         SpUtils.setParam(MyApplication.getInstance(), SP_USER_PWD_KEY, userPwd);
+    }
+
+    public static boolean getUserRemember() {
+        return (boolean) SpUtils.getParam(MyApplication.getInstance(), SP_USER_REMEMBER, false);
+    }
+
+    public static void setUserRemember(boolean userRemember) {
+        SpUtils.setParam(MyApplication.getInstance(), SP_USER_REMEMBER, userRemember);
     }
 
 }

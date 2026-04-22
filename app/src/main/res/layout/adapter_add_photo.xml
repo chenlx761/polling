@@ -35,7 +35,7 @@
             android:layout_height="24dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentTop="true"
-            android:src="@drawable/ic_delete"
+            android:src="@mipmap/icon_del"
             />
 
     </RelativeLayout>

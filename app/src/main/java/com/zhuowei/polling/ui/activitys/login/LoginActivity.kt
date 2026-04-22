@@ -50,11 +50,6 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
                 return@setOnClickListener
             }
 
-            if (MyApplication.getInstance().isLocationTest()) {
-                MainActivity.newInstance(this@LoginActivity)
-                finish()
-                return@setOnClickListener
-            }
 
             showLoading()
 
@@ -65,6 +60,7 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
                 SpManager.setUserName("")
                 SpManager.setUserPwd("")
             }
+            SpManager.setUserRemember(mBinding.cbRemember.isChecked)
 
             mViewModel!!.getTsId(
                 mBinding.etUsername.text.toString(), mBinding.etPassword.text.toString()
@@ -77,6 +73,7 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
             if (it != null) {
 
                 if (MyApplication.getInstance().isLocationTest()) {
+                    dismissDialog()
                     MainActivity.newInstance(this@LoginActivity)
                     finish()
                     return@observe
@@ -114,9 +111,10 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
     override fun setData() {
 
         if (BuildConfig.DEBUG) {
-            mBinding.etUsername.setText("sysadmin")
-            mBinding.etPassword.setText("123456")
+            mBinding.etUsername.setText("admin")
+            mBinding.etPassword.setText("admin123")
         }
+        mBinding.cbRemember.isChecked = SpManager.getUserRemember()
         if (!TextUtils.isEmpty(SpManager.getUserName()) && !TextUtils.isEmpty(SpManager.getUserPwd())) {
             mBinding.etUsername.setText(SpManager.getUserName())
             mBinding.etPassword.setText(SpManager.getUserPwd())
