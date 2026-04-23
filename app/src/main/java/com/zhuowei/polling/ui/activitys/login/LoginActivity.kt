@@ -52,12 +52,10 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
 
 
             showLoading()
-
+            SpManager.setUserName(mBinding.etUsername.text.toString())
             if (mBinding.cbRemember.isChecked) {
-                SpManager.setUserName(mBinding.etUsername.text.toString())
                 SpManager.setUserPwd(mBinding.etPassword.text.toString())
             } else {
-                SpManager.setUserName("")
                 SpManager.setUserPwd("")
             }
             SpManager.setUserRemember(mBinding.cbRemember.isChecked)
@@ -115,8 +113,10 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
             mBinding.etPassword.setText("admin123")
         }
         mBinding.cbRemember.isChecked = SpManager.getUserRemember()
-        if (!TextUtils.isEmpty(SpManager.getUserName()) && !TextUtils.isEmpty(SpManager.getUserPwd())) {
+        if (!TextUtils.isEmpty(SpManager.getUserName())) {
             mBinding.etUsername.setText(SpManager.getUserName())
+        }
+        if (!TextUtils.isEmpty(SpManager.getUserPwd())) {
             mBinding.etPassword.setText(SpManager.getUserPwd())
         }
 
