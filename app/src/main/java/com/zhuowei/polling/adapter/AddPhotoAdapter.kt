@@ -39,15 +39,15 @@ class AddPhotoAdapter(
                 onDeleteClickListener?.invoke(position)
             }
 
-            holder.cvItem.setOnClickListener(null)
         } else {
             holder.ivPhoto.visibility = View.GONE
             holder.ivDelete.visibility = View.GONE
             holder.ivAdd.visibility = View.VISIBLE
 
-            holder.cvItem.setOnClickListener {
-                mOnItemClickListener?.onClick(position, "", it)
-            }
+
+        }
+        holder.cvItem.setOnClickListener {
+            mOnItemClickListener?.onClick(position, mDatas[position], it)
         }
     }
 }

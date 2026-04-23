@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black">
+
+
+
+        <com.chenming.common.base.widget.MyTitleBar
+            android:id="@+id/my_title_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fitsSystemWindows="true"
+            android:background="#80000000"
+            app:titleBarLeftImg="@mipmap/top_back"
+            app:titleBarTitleColor="@color/white"
+            app:titleBarTitle="" />
+        <androidx.viewpager2.widget.ViewPager2
+            android:layout_below="@+id/my_title_bar"
+            android:id="@+id/view_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/black" />
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="40dp"
+            android:padding="12dp"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:background="@drawable/bg_black_radius_20" />
+
+    </RelativeLayout>
+</layout>

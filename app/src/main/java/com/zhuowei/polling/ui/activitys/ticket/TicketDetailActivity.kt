@@ -33,6 +33,7 @@ import com.zhuowei.polling.location.BaiDuLocationManager
 import com.zhuowei.polling.location.LocationCallBack
 import com.zhuowei.polling.location.LocationResult
 import com.zhuowei.polling.manager.UploadFileManager
+import com.zhuowei.polling.ui.activitys.image.ImagePreviewActivity
 import com.zhuowei.polling.utils.GetPhotoUtils.Companion.getPathFromUri
 import com.zhuowei.polling.utils.ImageWatermarkUtils
 import java.io.File
@@ -144,6 +145,11 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     override fun setObserveListener() {
         mViewModel.mUpdateFinish.observe(this) {
+            //删除文件
+            for (path in mAllPhotos.filter { it.isNotEmpty() }) {
+                val file = File(path)
+                if (file.exists()) file.delete()
+            }
             setResult(RESULT_OK, Intent())
             finish()
         }
@@ -231,7 +237,17 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             override fun onClick(position: Int, i: Any, view: View) {
                 if (mAllPhotos.getOrNull(position).isNullOrEmpty()) {
                     // 点击的是"添加照片"按钮
+                    if (mLocationResult == null) {
+                        ToastUtil.showShortToast(getString(R.string.location_hint))
+                        return@onClick
+                        return
+                    }
                     checkPermissionAndShowDialog()
+                } else {
+                    ImagePreviewActivity.newInstance(
+                        this@TicketDetailActivity,
+                        mAllPhotos.filter { it.isNotEmpty() }, position
+                    )
                 }
             }
         })
