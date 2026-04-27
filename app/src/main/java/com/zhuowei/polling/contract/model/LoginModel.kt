@@ -1,5 +1,6 @@
 package com.zhuowei.polling.contract.model
 
+import android.text.TextUtils
 import com.chenming.common.base.BaseModel
 import com.chenming.httprequest.http.RetrofitUtil
 import com.chenming.httprequest.http.bean.BaseBean
@@ -16,10 +17,13 @@ class LoginModel : BaseModel(), ILoginModel {
     ) {
 
 
-//        if (TextUtils.isEmpty(HttpConstants.HD_BASE_URL)) {
-//            callBack?.onRequestError("请先设置虎盾的baseUrl", null)
-//            return
-//        }
+        if (!MyApplication.getInstance().isLocationTest()) {
+            if (TextUtils.isEmpty(HttpConstants.HD_BASE_URL)) {
+                callBack?.onRequestError("", Throwable("请先设置虎盾的baseUrl"))
+                return
+            }
+
+        }
 
         addDisposable(
             RetrofitUtil.Builder(HttpConstants.GET_TS_ID_URL).addPara("username", userName)
