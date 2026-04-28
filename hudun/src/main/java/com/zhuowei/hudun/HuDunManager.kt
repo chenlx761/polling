@@ -74,7 +74,7 @@ class HuDunManager private constructor() {
     fun start(callBack: StartCallBack?) {
         ITVAPI.getMInstance(HuDunApplication.getInstance().application).start { code, message ->
             XLog.e("start  " + "code" + code + ":messgae" + message)
-            if (ErrorCode.SUCCESS == code) {
+            if (ErrorCode.SUCCESS == code || ErrorCode.SOME_ROUTE_OR_CLOUD_ABNORMAL==code) {
                 callBack?.onStartFinish()
             } else {
                 callBack?.onStartError(code, message)

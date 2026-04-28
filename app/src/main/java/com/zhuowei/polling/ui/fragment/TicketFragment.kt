@@ -81,7 +81,11 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
         mBinding!!.srlFlash.setOnLoadMoreListener {
             mViewModel!!.loadMoreTicketList()
         }
-        mViewModel!!.flashTicketList()
+        mBinding!!.srlFlash.postDelayed({
+            //vpn没有启动完 居然就让我进来这个界面了!!!
+            mViewModel!!.flashTicketList()
+        },500)
+
 
 
     }

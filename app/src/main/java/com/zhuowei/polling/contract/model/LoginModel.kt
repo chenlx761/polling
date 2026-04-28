@@ -26,10 +26,12 @@ class LoginModel : BaseModel(), ILoginModel {
         }
 
         addDisposable(
-            RetrofitUtil.Builder(HttpConstants.GET_TS_ID_URL).addPara("username", userName)
+            RetrofitUtil.Builder(HttpConstants.GET_TS_ID_URL)
+                .addPara("username", userName)
                 .addPara("password", pwd)
                 .addHeader("Host", HttpConstants.BASE_HOST)
-                .build().postJson(
+                .build()
+                .postJson(
                     LoginResult::class.java, object : OnHttpCallBack<BaseBean<LoginResult>> {
                         override fun onSuccessful(t: BaseBean<LoginResult>?) {
                             callBack?.onSuccessful(t)

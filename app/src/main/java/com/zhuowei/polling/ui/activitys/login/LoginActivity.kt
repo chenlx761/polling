@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.text.TextUtils
 import cn.tigersec.android.sdk.utils.ErrorCode
+import com.chenming.common.utils.ToastUtil
 import com.tencent.bugly.crashreport.CrashReport
 import com.zhuowei.hudun.HuDunManager
 import com.zhuowei.hudun.callback.InitFinishCallBack
@@ -162,7 +163,8 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
                     }
 
                     override fun onStartError(errorCode: Int, errorMsg: String?) {
-                        // TODO: 2020/9/16 错误处理
+                        // 2020/9/16 错误处理
+                        ToastUtil.showShortToast(errorMsg)
                         dismissDialog()
                     }
 

@@ -185,7 +185,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                     override fun onAllSuccessful(results: List<UploadFileResult>) {
                         XLog.e("完成咯")
                         mBean?.let { bean ->
-                            bean.images = TextUtils.join(",", results.map { it.url })
+                            bean.images = TextUtils.join(",", results.map { it.filePath })
                             bean.buildLocation = mLocationResult!!.address
                             bean.buildLocationCoord =
                                 "${mLocationResult!!.latitude},${mLocationResult!!.longitude}"
