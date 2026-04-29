@@ -143,6 +143,11 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     override fun getLayoutId(): Int = R.layout.activity_ticket_detail
 
 
+    override fun onDestroy() {
+        super.onDestroy()
+        BaiDuLocationManager.instance.release()
+    }
+
     override fun setObserveListener() {
         mViewModel.mUpdateFinish.observe(this) {
             //删除文件
@@ -156,7 +161,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     override fun setListener() {
-        getLocation()
+        mBinding!!.tvLocation.postDelayed({
+            getLocation()
+
+        }, 500)
 
         mBinding!!.myTitleBar.setLeftLayoutClickListener {
             finish()

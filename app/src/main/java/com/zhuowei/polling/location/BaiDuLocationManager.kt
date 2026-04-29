@@ -3,9 +3,6 @@ package com.zhuowei.polling.location
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.LocationManager
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.text.TextUtils
 import androidx.core.content.ContextCompat
 import com.baidu.location.BDAbstractLocationListener
@@ -79,6 +76,7 @@ class BaiDuLocationManager private constructor() {
         option.setIgnoreKillProcess(true) // 定位SDK内部优先级处理
         option.SetIgnoreCacheException(true) // 忽略缓存异常
         option.setWifiCacheTimeOut(5 * 60 * 1000) //  wifi缓存超时时间
+        option.setFirstLocType(LocationClientOption.FirstLocType.SPEED_IN_FIRST_LOC)
         option.setEnableSimulateGps(false) // 不允许模拟定位
         return option
     }
@@ -129,9 +127,7 @@ class BaiDuLocationManager private constructor() {
         })
 
         // 启动定位
-        if (!locationClient?.isStarted!!) {
-            locationClient?.start()
-        }
+        locationClient?.start()
 
 
     }
