@@ -19,7 +19,7 @@ class LoginModel : BaseModel(), ILoginModel {
 
         if (!MyApplication.getInstance().isLocationTest()) {
             if (TextUtils.isEmpty(HttpConstants.HD_BASE_URL)) {
-                callBack?.onRequestError("", Throwable("请先设置虎盾的baseUrl"))
+                callBack?.onRequestError("", Throwable("请先等待虎盾初始化完成"))
                 return
             }
 

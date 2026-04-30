@@ -121,14 +121,22 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
             mBinding.etPassword.setText(SpManager.getUserPwd())
         }
 
+        initHunDun()
+    }
+
+    private fun initHunDun(){
+        showLoading()
         HuDunManager.instance.initSDK(object : InitFinishCallBack {
             override fun onInitFinish(hudunBaseUrl: String?) {
+                dismissDialog()
                 HttpConstants.HD_BASE_URL = hudunBaseUrl
                 //虎盾初始化不知道为什么会把我的全部异常拦截覆盖了,只能在这里初始化
                 initCrash()
             }
 
             override fun onInitError(type: Int, errorCode: Int, errorMsg: String?) {
+                dismissDialog()
+                ToastUtil.showShortToast(errorMsg)
             }
 
         })

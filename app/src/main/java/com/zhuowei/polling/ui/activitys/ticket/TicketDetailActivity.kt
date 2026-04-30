@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.chenming.common.listener.OnItemClickListener
 import com.chenming.common.utils.AppManager
-import com.chenming.common.utils.TimeUtil
 import com.chenming.common.utils.ToastUtil
 import com.chenming.httprequest.XLog
 import com.zhuowei.polling.R
@@ -35,7 +34,6 @@ import com.zhuowei.polling.location.LocationResult
 import com.zhuowei.polling.manager.UploadFileManager
 import com.zhuowei.polling.ui.activitys.image.ImagePreviewActivity
 import com.zhuowei.polling.utils.GetPhotoUtils.Companion.getPathFromUri
-import com.zhuowei.polling.utils.ImageWatermarkUtils
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -74,15 +72,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private var mLocationResult: LocationResult? = null
 
 
-    private fun getWaterMark(): String {
-        var currentTime = TimeUtil.getCurrentTime()
-        if (mLocationResult != null) {
-            currentTime =
-                currentTime + "\n" + mLocationResult!!.address + "\n" + mLocationResult!!.latitude + "," + mLocationResult!!.longitude
-
-        }
-        return currentTime;
-    }
     // ========== ActivityResultLaunchers ==========
 
     /** 拍照：使用 TakePicture 契约，直接传入 Uri，返回是否成功 */
@@ -91,11 +80,8 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             if (success) {
                 mCurrentPhotoPath?.let { path ->
 
-                    val watermarkToCache = ImageWatermarkUtils.watermarkToCache(
-                        this, path, getWaterMark(),
-                    )
-                    if (watermarkToCache != null) addPhotoToList(watermarkToCache)
-                    else addPhotoToList(path)
+
+                    addPhotoToList(path)
                 }
             } else {
                 // 拍照取消或失败，清理临时文件
@@ -114,11 +100,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 result.data?.data?.let { uri ->
                     val path = getPathFromUri(uri)
                     if (path != null) {
-                        val watermarkToCache = ImageWatermarkUtils.watermarkToCache(
-                            this, path, getWaterMark(),
-                        )
-                        if (watermarkToCache != null) addPhotoToList(watermarkToCache)
-                        else addPhotoToList(path)
+                        addPhotoToList(path)
                     } else {
                         Toast.makeText(this, R.string.photo_select_failed, Toast.LENGTH_SHORT)
                             .show()
@@ -189,6 +171,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             UploadFileManager.uploadFileWithProgress(
                 AppManager.getAppManager().topActivity,
                 mAllPhotos.filter { it.isNotEmpty() },
+                mLocationResult,
                 object : UploadFileManager.OnUploadAllCallBack {
                     override fun onAllSuccessful(results: List<UploadFileResult>) {
                         XLog.e("完成咯")

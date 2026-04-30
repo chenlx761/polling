@@ -3,18 +3,23 @@ package com.zhuowei.polling.manager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.text.TextUtils
+import com.chenming.common.utils.TimeUtil
 import com.chenming.httprequest.XLog
 import com.chenming.httprequest.http.RetrofitUtil
 import com.chenming.httprequest.http.bean.BaseBean
 import com.chenming.httprequest.http.listener.OnHttpCallBack
+import com.zhuowei.polling.MyApplication
 import com.zhuowei.polling.beans.UploadFileResult
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.dialog.UploadFileProgressDialog
+import com.zhuowei.polling.location.LocationResult
+import com.zhuowei.polling.utils.ImageWatermarkUtils
 import java.io.File
 import java.io.FileOutputStream
 
 object UploadFileManager {
-
+    private var mLocationResult: LocationResult? = null
     interface OnUploadAllCallBack {
         fun onAllSuccessful(results: List<UploadFileResult>)
         fun onError(errorMsg: String, failedPaths: List<String>)
@@ -150,13 +155,14 @@ object UploadFileManager {
     fun uploadFileWithProgress(
         context: Context,
         paths: List<String>,
+        locationResult: LocationResult?,
         callBack: OnUploadAllCallBack
     ) {
         if (paths.isEmpty()) {
             callBack.onAllSuccessful(emptyList())
             return
         }
-
+        this.mLocationResult = locationResult
         val progressDialog = UploadFileProgressDialog(context)
         progressDialog.show()
 
@@ -197,6 +203,16 @@ object UploadFileManager {
         uploadFileInternal(paths, 0, results, failedPaths, callBack, progressDialog, compressedPaths)
     }
 
+    private fun getWaterMark(): String {
+        var currentTime = TimeUtil.getCurrentTime()
+        if (mLocationResult != null) {
+            currentTime =
+                currentTime + "\n" + mLocationResult!!.address + "\n" + mLocationResult!!.latitude + "," + mLocationResult!!.longitude
+
+        }
+        return currentTime;
+    }
+
     private fun uploadFileInternal(
         paths: List<String>,
         index: Int,
@@ -221,8 +237,19 @@ object UploadFileManager {
         // 更新进度弹窗
         progressDialog?.updateProgress(index + 1, paths.size)
 
+
+        val watermarkToCache = ImageWatermarkUtils.watermarkToCache(
+            MyApplication.getInstance(), paths[index], getWaterMark(),
+        )
+        var mPath="";
+        if (!TextUtils.isEmpty(watermarkToCache)){
+            mPath=watermarkToCache!!
+        }else{
+
+            mPath=paths[index]
+        }
         // 压缩图片
-        val uploadPath = compressImage(paths[index])
+        val uploadPath = compressImage(mPath)
         if (uploadPath != paths[index]) {
             compressedPaths.add(uploadPath)
         }
