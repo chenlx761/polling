@@ -14,7 +14,7 @@ import com.flyco.tablayout.listener.CustomTabEntity
 import com.flyco.tablayout.listener.OnTabSelectListener
 import com.zhuowei.polling.databinding.ActivityMainBinding
 import com.zhuowei.polling.ui.fragment.MyFragment
-import com.zhuowei.polling.ui.fragment.TicketFragment
+import com.zhuowei.polling.ui.fragment.TicketParentFragment
 import com.zhuowei.polling.ui.fragment.TreeDemoFragment
 
 
@@ -83,7 +83,7 @@ class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
     }
 
     private fun initFragmentAndTag() {
-        val ticketFragment = TicketFragment.newInstance()
+        val ticketFragment = TicketParentFragment.newInstance()
         val myFragment = MyFragment.newInstance()
         val treeDemoFragment = TreeDemoFragment.newInstance()
 

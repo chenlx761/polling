@@ -21,12 +21,15 @@ class MainVm : BaseViewModel<IMainModel>(), IMainVm {
     }
 
 
-    override fun flashTicketList() {
+    override fun flashTicketList(ticketStaus: String, account: String, address: String) {
 
         mCurPage = 1
         mModel.getTicketList(
             mCurPage,
             mPageSize,
+            ticketStaus,
+            account,
+            address,
             object :
                 BaseCallBack<BaseBean<List<TicketListBean.RowsDTO>>>(HttpConstants.GET_TICKET_LIST_URL) {
                 override fun onSuccessful(t: BaseBean<List<TicketListBean.RowsDTO>>?) {
@@ -43,8 +46,7 @@ class MainVm : BaseViewModel<IMainModel>(), IMainVm {
                 }
 
                 override fun onDataError(
-                    errorMsg: String?,
-                    t: BaseBean<List<TicketListBean.RowsDTO>>?
+                    errorMsg: String?, t: BaseBean<List<TicketListBean.RowsDTO>>?
                 ) {
                     super.onDataError(errorMsg, t)
                     mStopFlash.postValue(true)
@@ -53,11 +55,14 @@ class MainVm : BaseViewModel<IMainModel>(), IMainVm {
             })
     }
 
-    override fun loadMoreTicketList() {
+    override fun loadMoreTicketList(ticketStaus: String, account: String, address: String) {
         mCurPage++
         mModel.getTicketList(
             mCurPage,
             mPageSize,
+            ticketStaus,
+            account,
+            address,
             object :
                 BaseCallBack<BaseBean<List<TicketListBean.RowsDTO>>>(HttpConstants.GET_TICKET_LIST_URL) {
 
@@ -74,8 +79,7 @@ class MainVm : BaseViewModel<IMainModel>(), IMainVm {
                 }
 
                 override fun onDataError(
-                    errorMsg: String?,
-                    t: BaseBean<List<TicketListBean.RowsDTO>>?
+                    errorMsg: String?, t: BaseBean<List<TicketListBean.RowsDTO>>?
                 ) {
                     super.onDataError(errorMsg, t)
                     mStopLoadMore.postValue(true)

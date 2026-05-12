@@ -81,4 +81,9 @@ class HuDunManager private constructor() {
             }
         }
     }
+
+
+    fun release(){
+        ITVAPI.getMInstance(HuDunApplication.getInstance().application).release()
+    }
 }

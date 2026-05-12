@@ -1,6 +1,7 @@
 package com.zhuowei.polling.ui.fragment
 
 import android.app.Activity
+import android.os.Bundle
 import android.view.View
 import androidx.activity.result.ActivityResult
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,10 +18,17 @@ import com.zhuowei.polling.ui.activitys.ticket.TicketDetailActivity
 class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
 
     private var mMainOrderAdapter: MainOrderAdapter? = null
+    private var mTicketStaus: String = "0"
 
     companion object {
-        fun newInstance(): TicketFragment {
-            return TicketFragment()
+        val Ticket_Staus_Key = "ticketStaus"
+        fun newInstance(ticketStaus: String): TicketFragment {
+            //写入参数
+            val bundle = Bundle()
+            bundle.putString(Ticket_Staus_Key, ticketStaus)
+            return TicketFragment().apply {
+                arguments = bundle
+            }
         }
     }
 
@@ -29,6 +37,8 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
     }
 
     override fun initData() {
+        //获取参数
+        mTicketStaus = arguments?.getString(Ticket_Staus_Key)!!
     }
 
     override fun initViewModel(): MainVm {
@@ -62,7 +72,7 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
                     getActivityLauncher(object : OnActivityResultListener {
                         override fun onActivityResult(result: ActivityResult?) {
                             if (result != null && result.resultCode == Activity.RESULT_OK) {
-                                mViewModel!!.flashTicketList()
+                                mViewModel!!.flashTicketList(mTicketStaus, "", "")
                             }
                         }
 
@@ -75,17 +85,16 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
 
 
         mBinding!!.srlFlash.setOnRefreshListener {
-            mViewModel!!.flashTicketList()
+            mViewModel!!.flashTicketList(mTicketStaus, "", "")
         }
 
         mBinding!!.srlFlash.setOnLoadMoreListener {
-            mViewModel!!.loadMoreTicketList()
+            mViewModel!!.loadMoreTicketList(mTicketStaus, "", "")
         }
         mBinding!!.srlFlash.postDelayed({
             //vpn没有启动完 居然就让我进来这个界面了!!!
-            mViewModel!!.flashTicketList()
-        },500)
-
+            mViewModel!!.flashTicketList(mTicketStaus, "", "")
+        }, 500)
 
 
     }

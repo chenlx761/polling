@@ -13,14 +13,19 @@ class MainModel : BaseModel(), IMainModel {
     override fun getTicketList(
         page: Int,
         size: Int,
+        ticketStaus: String, account: String, address: String,
         callBack: OnHttpCallBack<BaseBean<List<TicketListBean.RowsDTO>?>?>
     ) {
+
         addDisposable(
             RetrofitUtil.Builder(HttpConstants.GET_TICKET_LIST_URL)
-            .addPara("pageNum", page)
-            .addPara("pageSize", size)
-            .build()
-            .getList(TicketListBean.RowsDTO::class.java, callBack)
+                .addPara("pageNum", page)
+                .addPara("pageSize", size)
+                .addPara("surveyStatus", ticketStaus)
+                .addPara("userName", account)
+                .addPara("userAddress", address)
+                .build()
+                .getList(TicketListBean.RowsDTO::class.java, callBack)
         )
     }
 
