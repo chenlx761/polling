@@ -26,6 +26,7 @@
     <string name="illegal_backfill_title">两违回填</string>
     <string name="illegal_info">两违信息</string>
     <string name="user_address">用户地址</string>
+    <string name="address">地址</string>
     <string name="scene_info">现场信息</string>
     <string name="illegal_building_location">违章建筑定位</string>
     <string name="take_photo_hint">请对现场进行拍照</string>
@@ -39,6 +40,7 @@
     <string name="select_photo_title">选择图片</string>
     <string name="not_work">未采集</string>
     <string name="finish_work">已采集</string>
+    <string name="search">搜索</string>
 
     <!-- 图片选择相关 -->
     <string name="photo_count_limit">最多只能选择9张图片</string>

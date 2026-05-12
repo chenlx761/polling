@@ -3,6 +3,7 @@ package com.zhuowei.polling.ui.fragment
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
 import androidx.activity.result.ActivityResult
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.chenming.common.base.BaseFragment
@@ -19,6 +20,8 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
 
     private var mMainOrderAdapter: MainOrderAdapter? = null
     private var mTicketStaus: String = "0"
+    private var mSearchType: Int = 0 // 0=用户名, 1=地址
+    private var mIsInitializing: Boolean = true
 
     companion object {
         val Ticket_Staus_Key = "ticketStaus"
@@ -52,6 +55,13 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
             adapter = mMainOrderAdapter
             layoutManager = LinearLayoutManager(requireActivity())
         }
+
+        val searchTypes = arrayOf(getString(R.string.user_name_label), getString(R.string.address))
+        val adapter = android.widget.ArrayAdapter(
+            requireContext(), android.R.layout.simple_spinner_item, searchTypes
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        mBinding!!.spSearchType.adapter = adapter
     }
 
     override fun setListener() {
@@ -72,31 +82,62 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
                     getActivityLauncher(object : OnActivityResultListener {
                         override fun onActivityResult(result: ActivityResult?) {
                             if (result != null && result.resultCode == Activity.RESULT_OK) {
-                                mViewModel!!.flashTicketList(mTicketStaus, "", "")
+                                performSearch()
                             }
                         }
 
-                    })!!,
-                    requireActivity(), i as TicketListBean.RowsDTO
+                    })!!, requireActivity(), i as TicketListBean.RowsDTO
                 )
             }
 
         })
 
+        mBinding!!.spSearchType.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?, view: View?, position: Int, id: Long
+                ) {
+                    mSearchType = position
+                    if (!mIsInitializing) {
+                        performSearch()
+                    }
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+
+
+        mBinding!!.tvSearch.setOnClickListener {
+            performSearch()
+        }
 
         mBinding!!.srlFlash.setOnRefreshListener {
-            mViewModel!!.flashTicketList(mTicketStaus, "", "")
+            performSearch()
         }
 
         mBinding!!.srlFlash.setOnLoadMoreListener {
-            mViewModel!!.loadMoreTicketList(mTicketStaus, "", "")
+            performLoadMore()
         }
         mBinding!!.srlFlash.postDelayed({
-            //vpn没有启动完 居然就让我进来这个界面了!!!
             mViewModel!!.flashTicketList(mTicketStaus, "", "")
+            mIsInitializing = false
         }, 500)
 
 
+    }
+
+    private fun performSearch() {
+        val keyword = mBinding!!.etSearch.text.toString().trim()
+        val account = if (mSearchType == 0) keyword else ""
+        val address = if (mSearchType == 1) keyword else ""
+        mViewModel!!.flashTicketList(mTicketStaus, account, address)
+    }
+
+    private fun performLoadMore() {
+        val keyword = mBinding!!.etSearch.text.toString().trim()
+        val account = if (mSearchType == 0) keyword else ""
+        val address = if (mSearchType == 1) keyword else ""
+        mViewModel!!.loadMoreTicketList(mTicketStaus, account, address)
     }
 
 

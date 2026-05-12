@@ -38,6 +38,7 @@
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:name=".MainActivity"
+            android:windowSoftInputMode="adjustNothing"
             android:theme="@style/MyAppTheme" />
         <activity
             android:exported="false"

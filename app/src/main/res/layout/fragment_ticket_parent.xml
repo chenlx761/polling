@@ -10,9 +10,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <com.chenming.common.base.widget.MyTitleBar
+            android:id="@+id/my_title_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fitsSystemWindows="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:titleBarBackground="@color/white"
+            app:titleBarTitle="@string/main_ticket" />
+
 
         <com.google.android.material.tabs.TabLayout
-            android:fitsSystemWindows="true"
             android:id="@+id/tabLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -22,7 +30,7 @@
             app:tabIndicatorColor="@color/primary"
             app:tabSelectedTextColor="@color/primary"
             app:tabTextColor="@color/gray_600"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/my_title_bar"
             app:tabIndicatorFullWidth="false"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
