@@ -26,6 +26,7 @@ import com.zhuowei.polling.adapter.AddPhotoAdapter
 import com.zhuowei.polling.base.MyBaseActivity
 import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.beans.UploadFileResult
+import com.zhuowei.polling.constants.NormalConstants
 import com.zhuowei.polling.contract.vm.TicketDetailVm
 import com.zhuowei.polling.databinding.ActivityTicketDetailBinding
 import com.zhuowei.polling.location.BaiDuLocationManager
@@ -43,33 +44,34 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     companion object {
         private const val MAX_PHOTO_COUNT = 9
-        private const val BEAN_KEY = "bean"
+        private const val Ticket_Id = "Ticket_Id"
+        private const val Ticket_Status = "Ticket_Status"
 
-        fun newInstance(context: Context, bean: TicketListBean.RowsDTO) {
-            val intent = Intent(context, TicketDetailActivity::class.java)
-            intent.putExtra(BEAN_KEY, bean)
-            context.startActivity(intent)
-        }
 
 
         @JvmStatic
         fun newIntent(
             myActivityLauncher: ActivityResultLauncher<Intent>,
             context: Context,
-            bean: TicketListBean.RowsDTO
+            ticketId: String?,
+            ticketStatus: String?
         ) {
             val intent = Intent(context, TicketDetailActivity::class.java)
-            intent.putExtra(BEAN_KEY, bean)
+            intent.putExtra(Ticket_Id, ticketId)
+            intent.putExtra(Ticket_Status, ticketStatus)
             //context.startActivity(intent)
             myActivityLauncher.launch(intent)
         }
     }
+
 
     private var mBean: TicketListBean.RowsDTO? = null
     private val mAllPhotos = ObservableArrayList<String>()
     private var mAddPhotoAdapter: AddPhotoAdapter? = null
     private var mCurrentPhotoPath: String? = null
     private var mLocationResult: LocationResult? = null
+    private var mTicketStatus: String? = null
+    private var mTicketId: String? = null
 
 
     // ========== ActivityResultLaunchers ==========
@@ -140,20 +142,23 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             setResult(RESULT_OK, Intent())
             finish()
         }
+
+        mViewModel.mDetail.observe(this) {
+            mBean = it
+            setData2View()
+        }
     }
 
     override fun setListener() {
-        mBinding!!.tvLocation.postDelayed({
-            getLocation()
 
-        }, 500)
 
         mBinding!!.myTitleBar.setLeftLayoutClickListener {
             finish()
         }
 
         mBinding!!.tvLocation.setOnClickListener {
-            getLocation()
+            if (mTicketStatus == NormalConstants.Ticket_Status_NOT_START)
+                getLocation()
         }
 
         mBinding!!.btnSubmit.setOnClickListener {
@@ -191,10 +196,14 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
                 })
         }
+
+
+        mViewModel.getTicketDetail(mTicketId)
     }
 
     override fun initData() {
-        mBean = intent.getSerializableExtra(BEAN_KEY) as? TicketListBean.RowsDTO
+        mTicketStatus = intent.getStringExtra(Ticket_Status)
+        mTicketId = intent.getStringExtra(Ticket_Id)
     }
 
     override fun initViewModel(): TicketDetailVm = createViewModel(TicketDetailVm::class.java)
@@ -203,18 +212,34 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         super.onResume()
     }
 
-    override fun setData() {
-
+    private fun setData2View() {
         mBean?.let {
             mBinding!!.etAddress.setText(it.userAddress)
             mBinding!!.etName.setText(it.userName)
             mBinding!!.etAccount.setText(it.userNo)
+            mAllPhotos.addAll(it.serverPhotosList)
+
+            if (TextUtils.isEmpty(it.buildLocation)) {
+                mBinding!!.tvLocation.postDelayed({
+                    getLocation()
+                }, 500)
+            } else {
+                mBinding!!.tvLocation.text = it.buildLocation
+            }
+        }
+    }
+
+    override fun setData() {
+
+        if (mTicketStatus == NormalConstants.Ticket_Status_NOT_START) {
+            // 初始添加一个占位项（"添加照片"按钮）
+            mAllPhotos.add("")
+        } else {
+            //完成直接隐藏掉先
+            mBinding.llBottom.visibility = View.GONE
         }
 
-
-        // 初始添加一个占位项（"添加照片"按钮）
-        mAllPhotos.add("")
-        mAddPhotoAdapter = AddPhotoAdapter(this, mAllPhotos, MAX_PHOTO_COUNT)
+        mAddPhotoAdapter = AddPhotoAdapter(this, mAllPhotos, mTicketStatus!!, MAX_PHOTO_COUNT)
 
         mBinding!!.rvPhoto.apply {
             adapter = mAddPhotoAdapter

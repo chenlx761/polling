@@ -37,7 +37,15 @@ public class TicketListBean {
         private String userAddress;
         private String buildLocation;
         private String buildLocationCoord;
+        private List<String> serverPhotosList;
 
+        public List<String> getServerPhotosList() {
+            return serverPhotosList;
+        }
+
+        public void setServerPhotosList(List<String> serverPhotosList) {
+            this.serverPhotosList = serverPhotosList;
+        }
 
         public String getBuildLocationCoord() {
             return buildLocationCoord;

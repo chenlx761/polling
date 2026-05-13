@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 第一层：你原来的白色背景 -->
+    <item android:drawable="@drawable/bg_card_white" />
+
+    <!-- 第二层：箭头图标 -->
+    <item
+        android:gravity="end|center_vertical"
+        android:right="10dp"> <!-- 控制箭头距离右边的距离 -->
+        <bitmap
+            android:src="@drawable/abc_spinner_mtrl_am_alpha"
+            android:tint="#999999" /> <!-- 可以通过 tint 修改箭头颜色 -->
+    </item>
+</layer-list>

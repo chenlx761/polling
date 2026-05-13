@@ -10,6 +10,17 @@ import com.zhuowei.polling.contract.TicketDetailContract
 import java.util.Objects
 
 class TicketDetailModel : BaseModel(), TicketDetailContract.ITicketDetailModel {
+    override fun getTicketDetail(
+        ticketId: String?,
+        callBack: OnHttpCallBack<BaseBean<TicketListBean.RowsDTO?>?>?
+    ) {
+        addDisposable(
+            RetrofitUtil.Builder(HttpConstants.GET_TICKET_DETAIL_URL)
+                .addPara("id", ticketId)
+                .build().get(TicketListBean.RowsDTO::class.java, callBack)
+        )
+    }
+
     override fun postTicketDetail(
         bean: TicketListBean.RowsDTO?,
         callBack: OnHttpCallBack<BaseBean<Objects?>?>?

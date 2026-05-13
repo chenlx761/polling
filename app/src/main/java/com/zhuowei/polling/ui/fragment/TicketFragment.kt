@@ -1,8 +1,11 @@
 package com.zhuowei.polling.ui.fragment
 
 import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import androidx.activity.result.ActivityResult
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -86,7 +89,10 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
                             }
                         }
 
-                    })!!, requireActivity(), i as TicketListBean.RowsDTO
+                    })!!,
+                    requireActivity(),
+                    (i as TicketListBean.RowsDTO).id.toString(),
+                    mTicketStaus
                 )
             }
 
@@ -107,8 +113,19 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
             }
 
 
-        mBinding!!.tvSearch.setOnClickListener {
-            performSearch()
+        mBinding!!.etSearch.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                performSearch()
+
+                // 隐藏软键盘
+                val imm =
+                    requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(v.windowToken, 0)
+
+                true // 返回 true 表示我们已经处理了该事件
+            } else {
+                false
+            }
         }
 
         mBinding!!.srlFlash.setOnRefreshListener {

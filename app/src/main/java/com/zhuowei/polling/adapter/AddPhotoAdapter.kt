@@ -7,14 +7,17 @@ import androidx.databinding.ObservableArrayList
 import com.chenming.common.utils.ImageLoaderUtil
 import com.example.hudundemo.base.NormalAdapter
 import com.zhuowei.polling.R
+import com.zhuowei.polling.constants.NormalConstants
 import com.zhuowei.polling.databinding.AdapterAddPhotoBinding
 
 class AddPhotoAdapter(
     context: Context,
     datas: ObservableArrayList<String>,
+    var status: String,
     private val maxCount: Int = 9,
     resId: Int = R.layout.adapter_add_photo
 ) : NormalAdapter<String, AdapterAddPhotoBinding>(context, resId, datas) {
+
 
     private var onDeleteClickListener: ((Int) -> Unit)? = null
 
@@ -34,7 +37,7 @@ class AddPhotoAdapter(
             holder.ivAdd.visibility = View.GONE
 
 
-            ImageLoaderUtil.getInstance().loadImg(holder.ivPhoto,mDatas[position])
+            ImageLoaderUtil.getInstance().loadImg(holder.ivPhoto, mDatas[position])
             holder.ivDelete.setOnClickListener {
                 onDeleteClickListener?.invoke(position)
             }
@@ -45,6 +48,10 @@ class AddPhotoAdapter(
             holder.ivAdd.visibility = View.VISIBLE
 
 
+        }
+
+        if (status == NormalConstants.Ticket_Status_FINISH) {
+            holder.ivDelete.visibility = View.GONE
         }
         holder.cvItem.setOnClickListener {
             mOnItemClickListener?.onClick(position, mDatas[position], it)
