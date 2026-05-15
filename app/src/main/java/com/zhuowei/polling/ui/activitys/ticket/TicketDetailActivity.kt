@@ -376,14 +376,16 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun showPhotoChoiceDialog() {
-        val options = arrayOf(getString(R.string.take_photo), getString(R.string.select_photo))
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle(getString(R.string.select_photo_title)).setItems(options) { _, which ->
-                when (which) {
-                    0 -> takePhoto()
-                    1 -> pickFromGallery()
-                }
-            }.show()
+        //只能拍照咯
+        takePhoto()
+//        val options = arrayOf(getString(R.string.take_photo), getString(R.string.select_photo))
+//        androidx.appcompat.app.AlertDialog.Builder(this)
+//            .setTitle(getString(R.string.select_photo_title)).setItems(options) { _, which ->
+//                when (which) {
+//                    0 -> takePhoto()
+//                    1 -> pickFromGallery()
+//                }
+//            }.show()
     }
 
     // ========== 拍照 ==========
