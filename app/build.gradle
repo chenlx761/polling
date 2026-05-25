@@ -29,7 +29,7 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "ShuZhiBaoLian_${variant.versionName}.apk"
+            outputFileName = "CaiJiGongJu_${variant.versionName}.apk"
         }
     }
 

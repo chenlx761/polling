@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">数智葆廉</string>
+    <string name="app_name">采集工具</string>
     <string name="login_title">存量建筑照片及定位采集系统</string>
     <string name="permission_tip">软件正常使用需要以下权限</string>
     <string name="main_ticket">台账</string>
