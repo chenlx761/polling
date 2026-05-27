@@ -26,7 +26,6 @@ import com.zhuowei.polling.adapter.AddPhotoAdapter
 import com.zhuowei.polling.base.MyBaseActivity
 import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.beans.UploadFileResult
-import com.zhuowei.polling.constants.NormalConstants
 import com.zhuowei.polling.contract.vm.TicketDetailVm
 import com.zhuowei.polling.databinding.ActivityTicketDetailBinding
 import com.zhuowei.polling.location.BaiDuLocationManager
@@ -46,7 +45,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         private const val MAX_PHOTO_COUNT = 9
         private const val Ticket_Id = "Ticket_Id"
         private const val Ticket_Status = "Ticket_Status"
-
 
 
         @JvmStatic
@@ -157,8 +155,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
 
         mBinding!!.tvLocation.setOnClickListener {
-            if (mTicketStatus == NormalConstants.Ticket_Status_NOT_START)
-                getLocation()
+            getLocation()
         }
 
         mBinding!!.btnSubmit.setOnClickListener {
@@ -177,10 +174,12 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 AppManager.getAppManager().topActivity,
                 mAllPhotos.filter { it.isNotEmpty() },
                 mLocationResult,
+                mBean,
                 object : UploadFileManager.OnUploadAllCallBack {
                     override fun onAllSuccessful(results: List<UploadFileResult>) {
                         XLog.e("完成咯")
                         mBean?.let { bean ->
+                            bean.remark = mBinding!!.etRemark.text.toString()
                             bean.images = TextUtils.join(",", results.map { it.filePath })
                             bean.buildLocation = mLocationResult!!.address
                             bean.buildLocationCoord =
@@ -215,31 +214,33 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private fun setData2View() {
         mBean?.let {
             mBinding!!.etAddress.setText(it.userAddress)
+            mBinding!!.etArea.setText(it.areaCompany)
             mBinding!!.etName.setText(it.userName)
             mBinding!!.etAccount.setText(it.userNo)
+            mBinding!!.etRemark.setText(it.remark)
             mAllPhotos.addAll(it.serverPhotosList)
-
+            // 初始添加一个占位项（"添加照片"按钮）
+            mAllPhotos.add("")
             if (TextUtils.isEmpty(it.buildLocation)) {
                 mBinding!!.tvLocation.postDelayed({
                     getLocation()
                 }, 500)
             } else {
-                mBinding!!.tvLocation.text = it.buildLocation
+                mLocationResult = LocationResult(
+                    it.buildLocationCoord.split(",")[0].toDouble(),
+                    it.buildLocationCoord.split(",")[1].toDouble(),
+                    it.buildLocation,
+                    ""
+                )
+                mBinding!!.tvLocation.text = it.buildLocationCoord
             }
         }
     }
 
     override fun setData() {
 
-        if (mTicketStatus == NormalConstants.Ticket_Status_NOT_START) {
-            // 初始添加一个占位项（"添加照片"按钮）
-            mAllPhotos.add("")
-        } else {
-            //完成直接隐藏掉先
-            mBinding.llBottom.visibility = View.GONE
-        }
 
-        mAddPhotoAdapter = AddPhotoAdapter(this, mAllPhotos, mTicketStatus!!, MAX_PHOTO_COUNT)
+        mAddPhotoAdapter = AddPhotoAdapter(this, mAllPhotos, MAX_PHOTO_COUNT)
 
         mBinding!!.rvPhoto.apply {
             adapter = mAddPhotoAdapter
@@ -261,8 +262,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                     checkPermissionAndShowDialog()
                 } else {
                     ImagePreviewActivity.newInstance(
-                        this@TicketDetailActivity,
-                        mAllPhotos.filter { it.isNotEmpty() }, position
+                        this@TicketDetailActivity, mAllPhotos.filter { it.isNotEmpty() }, position
                     )
                 }
             }
@@ -280,8 +280,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         BaiDuLocationManager.instance.requestLocation(this, object : LocationCallBack {
             override fun onLocationSuccess(result: LocationResult) {
                 XLog.e("定位成功", result.toString())
-                mBinding.tvLocation.text = result.address
                 mLocationResult = result
+                mBinding.tvLocation.text = "${result.latitude},${result.longitude}"
+
                 dismissDialog()
             }
 
@@ -335,6 +336,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         if (removedPath.isNotEmpty()) {
             // 仅删除本应用外部存储目录下的临时文件，不删除相册原文件
             try {
+                if (removedPath.startsWith("http")) {
+                    return
+                }
                 val file = File(removedPath)
                 val appStorageDir =
                     getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath

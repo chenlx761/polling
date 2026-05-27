@@ -10,16 +10,21 @@ import com.chenming.httprequest.http.RetrofitUtil
 import com.chenming.httprequest.http.bean.BaseBean
 import com.chenming.httprequest.http.listener.OnHttpCallBack
 import com.zhuowei.polling.MyApplication
+import com.zhuowei.polling.R
+import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.beans.UploadFileResult
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.dialog.UploadFileProgressDialog
 import com.zhuowei.polling.location.LocationResult
 import com.zhuowei.polling.utils.ImageWatermarkUtils
+import com.zhuowei.polling.utils.SpManager
 import java.io.File
 import java.io.FileOutputStream
 
 object UploadFileManager {
     private var mLocationResult: LocationResult? = null
+    private var mBean: TicketListBean.RowsDTO? = null
+
     interface OnUploadAllCallBack {
         fun onAllSuccessful(results: List<UploadFileResult>)
         fun onError(errorMsg: String, failedPaths: List<String>)
@@ -29,14 +34,19 @@ object UploadFileManager {
     object CompressConfig {
         /** 最大宽度（像素），超过则等比缩放 */
         const val MAX_WIDTH = 1080
+
         /** 最大高度（像素），超过则等比缩放 */
         const val MAX_HEIGHT = 1920
+
         /** 压缩质量 0-100，数值越小文件越小、画质越低 */
         const val QUALITY = 80
+
         /** 压缩后输出格式 */
         val FORMAT: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG
+
         /** 压缩后文件后缀 */
         const val SUFFIX = ".jpg"
+
         /** 支持的图片扩展名（小写） */
         val IMAGE_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp", "bmp")
     }
@@ -138,7 +148,8 @@ object UploadFileManager {
         paths.forEach { path ->
             if (path.contains("compress_temp")) {
                 try {
-                    File(path).delete()
+                    if (!path.startsWith("http"))
+                        File(path).delete()
                 } catch (e: Exception) {
                     XLog.e("cleanCompressTempFiles error: ${e.message}")
                 }
@@ -156,6 +167,7 @@ object UploadFileManager {
         context: Context,
         paths: List<String>,
         locationResult: LocationResult?,
+        bean: TicketListBean.RowsDTO?,
         callBack: OnUploadAllCallBack
     ) {
         if (paths.isEmpty()) {
@@ -163,6 +175,7 @@ object UploadFileManager {
             return
         }
         this.mLocationResult = locationResult
+        this.mBean = bean
         val progressDialog = UploadFileProgressDialog(context)
         progressDialog.show()
 
@@ -200,14 +213,30 @@ object UploadFileManager {
         val results = mutableListOf<UploadFileResult>()
         val failedPaths = mutableListOf<String>()
         val compressedPaths = mutableListOf<String>()
-        uploadFileInternal(paths, 0, results, failedPaths, callBack, progressDialog, compressedPaths)
+        uploadFileInternal(
+            paths,
+            0,
+            results,
+            failedPaths,
+            callBack,
+            progressDialog,
+            compressedPaths
+        )
     }
 
     private fun getWaterMark(): String {
         var currentTime = TimeUtil.getCurrentTime()
         if (mLocationResult != null) {
             currentTime =
-                currentTime + "\n" + mLocationResult!!.address + "\n" + mLocationResult!!.latitude + "," + mLocationResult!!.longitude
+                currentTime + "\n" +
+                        mLocationResult!!.address + "\n" +
+                        mLocationResult!!.latitude + "," + mLocationResult!!.longitude + "\n" +
+                        MyApplication.getInstance()
+                            .getString(R.string.address) + ":" + mBean!!.userAddress + "\n" +
+                        MyApplication.getInstance()
+                            .getString(R.string.account_number) + ":" + mBean!!.userNo + "\n" +
+                        MyApplication.getInstance()
+                            .getString(R.string.take_account) + ":" + SpManager.getUserName()
 
         }
         return currentTime;
@@ -237,16 +266,33 @@ object UploadFileManager {
         // 更新进度弹窗
         progressDialog?.updateProgress(index + 1, paths.size)
 
+        if (paths[index].startsWith("http")) {
+            val uploadFileResult = UploadFileResult()
+            uploadFileResult.filePath = paths[index].replace(HttpConstants.BASE_URL, "")
+            uploadFileResult.url = paths[index]
+            results.add(uploadFileResult)
+            // 上传下一个
+            uploadFileInternal(
+                paths,
+                index + 1,
+                results,
+                failedPaths,
+                callBack,
+                progressDialog,
+                compressedPaths
+            )
+            return
+        }
 
         val watermarkToCache = ImageWatermarkUtils.watermarkToCache(
             MyApplication.getInstance(), paths[index], getWaterMark(),
         )
-        var mPath="";
-        if (!TextUtils.isEmpty(watermarkToCache)){
-            mPath=watermarkToCache!!
-        }else{
+        var mPath = "";
+        if (!TextUtils.isEmpty(watermarkToCache)) {
+            mPath = watermarkToCache!!
+        } else {
 
-            mPath=paths[index]
+            mPath = paths[index]
         }
         // 压缩图片
         val uploadPath = compressImage(mPath)
@@ -264,7 +310,15 @@ object UploadFileManager {
                         XLog.e("uploadFile onSuccessful:${t!!.data.url}")
                         t?.data?.let { results.add(it) }
                         // 上传下一个
-                        uploadFileInternal(paths, index + 1, results, failedPaths, callBack, progressDialog, compressedPaths)
+                        uploadFileInternal(
+                            paths,
+                            index + 1,
+                            results,
+                            failedPaths,
+                            callBack,
+                            progressDialog,
+                            compressedPaths
+                        )
                     }
 
                     override fun onDataError(
@@ -274,7 +328,15 @@ object UploadFileManager {
                         XLog.e("uploadFile onDataError: ${paths[index]}, errorMsg: $errorMsg")
                         failedPaths.add(paths[index])
                         // 继续上传下一个
-                        uploadFileInternal(paths, index + 1, results, failedPaths, callBack, progressDialog, compressedPaths)
+                        uploadFileInternal(
+                            paths,
+                            index + 1,
+                            results,
+                            failedPaths,
+                            callBack,
+                            progressDialog,
+                            compressedPaths
+                        )
                     }
 
                     override fun onRequestError(
@@ -284,7 +346,15 @@ object UploadFileManager {
                         XLog.e("uploadFile onRequestError: ${paths[index]}, errorMsg: $errorMsg")
                         failedPaths.add(paths[index])
                         // 继续上传下一个
-                        uploadFileInternal(paths, index + 1, results, failedPaths, callBack, progressDialog, compressedPaths)
+                        uploadFileInternal(
+                            paths,
+                            index + 1,
+                            results,
+                            failedPaths,
+                            callBack,
+                            progressDialog,
+                            compressedPaths
+                        )
                     }
                 })
     }

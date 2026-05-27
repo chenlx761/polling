@@ -63,7 +63,36 @@
                             android:textColor="#232323"
                             android:textSize="21sp"
                             android:textStyle="bold" />
+                        <!-- 用户地址 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="64dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
+                            <TextView
+                                android:layout_width="90dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/belonging_area"
+                                android:textColor="@color/text_color333"
+                                android:textSize="16sp" />
+
+                            <EditText
+                                android:clickable="false"
+                                android:enabled="false"
+                                android:id="@+id/et_area"
+                                android:background="@null"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:textColor="@color/text_color333"
+                                android:textSize="16sp" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0.5dp"
+                            android:background="#EEEEEE" />
                         <!-- 用户地址 -->
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -185,7 +214,7 @@
                             android:textSize="21sp"
                             android:textStyle="bold" />
 
-                        <!-- 定位 -->
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="64dp"
@@ -221,6 +250,34 @@
                             android:layout_height="0.5dp"
                             android:background="#EEEEEE" />
 
+                        <!-- 备注 -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="64dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="120dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/remark"
+                                android:textColor="@color/text_color333"
+                                android:textSize="19sp" />
+
+                            <EditText
+                                android:gravity="center_vertical|end"
+                                android:id="@+id/et_remark"
+                                android:background="@null"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/text_color333"
+                                android:textSize="16sp" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="0.5dp"
+                            android:background="#EEEEEE" />
                         <!-- 拍照 -->
                         <TextView
                             android:layout_width="wrap_content"

@@ -37,10 +37,20 @@ public class TicketListBean {
         private String userAddress;
         private String buildLocation;
         private String buildLocationCoord;
+        private String remark;
         private List<String> serverPhotosList;
 
         public List<String> getServerPhotosList() {
             return serverPhotosList;
+        }
+
+
+        public String getRemark() {
+            return remark;
+        }
+
+        public void setRemark(String remark) {
+            this.remark = remark;
         }
 
         public void setServerPhotosList(List<String> serverPhotosList) {
