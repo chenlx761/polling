@@ -27,6 +27,8 @@
     <string name="illegal_info">台账信息</string>
     <string name="user_address">地址</string>
     <string name="address">地址</string>
+    <string name="location_address">定位地址</string>
+    <string name="take_photo_time">拍照时间</string>
     <string name="scene_info">现场信息</string>
     <string name="remark">备注</string>
     <string name="illegal_building_location">建筑定位</string>

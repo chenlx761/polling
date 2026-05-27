@@ -228,13 +228,14 @@ object UploadFileManager {
         var currentTime = TimeUtil.getCurrentTime()
         if (mLocationResult != null) {
             currentTime =
-                currentTime + "\n" +
-                        mLocationResult!!.address + "\n" +
-                        mLocationResult!!.latitude + "," + mLocationResult!!.longitude + "\n" +
+                MyApplication.getInstance()
+                    .getString(R.string.take_photo_time) + ":" +  currentTime + "\n" +
+                        MyApplication.getInstance()
+                            .getString(R.string.location_address) + ":" +   mLocationResult!!.address + "\n" +
                         MyApplication.getInstance()
                             .getString(R.string.address) + ":" + mBean!!.userAddress + "\n" +
                         MyApplication.getInstance()
-                            .getString(R.string.account_number) + ":" + mBean!!.userNo + "\n" +
+                            .getString(R.string.user_name_label) + ":" + mBean!!.userName + "\n" +
                         MyApplication.getInstance()
                             .getString(R.string.take_account) + ":" + SpManager.getUserName()
 
