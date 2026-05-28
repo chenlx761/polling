@@ -21,7 +21,7 @@
     <string name="username_or_password_empty">用户名称或密码不能为空</string>
     <string name="user_name_label">户名</string>
     <string name="account_number">户号</string>
-    <string name="belonging_area">所属区域</string>
+    <string name="belonging_area">区域</string>
     <string name="dispatch_time">派工时间:</string>
     <string name="illegal_backfill_title">台账回填</string>
     <string name="illegal_info">台账信息</string>

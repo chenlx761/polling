@@ -214,7 +214,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private fun setData2View() {
         mBean?.let {
             mBinding!!.etAddress.setText(it.userAddress)
-            mBinding!!.etArea.setText(it.areaCompany)
+            mBinding!!.etArea.setText(it.workOrderCompany)
             mBinding!!.etName.setText(it.userName)
             mBinding!!.etAccount.setText(it.userNo)
             mBinding!!.etRemark.setText(it.remark)

@@ -38,12 +38,20 @@ public class TicketListBean {
         private String buildLocation;
         private String buildLocationCoord;
         private String remark;
+        private String workOrderCompany;
         private List<String> serverPhotosList;
 
         public List<String> getServerPhotosList() {
             return serverPhotosList;
         }
 
+        public String getWorkOrderCompany() {
+            return workOrderCompany;
+        }
+
+        public void setWorkOrderCompany(String workOrderCompany) {
+            this.workOrderCompany = workOrderCompany;
+        }
 
         public String getRemark() {
             return remark;

@@ -19,7 +19,7 @@ class MainOrderAdapter(
     ) {
         super.onBindOtherViewHolder(holder, position, adapterPosition)
         holder.tvAddress.text = mDatas[position].userAddress
-        holder.tvArea.text = mDatas[position].areaCompany
+        holder.tvArea.text = mDatas[position].workOrderCompany
         holder.tvUserId.text = mDatas[position].userNo
         holder.tvUserName.text = mDatas[position].userName
 

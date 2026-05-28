@@ -61,7 +61,8 @@
                 <LinearLayout
                     android:paddingVertical="5dp"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
@@ -84,6 +85,7 @@
 
                 <!-- 户号 -->
                 <LinearLayout
+                    android:visibility="gone"
                     android:paddingVertical="5dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -111,7 +113,8 @@
                 <LinearLayout
                     android:paddingVertical="5dp"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
