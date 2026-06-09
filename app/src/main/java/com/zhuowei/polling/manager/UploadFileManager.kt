@@ -285,23 +285,28 @@ object UploadFileManager {
             return
         }
 
-        val watermarkToCache = ImageWatermarkUtils.watermarkToCache(
-            MyApplication.getInstance(), paths[index], getWaterMark(),
-        )
-        var mPath = "";
-        if (!TextUtils.isEmpty(watermarkToCache)) {
-            mPath = watermarkToCache!!
+        val currentPath = paths[index]
+        val isImage = isImageFile(currentPath)
+        val uploadPath = if (isImage) {
+            val watermarkToCache = ImageWatermarkUtils.watermarkToCache(
+                MyApplication.getInstance(), currentPath, getWaterMark(),
+            )
+            val imagePath = if (!TextUtils.isEmpty(watermarkToCache)) {
+                watermarkToCache!!
+            } else {
+                currentPath
+            }
+            compressImage(imagePath).also { compressedPath ->
+                if (compressedPath != currentPath) {
+                    compressedPaths.add(compressedPath)
+                }
+            }
         } else {
-
-            mPath = paths[index]
+            currentPath
         }
-        // 压缩图片
-        val uploadPath = compressImage(mPath)
-        if (uploadPath != paths[index]) {
-            compressedPaths.add(uploadPath)
-        }
+        val uploadApi = if (isImage) HttpConstants.POST_FILE else HttpConstants.POST_FILE_2
 
-        RetrofitUtil.Builder(HttpConstants.POST_FILE)
+        RetrofitUtil.Builder(uploadApi)
             .setFile(uploadPath)
             .build()
             .postFile(

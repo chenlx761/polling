@@ -33,7 +33,14 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
                         split.forEach {
                             imageList.add(HttpConstants.BASE_URL + it)
                         }
-                        t.data.serverPhotosList= imageList
+                        t.data.serverPhotosList = imageList
+
+                        val governmentSplit = t.data.governmentImages.split(",").filter { it.isNotEmpty() }
+                        val governmentImageList = ArrayList<String>()
+                        governmentSplit.forEach {
+                            governmentImageList.add(HttpConstants.BASE_URL + it)
+                        }
+                        t.data.governmentServerPhotosList = governmentImageList
                         mDetail.postValue(t.data)
                     }
                 }

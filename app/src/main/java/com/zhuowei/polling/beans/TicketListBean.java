@@ -32,7 +32,8 @@ public class TicketListBean {
         private String userName;
         private String areaCompany;
         private String delFlag;
-        private String images;
+        private String images="";
+        private String governmentImages="";
         private String address;
         private String userAddress;
         private String buildLocation;
@@ -40,9 +41,22 @@ public class TicketListBean {
         private String remark;
         private String workOrderCompany;
         private List<String> serverPhotosList;
+        private List<String> governmentServerPhotosList;
 
         public List<String> getServerPhotosList() {
             return serverPhotosList;
+        }
+
+        public void setServerPhotosList(List<String> serverPhotosList) {
+            this.serverPhotosList = serverPhotosList;
+        }
+
+        public List<String> getGovernmentServerPhotosList() {
+            return governmentServerPhotosList;
+        }
+
+        public void setGovernmentServerPhotosList(List<String> governmentServerPhotosList) {
+            this.governmentServerPhotosList = governmentServerPhotosList;
         }
 
         public String getWorkOrderCompany() {
@@ -61,10 +75,6 @@ public class TicketListBean {
             this.remark = remark;
         }
 
-        public void setServerPhotosList(List<String> serverPhotosList) {
-            this.serverPhotosList = serverPhotosList;
-        }
-
         public String getBuildLocationCoord() {
             return buildLocationCoord;
         }
@@ -80,6 +90,14 @@ public class TicketListBean {
 
         public void setImages(String images) {
             this.images = images;
+        }
+
+        public String getGovernmentImages() {
+            return governmentImages;
+        }
+
+        public void setGovernmentImages(String governmentImages) {
+            this.governmentImages = governmentImages;
         }
 
         public String getUserAddress() {

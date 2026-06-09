@@ -2,6 +2,10 @@ package com.zhuowei.polling.ui.activitys.login
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.Settings
 import android.text.TextUtils
 import cn.tigersec.android.sdk.utils.ErrorCode
 import com.chenming.common.utils.ToastUtil
@@ -42,8 +46,20 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
         return R.layout.activity_login
     }
 
-    override fun setListener() {
 
+    private fun requestFilePermission(){
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                intent.setData(Uri.parse("package:" + getPackageName()))
+                startActivityForResult(intent, 100)
+            }
+        }
+    }
+
+    override fun setListener() {
+        requestFilePermission()
 
         mBinding.btnLogin.setOnClickListener {
             if (mBinding.etUsername.text.isNullOrEmpty() || mBinding.etPassword.text.isNullOrEmpty()) {

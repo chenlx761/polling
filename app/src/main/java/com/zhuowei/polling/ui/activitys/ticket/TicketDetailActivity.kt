@@ -65,11 +65,19 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     private var mBean: TicketListBean.RowsDTO? = null
     private val mAllPhotos = ObservableArrayList<String>()
+    private val mGovernmentPhotos = ObservableArrayList<String>()
     private var mAddPhotoAdapter: AddPhotoAdapter? = null
+    private var mGovernmentPhotoAdapter: AddPhotoAdapter? = null
     private var mCurrentPhotoPath: String? = null
+    private var mCurrentPhotoType: PhotoType = PhotoType.SCENE
     private var mLocationResult: LocationResult? = null
     private var mTicketStatus: String? = null
     private var mTicketId: String? = null
+
+    private enum class PhotoType {
+        SCENE,
+        GOVERNMENT
+    }
 
 
     // ========== ActivityResultLaunchers ==========
@@ -79,9 +87,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
             if (success) {
                 mCurrentPhotoPath?.let { path ->
-
-
-                    addPhotoToList(path)
+                    addPhotoToCurrentList(path)
                 }
             } else {
                 // 拍照取消或失败，清理临时文件
@@ -100,7 +106,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 result.data?.data?.let { uri ->
                     val path = getPathFromUri(uri)
                     if (path != null) {
-                        addPhotoToList(path)
+                        addPhotoToCurrentList(path)
                     } else {
                         Toast.makeText(this, R.string.photo_select_failed, Toast.LENGTH_SHORT)
                             .show()
@@ -133,7 +139,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     override fun setObserveListener() {
         mViewModel.mUpdateFinish.observe(this) {
             //删除文件
-            for (path in mAllPhotos.filter { it.isNotEmpty() }) {
+            for (path in (mAllPhotos + mGovernmentPhotos).filter { it.isNotEmpty() }) {
                 val file = File(path)
                 if (file.exists()) file.delete()
             }
@@ -170,17 +176,26 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 return@setOnClickListener
             }
 
+            val scenePhotos = mAllPhotos.filter { it.isNotEmpty() }
+            val governmentPhotos = mGovernmentPhotos.filter { it.isNotEmpty() }
+            val allUploadPhotos = scenePhotos + governmentPhotos
+
             UploadFileManager.uploadFileWithProgress(
                 AppManager.getAppManager().topActivity,
-                mAllPhotos.filter { it.isNotEmpty() },
+                allUploadPhotos,
                 mLocationResult,
                 mBean,
                 object : UploadFileManager.OnUploadAllCallBack {
                     override fun onAllSuccessful(results: List<UploadFileResult>) {
                         XLog.e("完成咯")
                         mBean?.let { bean ->
+                            val sceneSize = scenePhotos.size
+                            val sceneResults = results.take(sceneSize)
+                            val governmentResults = results.drop(sceneSize)
                             bean.remark = mBinding!!.etRemark.text.toString()
-                            bean.images = TextUtils.join(",", results.map { it.filePath })
+                            bean.images = TextUtils.join(",", sceneResults.map { it.filePath })
+                            bean.governmentImages =
+                                TextUtils.join(",", governmentResults.map { it.filePath })
                             bean.buildLocation = mLocationResult!!.address
                             bean.buildLocationCoord =
                                 "${mLocationResult!!.latitude},${mLocationResult!!.longitude}"
@@ -219,8 +234,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             mBinding!!.etAccount.setText(it.userNo)
             mBinding!!.etRemark.setText(it.remark)
             mAllPhotos.addAll(it.serverPhotosList)
-            // 初始添加一个占位项（"添加照片"按钮）
-            mAllPhotos.add("")
+            ensureAddPlaceholder(mAllPhotos)
+            mGovernmentPhotos.addAll(it.governmentServerPhotosList)
+            ensureAddPlaceholder(mGovernmentPhotos)
             if (TextUtils.isEmpty(it.buildLocation)) {
                 mBinding!!.tvLocation.postDelayed({
                     getLocation()
@@ -241,6 +257,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
 
         mAddPhotoAdapter = AddPhotoAdapter(this, mAllPhotos, MAX_PHOTO_COUNT)
+        mGovernmentPhotoAdapter = AddPhotoAdapter(this, mGovernmentPhotos, MAX_PHOTO_COUNT)
 
         mBinding!!.rvPhoto.apply {
             adapter = mAddPhotoAdapter
@@ -250,26 +267,52 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             (itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
         }
 
+        mBinding!!.rvGovernmentPhoto.apply {
+            adapter = mGovernmentPhotoAdapter
+            layoutManager = GridLayoutManager(this@TicketDetailActivity, 3)
+            isNestedScrollingEnabled = false
+            setHasFixedSize(true)
+            (itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
+        }
+
         mAddPhotoAdapter?.setOnItemClickListener(object : OnItemClickListener {
             override fun onClick(position: Int, i: Any, view: View) {
-                if (mAllPhotos.getOrNull(position).isNullOrEmpty()) {
-                    // 点击的是"添加照片"按钮
-                    if (mLocationResult == null) {
-                        ToastUtil.showShortToast(getString(R.string.location_hint))
-                        return@onClick
-                        return
-                    }
-                    checkPermissionAndShowDialog()
-                } else {
-                    ImagePreviewActivity.newInstance(
-                        this@TicketDetailActivity, mAllPhotos.filter { it.isNotEmpty() }, position
-                    )
-                }
+                handlePhotoItemClick(mAllPhotos, position, PhotoType.SCENE)
+            }
+        })
+
+        mGovernmentPhotoAdapter?.setOnItemClickListener(object : OnItemClickListener {
+            override fun onClick(position: Int, i: Any, view: View) {
+                handlePhotoItemClick(mGovernmentPhotos, position, PhotoType.GOVERNMENT)
             }
         })
 
         mAddPhotoAdapter?.setOnDeleteClickListener { position ->
-            removePhotoAt(position)
+            removePhotoAt(mAllPhotos, position)
+        }
+
+        mGovernmentPhotoAdapter?.setOnDeleteClickListener { position ->
+            removePhotoAt(mGovernmentPhotos, position)
+        }
+    }
+
+    private fun handlePhotoItemClick(
+        photoList: ObservableArrayList<String>,
+        position: Int,
+        photoType: PhotoType
+    ) {
+        if (photoList.getOrNull(position).isNullOrEmpty()) {
+            if (mLocationResult == null) {
+                ToastUtil.showShortToast(getString(R.string.location_hint))
+                return
+            }
+            checkPermissionAndShowDialog(photoType, photoList)
+        } else {
+            ImagePreviewActivity.newInstance(
+                this@TicketDetailActivity,
+                photoList.filter { it.isNotEmpty() },
+                position
+            )
         }
     }
 
@@ -296,29 +339,39 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     // ========== 图片选择核心逻辑 ==========
 
+    private fun addPhotoToCurrentList(path: String) {
+        addPhotoToList(
+            when (mCurrentPhotoType) {
+                PhotoType.SCENE -> mAllPhotos
+                PhotoType.GOVERNMENT -> mGovernmentPhotos
+            },
+            path
+        )
+    }
+
     /**
      * 将图片路径添加到列表中。
      * 先移除末尾的占位空字符串，再插入实际路径，
      * 若仍未达上限则在末尾补回占位空字符串。
      */
-    private fun addPhotoToList(path: String) {
-        if (mAllPhotos.contains(path)) return
-        if (getActualPhotoCount() >= MAX_PHOTO_COUNT) {
+    private fun addPhotoToList(photoList: ObservableArrayList<String>, path: String) {
+        if (photoList.contains(path)) return
+        if (getActualPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
             Toast.makeText(this, R.string.photo_count_limit, Toast.LENGTH_SHORT).show()
             return
         }
 
-        // 移除末尾的占位空字符串
-        if (mAllPhotos.isNotEmpty() && mAllPhotos.last().isEmpty()) {
-            mAllPhotos.removeAt(mAllPhotos.lastIndex)
+        if (photoList.isNotEmpty() && photoList.last().isEmpty()) {
+            photoList.removeAt(photoList.lastIndex)
         }
 
-        // 添加实际图片路径
-        mAllPhotos.add(path)
+        photoList.add(path)
+        ensureAddPlaceholder(photoList)
+    }
 
-        // 未达上限时，补回占位空字符串以显示"添加照片"按钮
-        if (getActualPhotoCount() < MAX_PHOTO_COUNT) {
-            mAllPhotos.add("")
+    private fun ensureAddPlaceholder(photoList: ObservableArrayList<String>) {
+        if (getActualPhotoCount(photoList) < MAX_PHOTO_COUNT && !photoList.contains("")) {
+            photoList.add("")
         }
     }
 
@@ -327,16 +380,15 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
      * 若删除的是实际图片，则移除后确保占位空字符串存在；
      * 若删除的是占位空字符串则忽略。
      */
-    private fun removePhotoAt(position: Int) {
-        if (position < 0 || position >= mAllPhotos.size) return
+    private fun removePhotoAt(photoList: ObservableArrayList<String>, position: Int) {
+        if (position < 0 || position >= photoList.size) return
 
-        val removedPath = mAllPhotos.removeAt(position)
+        val removedPath = photoList.removeAt(position)
 
-        // 只处理实际图片的删除（非占位空字符串）
         if (removedPath.isNotEmpty()) {
-            // 仅删除本应用外部存储目录下的临时文件，不删除相册原文件
             try {
                 if (removedPath.startsWith("http")) {
+                    ensureAddPlaceholder(photoList)
                     return
                 }
                 val file = File(removedPath)
@@ -349,26 +401,28 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 XLog.e("删除图片文件失败", e.message ?: "")
             }
 
-            // 确保占位空字符串存在，以显示"添加照片"按钮
-            if (!mAllPhotos.contains("")) {
-                mAllPhotos.add("")
-            }
+            ensureAddPlaceholder(photoList)
         }
     }
 
     /**
      * 获取实际图片数量（排除占位空字符串）
      */
-    private fun getActualPhotoCount(): Int = mAllPhotos.count { it.isNotEmpty() }
+    private fun getActualPhotoCount(photoList: ObservableArrayList<String>): Int =
+        photoList.count { it.isNotEmpty() }
 
     // ========== 权限与弹窗 ==========
 
-    private fun checkPermissionAndShowDialog() {
-        if (getActualPhotoCount() >= MAX_PHOTO_COUNT) {
+    private fun checkPermissionAndShowDialog(
+        photoType: PhotoType,
+        photoList: ObservableArrayList<String>
+    ) {
+        if (getActualPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
             Toast.makeText(this, R.string.photo_count_limit, Toast.LENGTH_SHORT).show()
             return
         }
 
+        mCurrentPhotoType = photoType
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
@@ -380,16 +434,21 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun showPhotoChoiceDialog() {
-        //只能拍照咯
-        takePhoto()
-//        val options = arrayOf(getString(R.string.take_photo), getString(R.string.select_photo))
-//        androidx.appcompat.app.AlertDialog.Builder(this)
-//            .setTitle(getString(R.string.select_photo_title)).setItems(options) { _, which ->
-//                when (which) {
-//                    0 -> takePhoto()
-//                    1 -> pickFromGallery()
-//                }
-//            }.show()
+
+        if (mCurrentPhotoType == PhotoType.GOVERNMENT) {
+            val options = arrayOf(getString(R.string.take_photo), getString(R.string.select_photo))
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(getString(R.string.select_photo_title)).setItems(options) { _, which ->
+                    when (which) {
+                        0 -> takePhoto()
+                        1 -> pickFromGallery()
+                    }
+                }.show()
+        } else {
+            //只能拍照咯
+            takePhoto()
+        }
+
     }
 
     // ========== 拍照 ==========
