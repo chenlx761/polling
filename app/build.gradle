@@ -148,7 +148,10 @@ dependencies {
 
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
 
-    implementation 'com.baidu.lbsyun:BaiduMapSDK_Location:9.6.4'
+    implementation 'com.baidu.lbsyun:BaiduMapSDK_Search:7.6.4'
+    implementation 'com.baidu.lbsyun:BaiduMapSDK_Map:7.6.4'
+    implementation 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.6.4'
+    implementation 'com.baidu.lbsyun:BaiduMapSDK_Util:7.6.4'
     implementation project(path: ':hudun')
 
     implementation  'io.github.scwang90:refresh-layout-kernel:3.0.0-alpha'      //核心必须依赖

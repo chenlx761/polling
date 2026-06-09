@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import androidx.multidex.MultiDex
+import com.baidu.mapapi.SDKInitializer
+import com.baidu.mapapi.common.BaiduMapSDKException
 import com.chenming.common.utils.CommApplication
 import com.chenming.httprequest.http.HttpManager
 import com.chenming.httprequest.http.bean.BaseBean
@@ -30,7 +32,6 @@ class MyApplication : Application() {
         fun getInstance(): MyApplication {
             return instance!!
         }
-
 
 
 //        private fun refreshTokenSync(): String {
@@ -77,6 +78,13 @@ class MyApplication : Application() {
         instance = this
 
 
+      // 是否同意隐私政策，默认为false
+        SDKInitializer.setAgreePrivacy(this, true)
+        try {
+            // 在使用 SDK 各组间之前初始化 context 信息，传入 ApplicationContext
+            SDKInitializer.initialize(this)
+        } catch (e: BaiduMapSDKException) {
+        }
 
         HuDunApplication.getInstance().application = this
         CommApplication.setInstance(this)

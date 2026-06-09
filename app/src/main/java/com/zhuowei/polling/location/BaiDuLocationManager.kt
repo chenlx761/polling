@@ -10,6 +10,7 @@ import com.baidu.location.BDLocation
 import com.baidu.location.LocationClient
 import com.baidu.location.LocationClientOption
 
+
 /**
  * 百度地图定位管理器
  * 实现单次定位功能，返回坐标系和地址信息
@@ -76,7 +77,7 @@ class BaiDuLocationManager private constructor() {
         option.setIgnoreKillProcess(true) // 定位SDK内部优先级处理
         option.SetIgnoreCacheException(true) // 忽略缓存异常
         option.setWifiCacheTimeOut(5 * 60 * 1000) //  wifi缓存超时时间
-        option.setFirstLocType(LocationClientOption.FirstLocType.SPEED_IN_FIRST_LOC)
+        option.setFirstLocType(LocationClientOption.FirstLocType.ACCURACY_IN_FIRST_LOC)
         option.setEnableSimulateGps(false) // 不允许模拟定位
         return option
     }
@@ -169,6 +170,19 @@ class BaiDuLocationManager private constructor() {
                 radius = location.radius,
                 time = location.timeStamp
             )
+
+//            val bd09ToGcj02 = MyCoordinateConverter.bd09ToGcj02(location.longitude, location.latitude)
+//
+//
+//            //初始化左边转换工具类，指定源坐标类型和坐标数据
+////sourceLatLng 待转换坐标
+//            val converter = CoordinateConverter()
+//                .from(CoordinateConverter.CoordType.COMMON)
+//                .coord(LatLng(bd09ToGcj02.first, bd09ToGcj02.second))
+//
+//
+////转换坐标
+//            val desLatLng = converter.convert()
 
             locationCallBack?.onLocationSuccess(result)
         } else {
