@@ -8,14 +8,15 @@ import com.chenming.common.utils.ImageLoaderUtil
 import com.example.hudundemo.base.NormalAdapter
 import com.zhuowei.polling.R
 import com.zhuowei.polling.databinding.AdapterAddPhotoBinding
+import java.io.File
 
 class AddPhotoAdapter(
     context: Context,
     datas: ObservableArrayList<String>,
     private val maxCount: Int = 9,
-    resId: Int = R.layout.adapter_add_photo
+    resId: Int = R.layout.adapter_add_photo,
+    private val supportFilePlaceholder: Boolean = false
 ) : NormalAdapter<String, AdapterAddPhotoBinding>(context, resId, datas) {
-
 
     private var onDeleteClickListener: ((Int) -> Unit)? = null
 
@@ -23,33 +24,55 @@ class AddPhotoAdapter(
         onDeleteClickListener = listener
     }
 
-
     override fun onBindOtherViewHolder(
         holder: AdapterAddPhotoBinding, position: Int, adapterPosition: Int
     ) {
         super.onBindOtherViewHolder(holder, position, adapterPosition)
 
-        if (!TextUtils.isEmpty(mDatas[position])) {
+        val item = mDatas[position]
+        if (!TextUtils.isEmpty(item)) {
             holder.ivPhoto.visibility = View.VISIBLE
             holder.ivDelete.visibility = View.VISIBLE
             holder.ivAdd.visibility = View.GONE
 
+            if (supportFilePlaceholder && !isImageFile(item)) {
+                holder.ivPhoto.setImageResource(R.mipmap.file_normal)
+                holder.ivPhoto.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                holder.tvFileName.visibility = View.VISIBLE
+                holder.tvFileName.text = File(item).name
+            } else {
+                holder.ivPhoto.scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                holder.tvFileName.visibility = View.GONE
+                holder.tvFileName.text = ""
+                ImageLoaderUtil.getInstance().loadImg(holder.ivPhoto, item)
+            }
 
-            ImageLoaderUtil.getInstance().loadImg(holder.ivPhoto, mDatas[position])
             holder.ivDelete.setOnClickListener {
                 onDeleteClickListener?.invoke(position)
             }
-
         } else {
             holder.ivPhoto.visibility = View.GONE
             holder.ivDelete.visibility = View.GONE
             holder.ivAdd.visibility = View.VISIBLE
-
-
+            holder.tvFileName.visibility = View.GONE
+            holder.tvFileName.text = ""
         }
 
         holder.cvItem.setOnClickListener {
-            mOnItemClickListener?.onClick(position, mDatas[position], it)
+            mOnItemClickListener?.onClick(position, item, it)
         }
+    }
+
+    private fun isImageFile(path: String): Boolean {
+        if (path.startsWith("http", true)) {
+            val lowerPath = path.lowercase()
+            return IMAGE_EXTENSIONS.any { lowerPath.contains(".$it") }
+        }
+        val extension = path.substringAfterLast('.', "").lowercase()
+        return extension in IMAGE_EXTENSIONS
+    }
+
+    companion object {
+        private val IMAGE_EXTENSIONS = setOf("jpg", "jpeg", "png", "webp", "bmp", "gif")
     }
 }

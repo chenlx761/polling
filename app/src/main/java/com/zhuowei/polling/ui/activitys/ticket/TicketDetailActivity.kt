@@ -33,7 +33,9 @@ import com.zhuowei.polling.location.LocationCallBack
 import com.zhuowei.polling.location.LocationResult
 import com.zhuowei.polling.manager.UploadFileManager
 import com.zhuowei.polling.ui.activitys.image.ImagePreviewActivity
+import com.zhuowei.polling.util.FileHelper
 import com.zhuowei.polling.utils.GetPhotoUtils.Companion.getPathFromUri
+import com.zhuowei.polling.utils.SpManager
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -46,7 +48,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         private const val Ticket_Id = "Ticket_Id"
         private const val Ticket_Status = "Ticket_Status"
 
-
         @JvmStatic
         fun newIntent(
             myActivityLauncher: ActivityResultLauncher<Intent>,
@@ -57,11 +58,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             val intent = Intent(context, TicketDetailActivity::class.java)
             intent.putExtra(Ticket_Id, ticketId)
             intent.putExtra(Ticket_Status, ticketStatus)
-            //context.startActivity(intent)
             myActivityLauncher.launch(intent)
         }
     }
-
 
     private var mBean: TicketListBean.RowsDTO? = null
     private val mAllPhotos = ObservableArrayList<String>()
@@ -79,10 +78,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         GOVERNMENT
     }
 
-
-    // ========== ActivityResultLaunchers ==========
-
-    /** 拍照：使用 TakePicture 契约，直接传入 Uri，返回是否成功 */
     private val takePictureLauncher: ActivityResultLauncher<Uri> =
         registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
             if (success) {
@@ -90,7 +85,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                     addPhotoToCurrentList(path)
                 }
             } else {
-                // 拍照取消或失败，清理临时文件
                 mCurrentPhotoPath?.let { path ->
                     val file = File(path)
                     if (file.exists()) file.delete()
@@ -99,7 +93,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             mCurrentPhotoPath = null
         }
 
-    /** 从相册选取图片 */
     private val pickImageLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
@@ -115,7 +108,28 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             }
         }
 
-    /** 请求相机权限 */
+    private val pickFileLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                result.data?.data?.let { uri ->
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    } catch (_: Exception) {
+                    }
+                    val path = getPathFromUri(uri)
+                    if (path != null) {
+                        addPhotoToCurrentList(path)
+                    } else {
+                        Toast.makeText(this, R.string.photo_select_failed, Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                }
+            }
+        }
+
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -126,10 +140,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
     }
 
-    // ========== 生命周期方法 ==========
-
     override fun getLayoutId(): Int = R.layout.activity_ticket_detail
-
 
     override fun onDestroy() {
         super.onDestroy()
@@ -138,7 +149,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     override fun setObserveListener() {
         mViewModel.mUpdateFinish.observe(this) {
-            //删除文件
             for (path in (mAllPhotos + mGovernmentPhotos).filter { it.isNotEmpty() }) {
                 val file = File(path)
                 if (file.exists()) file.delete()
@@ -154,8 +164,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     override fun setListener() {
-
-
         mBinding!!.myTitleBar.setLeftLayoutClickListener {
             finish()
         }
@@ -165,14 +173,12 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
 
         mBinding!!.btnSubmit.setOnClickListener {
-
             if (mLocationResult == null) {
                 ToastUtil.showShortToast(getString(R.string.location_hint))
                 return@setOnClickListener
             }
             if (mAllPhotos.filter { it.isNotEmpty() }.isEmpty()) {
                 ToastUtil.showShortToast(getString(R.string.please_take_photo_hint))
-
                 return@setOnClickListener
             }
 
@@ -204,13 +210,13 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                     }
 
                     override fun onError(
-                        errorMsg: String, failedPaths: List<String>
+                        errorMsg: String,
+                        failedPaths: List<String>
                     ) {
                     }
-
-                })
+                }
+            )
         }
-
 
         mViewModel.getTicketDetail(mTicketId)
     }
@@ -254,10 +260,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     override fun setData() {
-
-
         mAddPhotoAdapter = AddPhotoAdapter(this, mAllPhotos, MAX_PHOTO_COUNT)
-        mGovernmentPhotoAdapter = AddPhotoAdapter(this, mGovernmentPhotos, MAX_PHOTO_COUNT)
+        mGovernmentPhotoAdapter =
+            AddPhotoAdapter(this, mGovernmentPhotos, MAX_PHOTO_COUNT, supportFilePlaceholder = true)
 
         mBinding!!.rvPhoto.apply {
             adapter = mAddPhotoAdapter
@@ -301,22 +306,34 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         position: Int,
         photoType: PhotoType
     ) {
-        if (photoList.getOrNull(position).isNullOrEmpty()) {
+        val item = photoList.getOrNull(position)
+        if (item.isNullOrEmpty()) {
             if (mLocationResult == null) {
                 ToastUtil.showShortToast(getString(R.string.location_hint))
                 return
             }
             checkPermissionAndShowDialog(photoType, photoList)
-        } else {
+            return
+        }
+
+        if (!isImageFile(item)){
+            if (item.startsWith("http")){
+                FileHelper.downloadWithHeaders(this,item, SpManager.getToken(), File(item).name)
+            }
+            return
+        }
+
+
+        val previewList = photoList.filter { it.isNotEmpty() && isImageFile(it) }
+        val previewPosition = previewList.indexOf(item)
+        if (previewPosition >= 0) {
             ImagePreviewActivity.newInstance(
                 this@TicketDetailActivity,
-                photoList.filter { it.isNotEmpty() },
-                position
+                previewList,
+                previewPosition
             )
         }
     }
-
-    // ========== 定位 ==========
 
     private fun getLocation() {
         showLoading()
@@ -325,7 +342,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 XLog.e("定位成功", result.toString())
                 mLocationResult = result
                 mBinding.tvLocation.text = "${result.latitude},${result.longitude}"
-
                 dismissDialog()
             }
 
@@ -337,8 +353,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         })
     }
 
-    // ========== 图片选择核心逻辑 ==========
-
     private fun addPhotoToCurrentList(path: String) {
         addPhotoToList(
             when (mCurrentPhotoType) {
@@ -349,11 +363,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         )
     }
 
-    /**
-     * 将图片路径添加到列表中。
-     * 先移除末尾的占位空字符串，再插入实际路径，
-     * 若仍未达上限则在末尾补回占位空字符串。
-     */
     private fun addPhotoToList(photoList: ObservableArrayList<String>, path: String) {
         if (photoList.contains(path)) return
         if (getActualPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
@@ -375,16 +384,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
     }
 
-    /**
-     * 删除指定位置的图片。
-     * 若删除的是实际图片，则移除后确保占位空字符串存在；
-     * 若删除的是占位空字符串则忽略。
-     */
     private fun removePhotoAt(photoList: ObservableArrayList<String>, position: Int) {
         if (position < 0 || position >= photoList.size) return
 
         val removedPath = photoList.removeAt(position)
-
         if (removedPath.isNotEmpty()) {
             try {
                 if (removedPath.startsWith("http")) {
@@ -405,13 +408,8 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
     }
 
-    /**
-     * 获取实际图片数量（排除占位空字符串）
-     */
     private fun getActualPhotoCount(photoList: ObservableArrayList<String>): Int =
         photoList.count { it.isNotEmpty() }
-
-    // ========== 权限与弹窗 ==========
 
     private fun checkPermissionAndShowDialog(
         photoType: PhotoType,
@@ -423,8 +421,14 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
 
         mCurrentPhotoType = photoType
+        if (photoType == PhotoType.GOVERNMENT) {
+            showPhotoChoiceDialog()
+            return
+        }
+
         if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.CAMERA
+                this,
+                Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             showPhotoChoiceDialog()
@@ -434,24 +438,38 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun showPhotoChoiceDialog() {
-
         if (mCurrentPhotoType == PhotoType.GOVERNMENT) {
-            val options = arrayOf(getString(R.string.take_photo), getString(R.string.select_photo))
+            val options = arrayOf(
+                getString(R.string.take_photo),
+                getString(R.string.select_photo),
+                "选择文件"
+            )
             androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle(getString(R.string.select_photo_title)).setItems(options) { _, which ->
+                .setTitle(getString(R.string.select_photo_title))
+                .setItems(options) { _, which ->
                     when (which) {
-                        0 -> takePhoto()
+                        0 -> ensureCameraAndTakePhoto()
                         1 -> pickFromGallery()
+                        2 -> pickFile()
                     }
-                }.show()
+                }
+                .show()
         } else {
-            //只能拍照咯
             takePhoto()
         }
-
     }
 
-    // ========== 拍照 ==========
+    private fun ensureCameraAndTakePhoto() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            takePhoto()
+        } else {
+            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     private fun takePhoto() {
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
@@ -483,12 +501,25 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
     }
 
-    // ========== 从相册选取 ==========
-
     private fun pickFromGallery() {
         val intent = Intent(Intent.ACTION_PICK).apply {
             setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
         }
         pickImageLauncher.launch(intent)
+    }
+
+    private fun pickFile() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        }
+        pickFileLauncher.launch(intent)
+    }
+
+    private fun isImageFile(path: String): Boolean {
+        val extension = path.substringAfterLast('.', "").lowercase()
+        return extension in setOf("jpg", "jpeg", "png", "webp", "bmp", "gif")
     }
 }
