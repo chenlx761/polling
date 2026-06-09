@@ -22,6 +22,7 @@ import com.chenming.common.utils.AppManager
 import com.chenming.common.utils.ToastUtil
 import com.chenming.httprequest.XLog
 import com.zhuowei.polling.R
+import com.zhuowei.polling.adapter.AddFileAdapter
 import com.zhuowei.polling.adapter.AddPhotoAdapter
 import com.zhuowei.polling.base.MyBaseActivity
 import com.zhuowei.polling.beans.TicketListBean
@@ -64,9 +65,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     private var mBean: TicketListBean.RowsDTO? = null
     private val mAllPhotos = ObservableArrayList<String>()
-    private val mGovernmentPhotos = ObservableArrayList<String>()
+    private val mGovernmentPhotos = ObservableArrayList<UploadFileResult>()
     private var mAddPhotoAdapter: AddPhotoAdapter? = null
-    private var mGovernmentPhotoAdapter: AddPhotoAdapter? = null
+    private var mGovernmentPhotoAdapter: AddFileAdapter? = null
     private var mCurrentPhotoPath: String? = null
     private var mCurrentPhotoType: PhotoType = PhotoType.SCENE
     private var mLocationResult: LocationResult? = null
@@ -149,7 +150,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     override fun setObserveListener() {
         mViewModel.mUpdateFinish.observe(this) {
-            for (path in (mAllPhotos + mGovernmentPhotos).filter { it.isNotEmpty() }) {
+         val paths =  mGovernmentPhotos.map {
+                it.filePath
+            }
+            for (path in (mAllPhotos + paths).filter { it.isNotEmpty() }) {
                 val file = File(path)
                 if (file.exists()) file.delete()
             }
@@ -183,7 +187,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             }
 
             val scenePhotos = mAllPhotos.filter { it.isNotEmpty() }
-            val governmentPhotos = mGovernmentPhotos.filter { it.isNotEmpty() }
+            val governmentPhotos = mGovernmentPhotos.filter { !TextUtils.isEmpty(it.filePath ) }.map { it.filePath }
             val allUploadPhotos = scenePhotos + governmentPhotos
 
             UploadFileManager.uploadFileWithProgress(
@@ -200,8 +204,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                             val governmentResults = results.drop(sceneSize)
                             bean.remark = mBinding!!.etRemark.text.toString()
                             bean.images = TextUtils.join(",", sceneResults.map { it.filePath })
-                            bean.governmentImages =
-                                TextUtils.join(",", governmentResults.map { it.filePath })
+                            bean.governmentImages = governmentResults
                             bean.buildLocation = mLocationResult!!.address
                             bean.buildLocationCoord =
                                 "${mLocationResult!!.latitude},${mLocationResult!!.longitude}"
@@ -240,9 +243,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             mBinding!!.etAccount.setText(it.userNo)
             mBinding!!.etRemark.setText(it.remark)
             mAllPhotos.addAll(it.serverPhotosList)
-            ensureAddPlaceholder(mAllPhotos)
-            mGovernmentPhotos.addAll(it.governmentServerPhotosList)
-            ensureAddPlaceholder(mGovernmentPhotos)
+            ensureSceneAddPlaceholder(mAllPhotos)
+            mGovernmentPhotos.addAll(it.governmentImages)
+            ensureGovernmentAddPlaceholder(mGovernmentPhotos)
             if (TextUtils.isEmpty(it.buildLocation)) {
                 mBinding!!.tvLocation.postDelayed({
                     getLocation()
@@ -262,7 +265,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     override fun setData() {
         mAddPhotoAdapter = AddPhotoAdapter(this, mAllPhotos, MAX_PHOTO_COUNT)
         mGovernmentPhotoAdapter =
-            AddPhotoAdapter(this, mGovernmentPhotos, MAX_PHOTO_COUNT, supportFilePlaceholder = true)
+            AddFileAdapter(this, mGovernmentPhotos, MAX_PHOTO_COUNT, supportFilePlaceholder = true)
 
         mBinding!!.rvPhoto.apply {
             adapter = mAddPhotoAdapter
@@ -282,26 +285,26 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
         mAddPhotoAdapter?.setOnItemClickListener(object : OnItemClickListener {
             override fun onClick(position: Int, i: Any, view: View) {
-                handlePhotoItemClick(mAllPhotos, position, PhotoType.SCENE)
+                handleScenePhotoItemClick(mAllPhotos, position, PhotoType.SCENE)
             }
         })
 
         mGovernmentPhotoAdapter?.setOnItemClickListener(object : OnItemClickListener {
             override fun onClick(position: Int, i: Any, view: View) {
-                handlePhotoItemClick(mGovernmentPhotos, position, PhotoType.GOVERNMENT)
+                handleGovernmentPhotoItemClick(mGovernmentPhotos, position, PhotoType.GOVERNMENT)
             }
         })
 
         mAddPhotoAdapter?.setOnDeleteClickListener { position ->
-            removePhotoAt(mAllPhotos, position)
+            removeScenePhotoAt(mAllPhotos, position)
         }
 
         mGovernmentPhotoAdapter?.setOnDeleteClickListener { position ->
-            removePhotoAt(mGovernmentPhotos, position)
+            removeGovernmentPhotoAt(mGovernmentPhotos, position)
         }
     }
 
-    private fun handlePhotoItemClick(
+    private fun handleScenePhotoItemClick(
         photoList: ObservableArrayList<String>,
         position: Int,
         photoType: PhotoType
@@ -312,20 +315,60 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 ToastUtil.showShortToast(getString(R.string.location_hint))
                 return
             }
-            checkPermissionAndShowDialog(photoType, photoList)
+            checkScenePermissionAndShowDialog(photoType, photoList)
             return
         }
 
-        if (!isImageFile(item)){
-            if (item.startsWith("http")){
-                FileHelper.downloadWithHeaders(this,item, SpManager.getToken(), File(item).name)
+        if (!isImageFile(item)) {
+            if (item.startsWith("http")) {
+                FileHelper.downloadWithHeaders(this, item, SpManager.getToken(), File(item).name)
             }
             return
         }
 
-
         val previewList = photoList.filter { it.isNotEmpty() && isImageFile(it) }
         val previewPosition = previewList.indexOf(item)
+        if (previewPosition >= 0) {
+            ImagePreviewActivity.newInstance(
+                this@TicketDetailActivity,
+                previewList,
+                previewPosition
+            )
+        }
+    }
+
+    private fun handleGovernmentPhotoItemClick(
+        photoList: ObservableArrayList<UploadFileResult>,
+        position: Int,
+        photoType: PhotoType
+    ) {
+        val item = photoList.getOrNull(position) ?: return
+        val filePath = item.filePath.orEmpty()
+        if (filePath.isEmpty()) {
+            if (mLocationResult == null) {
+                ToastUtil.showShortToast(getString(R.string.location_hint))
+                return
+            }
+            checkGovernmentPermissionAndShowDialog(photoType, photoList)
+            return
+        }
+
+        if (!isImageFile(filePath)) {
+            if (filePath.startsWith("http")) {
+                FileHelper.downloadWithHeaders(
+                    this,
+                    filePath,
+                    SpManager.getToken(),
+                    item.fileName?.takeIf { it.isNotEmpty() } ?: File(filePath).name
+                )
+            }
+            return
+        }
+
+        val previewList = photoList.mapNotNull { photo ->
+            photo.filePath?.takeIf { it.isNotEmpty() && isImageFile(it) }
+        }
+        val previewPosition = previewList.indexOf(filePath)
         if (previewPosition >= 0) {
             ImagePreviewActivity.newInstance(
                 this@TicketDetailActivity,
@@ -354,18 +397,15 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun addPhotoToCurrentList(path: String) {
-        addPhotoToList(
-            when (mCurrentPhotoType) {
-                PhotoType.SCENE -> mAllPhotos
-                PhotoType.GOVERNMENT -> mGovernmentPhotos
-            },
-            path
-        )
+        when (mCurrentPhotoType) {
+            PhotoType.SCENE -> addScenePhotoToList(mAllPhotos, path)
+            PhotoType.GOVERNMENT -> addGovernmentPhotoToList(mGovernmentPhotos, path)
+        }
     }
 
-    private fun addPhotoToList(photoList: ObservableArrayList<String>, path: String) {
+    private fun addScenePhotoToList(photoList: ObservableArrayList<String>, path: String) {
         if (photoList.contains(path)) return
-        if (getActualPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
+        if (getSceneActualPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
             Toast.makeText(this, R.string.photo_count_limit, Toast.LENGTH_SHORT).show()
             return
         }
@@ -375,23 +415,47 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
 
         photoList.add(path)
-        ensureAddPlaceholder(photoList)
+        ensureSceneAddPlaceholder(photoList)
     }
 
-    private fun ensureAddPlaceholder(photoList: ObservableArrayList<String>) {
-        if (getActualPhotoCount(photoList) < MAX_PHOTO_COUNT && !photoList.contains("")) {
+    private fun addGovernmentPhotoToList(photoList: ObservableArrayList<UploadFileResult>, path: String) {
+        if (photoList.any { it.filePath == path }) return
+        if (getGovernmentActualPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
+            Toast.makeText(this, R.string.photo_count_limit, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (photoList.isNotEmpty() && photoList.last().filePath.isNullOrEmpty()) {
+            photoList.removeAt(photoList.lastIndex)
+        }
+
+        photoList.add(UploadFileResult().apply {
+            filePath = path
+            fileName = File(path).name
+        })
+        ensureGovernmentAddPlaceholder(photoList)
+    }
+
+    private fun ensureSceneAddPlaceholder(photoList: ObservableArrayList<String>) {
+        if (getSceneActualPhotoCount(photoList) < MAX_PHOTO_COUNT && !photoList.contains("")) {
             photoList.add("")
         }
     }
 
-    private fun removePhotoAt(photoList: ObservableArrayList<String>, position: Int) {
+    private fun ensureGovernmentAddPlaceholder(photoList: ObservableArrayList<UploadFileResult>) {
+        if (getGovernmentActualPhotoCount(photoList) < MAX_PHOTO_COUNT && photoList.none { it.filePath.isNullOrEmpty() }) {
+            photoList.add(UploadFileResult())
+        }
+    }
+
+    private fun removeScenePhotoAt(photoList: ObservableArrayList<String>, position: Int) {
         if (position < 0 || position >= photoList.size) return
 
         val removedPath = photoList.removeAt(position)
         if (removedPath.isNotEmpty()) {
             try {
                 if (removedPath.startsWith("http")) {
-                    ensureAddPlaceholder(photoList)
+                    ensureSceneAddPlaceholder(photoList)
                     return
                 }
                 val file = File(removedPath)
@@ -404,18 +468,46 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 XLog.e("删除图片文件失败", e.message ?: "")
             }
 
-            ensureAddPlaceholder(photoList)
+            ensureSceneAddPlaceholder(photoList)
         }
     }
 
-    private fun getActualPhotoCount(photoList: ObservableArrayList<String>): Int =
+    private fun removeGovernmentPhotoAt(photoList: ObservableArrayList<UploadFileResult>, position: Int) {
+        if (position < 0 || position >= photoList.size) return
+
+        val removedItem = photoList.removeAt(position)
+        val removedPath = removedItem.filePath.orEmpty()
+        if (removedPath.isNotEmpty()) {
+            try {
+                if (removedPath.startsWith("http")) {
+                    ensureGovernmentAddPlaceholder(photoList)
+                    return
+                }
+                val file = File(removedPath)
+                val appStorageDir =
+                    getExternalFilesDir(Environment.DIRECTORY_PICTURES)?.absolutePath
+                if (appStorageDir != null && removedPath.startsWith(appStorageDir) && file.exists()) {
+                    file.delete()
+                }
+            } catch (e: Exception) {
+                XLog.e("删除图片文件失败", e.message ?: "")
+            }
+        }
+
+        ensureGovernmentAddPlaceholder(photoList)
+    }
+
+    private fun getSceneActualPhotoCount(photoList: ObservableArrayList<String>): Int =
         photoList.count { it.isNotEmpty() }
 
-    private fun checkPermissionAndShowDialog(
+    private fun getGovernmentActualPhotoCount(photoList: ObservableArrayList<UploadFileResult>): Int =
+        photoList.count { !it.filePath.isNullOrEmpty() }
+
+    private fun checkScenePermissionAndShowDialog(
         photoType: PhotoType,
         photoList: ObservableArrayList<String>
     ) {
-        if (getActualPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
+        if (getSceneActualPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
             Toast.makeText(this, R.string.photo_count_limit, Toast.LENGTH_SHORT).show()
             return
         }
@@ -435,6 +527,19 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         } else {
             requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
+    }
+
+    private fun checkGovernmentPermissionAndShowDialog(
+        photoType: PhotoType,
+        photoList: ObservableArrayList<UploadFileResult>
+    ) {
+        if (getGovernmentActualPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
+            Toast.makeText(this, R.string.photo_count_limit, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        mCurrentPhotoType = photoType
+        showPhotoChoiceDialog()
     }
 
     private fun showPhotoChoiceDialog() {

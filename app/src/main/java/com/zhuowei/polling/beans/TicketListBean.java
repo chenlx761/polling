@@ -1,6 +1,7 @@
 package com.zhuowei.polling.beans;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TicketListBean {
@@ -32,8 +33,8 @@ public class TicketListBean {
         private String userName;
         private String areaCompany;
         private String delFlag;
-        private String images="";
-        private String governmentImages="";
+        private String images = "";
+        private List<UploadFileResult> governmentImages = new ArrayList<>();
         private String address;
         private String userAddress;
         private String buildLocation;
@@ -41,7 +42,6 @@ public class TicketListBean {
         private String remark;
         private String workOrderCompany;
         private List<String> serverPhotosList;
-        private List<String> governmentServerPhotosList;
 
         public List<String> getServerPhotosList() {
             return serverPhotosList;
@@ -51,13 +51,6 @@ public class TicketListBean {
             this.serverPhotosList = serverPhotosList;
         }
 
-        public List<String> getGovernmentServerPhotosList() {
-            return governmentServerPhotosList;
-        }
-
-        public void setGovernmentServerPhotosList(List<String> governmentServerPhotosList) {
-            this.governmentServerPhotosList = governmentServerPhotosList;
-        }
 
         public String getWorkOrderCompany() {
             return workOrderCompany;
@@ -92,11 +85,11 @@ public class TicketListBean {
             this.images = images;
         }
 
-        public String getGovernmentImages() {
+        public List<UploadFileResult> getGovernmentImages() {
             return governmentImages;
         }
 
-        public void setGovernmentImages(String governmentImages) {
+        public void setGovernmentImages(List<UploadFileResult> governmentImages) {
             this.governmentImages = governmentImages;
         }
 
