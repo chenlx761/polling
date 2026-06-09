@@ -18,6 +18,8 @@ import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.widget.Toast;
 
+import com.zhuowei.polling.R;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -31,19 +33,19 @@ public class FileHelper {
     public  static void downloadWithHeaders(Context context, String url, String token, String fileName) {
         // 显示确认弹窗
         new AlertDialog.Builder(context)
-                .setTitle("确认下载")
-                .setMessage("确定要下载文件 " + fileName + " 吗？")
-                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                .setTitle(context.getString(R.string.download_confirm_title))
+                .setMessage(context.getString(R.string.download_confirm_message, fileName))
+                .setPositiveButton(context.getString(R.string.common_confirm), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         startDownload(context, url, token, fileName);
                     }
                 })
-                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                .setNegativeButton(context.getString(R.string.common_cancel), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         if (context != null && context instanceof android.app.Activity) {
-                            Toast.makeText(context, "已取消下载", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, context.getString(R.string.download_cancelled), Toast.LENGTH_SHORT).show();
                         }
                     }
                 })
