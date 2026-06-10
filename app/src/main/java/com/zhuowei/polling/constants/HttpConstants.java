@@ -4,8 +4,8 @@ public class HttpConstants {
 
     public static String HD_BASE_URL = "";//虎盾的baseURl
 
-    public static final String BASE_HOST = "szbl-api.dev.tw.com";
-//    public static final String BASE_HOST = "192.168.3.54:8080";
+//    public static final String BASE_HOST = "szbl-api.dev.tw.com";
+    public static final String BASE_HOST = "192.168.3.54:8080";
     public static final String BASE_URL = "http://" + BASE_HOST;
 
     public static final String GET_TS_ID_URL = "appLogin";//登录1

@@ -1,5 +1,6 @@
 package com.zhuowei.polling.contract.vm
 
+import android.text.TextUtils
 import androidx.lifecycle.MutableLiveData
 import com.chenming.common.base.BaseViewModel
 import com.chenming.httprequest.http.bean.BaseBean
@@ -27,11 +28,13 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
                 override fun onSuccessful(t: BaseBean<TicketListBean.RowsDTO>?) {
                     mStartLoadingDialog.postValue(false)
                     if (t != null) {
-                        //设置图片列表
-                        val split = t.data.images.split(",").filter { it.isNotEmpty() }
                         val imageList = ArrayList<String>()
-                        split.forEach {
-                            imageList.add(HttpConstants.BASE_URL + it)
+                        //设置图片列表
+                        if (!TextUtils.isEmpty(t.data.images)) {
+                            val split = t.data.images.split(",").filter { it.isNotEmpty() }
+                            split.forEach {
+                                imageList.add(HttpConstants.BASE_URL + it)
+                            }
                         }
                         t.data.serverPhotosList = imageList
 
