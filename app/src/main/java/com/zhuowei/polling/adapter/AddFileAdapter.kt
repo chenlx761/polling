@@ -40,7 +40,11 @@ class AddFileAdapter(
                 holder.ivPhoto.setImageResource(R.mipmap.file_normal)
                 holder.ivPhoto.scaleType = ImageView.ScaleType.FIT_CENTER
                 holder.tvFileName.visibility = View.VISIBLE
-                holder.tvFileName.text =item.fileName
+                if (!TextUtils.isEmpty(item.originalFileName)) {
+                    holder.tvFileName.text = item.originalFileName
+                } else {
+                    holder.tvFileName.text = item.fileName
+                }
             } else {
                 holder.ivPhoto.scaleType = ImageView.ScaleType.CENTER_CROP
                 holder.tvFileName.visibility = View.GONE

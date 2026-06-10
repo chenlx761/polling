@@ -3,12 +3,21 @@ package com.zhuowei.polling.beans;
 import com.chenming.httprequest.http.bean.BaseBean;
 import com.google.gson.annotations.SerializedName;
 
-public class UploadFileResult extends BaseBean {
+public class UploadFileResult  {
 
 
+    private String originalFileName;
     private String fileName;
     private String filePath;
     private String url;
+
+    public String getOriginalFileName() {
+        return originalFileName;
+    }
+
+    public void setOriginalFileName(String originalFileName) {
+        this.originalFileName = originalFileName;
+    }
 
     public String getFileName() {
         return fileName;

@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import com.chenming.common.base.BaseViewModel
 import com.chenming.httprequest.http.bean.BaseBean
 import com.zhuowei.polling.beans.TicketListBean
+import com.zhuowei.polling.beans.UploadFileResult
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.TicketDetailContract
 import com.zhuowei.polling.contract.model.TicketDetailModel
@@ -28,12 +29,14 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
                 override fun onSuccessful(t: BaseBean<TicketListBean.RowsDTO>?) {
                     mStartLoadingDialog.postValue(false)
                     if (t != null) {
-                        val imageList = ArrayList<String>()
+                        val imageList = ArrayList<UploadFileResult>()
                         //设置图片列表
                         if (!TextUtils.isEmpty(t.data.images)) {
                             val split = t.data.images.split(",").filter { it.isNotEmpty() }
                             split.forEach {
-                                imageList.add(HttpConstants.BASE_URL + it)
+                                val uploadFileResult = UploadFileResult()
+                                uploadFileResult.filePath = HttpConstants.BASE_URL + it
+                                imageList.add(uploadFileResult)
                             }
                         }
                         t.data.serverPhotosList = imageList
@@ -64,6 +67,7 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
 
             })
     }
+
 
 
 }

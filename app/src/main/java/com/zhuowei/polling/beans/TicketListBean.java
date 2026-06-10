@@ -41,13 +41,13 @@ public class TicketListBean {
         private String buildLocationCoord;
         private String remark;
         private String workOrderCompany;
-        private List<String> serverPhotosList;
+        private List<UploadFileResult> serverPhotosList;
 
-        public List<String> getServerPhotosList() {
+        public List<UploadFileResult> getServerPhotosList() {
             return serverPhotosList;
         }
 
-        public void setServerPhotosList(List<String> serverPhotosList) {
+        public void setServerPhotosList(List<UploadFileResult> serverPhotosList) {
             this.serverPhotosList = serverPhotosList;
         }
 
