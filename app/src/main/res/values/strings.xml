@@ -41,7 +41,7 @@
     <string name="max_photo_count">最多只能选择%d张图片</string>
     <string name="take_photo">拍照</string>
     <string name="select_photo">从相册选择</string>
-    <string name="select_photo_title">选择图片</string>
+    <string name="select_photo_title">选择图片/文件</string>
     <string name="not_work">未采集</string>
     <string name="finish_work">已采集</string>
     <string name="search">搜索</string>

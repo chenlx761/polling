@@ -6,18 +6,9 @@ import com.google.gson.annotations.SerializedName;
 public class UploadFileResult  {
 
 
-    private String originalFileName;
     private String fileName;
     private String filePath;
-    private String url;
 
-    public String getOriginalFileName() {
-        return originalFileName;
-    }
-
-    public void setOriginalFileName(String originalFileName) {
-        this.originalFileName = originalFileName;
-    }
 
     public String getFileName() {
         return fileName;
@@ -36,11 +27,4 @@ public class UploadFileResult  {
         this.filePath = filePath;
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
 }

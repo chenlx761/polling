@@ -270,7 +270,6 @@ object UploadFileManager {
         if (paths[index].startsWith("http")) {
             val uploadFileResult = UploadFileResult()
             uploadFileResult.filePath = paths[index].replace(HttpConstants.BASE_URL, "")
-            uploadFileResult.url = paths[index]
             results.add(uploadFileResult)
             // 上传下一个
             uploadFileInternal(
@@ -313,7 +312,7 @@ object UploadFileManager {
                 UploadFileResult::class.java,
                 object : OnHttpCallBack<BaseBean<UploadFileResult>> {
                     override fun onSuccessful(t: BaseBean<UploadFileResult>?) {
-                        XLog.e("uploadFile onSuccessful:${t!!.data.url}")
+                        XLog.e("uploadFile onSuccessful:${t!!.data.filePath}")
                         t?.data?.let { results.add(it) }
                         // 上传下一个
                         uploadFileInternal(

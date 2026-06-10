@@ -12,6 +12,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.databinding.ObservableArrayList
@@ -149,15 +150,19 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     override fun setObserveListener() {
         mViewModel.mUpdateFinish.observe(this) {
-            val paths = mGovernmentPhotos.map {
-                it.filePath
-            }
-            val paths2 = mScenePhotos.map {
-                it.filePath
-            }
-            for (path in (paths2 + paths).filter { it.isNotEmpty() }) {
-                val file = File(path)
-                if (file.exists()) file.delete()
+            try {
+                val paths = mGovernmentPhotos.filter { !TextUtils.isEmpty(it.filePath) }.map {
+                    it.filePath
+                }
+                val paths2 = mScenePhotos.filter { !TextUtils.isEmpty(it.filePath) }.map {
+                    it.filePath
+                }
+                for (path in (paths2 + paths).filter { it.isNotEmpty() }) {
+                    val file = File(path)
+                    if (file.exists()) file.delete()
+                }
+            } catch (e: Exception) {
+
             }
             setResult(RESULT_OK, Intent())
             finish()
@@ -278,7 +283,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             adapter = mAddPhotoAdapter
             layoutManager = GridLayoutManager(this@TicketDetailActivity, 3)
             isNestedScrollingEnabled = false
-            setHasFixedSize(true)
             (itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
         }
 
@@ -286,7 +290,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             adapter = mGovernmentPhotoAdapter
             layoutManager = GridLayoutManager(this@TicketDetailActivity, 3)
             isNestedScrollingEnabled = false
-            setHasFixedSize(true)
             (itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
         }
 
@@ -461,7 +464,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 getString(R.string.select_photo),
                 "选择文件"
             )
-            androidx.appcompat.app.AlertDialog.Builder(this)
+            AlertDialog.Builder(this)
                 .setTitle(getString(R.string.select_photo_title))
                 .setItems(options) { _, which ->
                     when (which) {

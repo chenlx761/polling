@@ -68,7 +68,10 @@ class BaiDuLocationManager private constructor() {
     private fun setLocationOption(): LocationClientOption {
         val option = LocationClientOption()
         option.locationMode = LocationClientOption.LocationMode.Hight_Accuracy // 高精度定位模式
-        option.setCoorType("bd09ll") // 百度坐标系 (BD-09)
+        //gcj02：国测局坐标；
+        //bd09ll：百度经纬度坐标；
+        //bd09：百度墨卡托坐标；
+        option.setCoorType("bd09ll")
         option.setScanSpan(0) // 单次定位，扫描间隔为0
         option.setIsNeedAddress(true) // 需要地址信息
         option.setIsNeedLocationDescribe(true) // 需要位置描述
@@ -172,16 +175,16 @@ class BaiDuLocationManager private constructor() {
             )
 
 //            val bd09ToGcj02 = MyCoordinateConverter.bd09ToGcj02(location.longitude, location.latitude)
-//
-//
-//            //初始化左边转换工具类，指定源坐标类型和坐标数据
-////sourceLatLng 待转换坐标
+
+
+            //初始化左边转换工具类，指定源坐标类型和坐标数据
+             //sourceLatLng 待转换坐标
 //            val converter = CoordinateConverter()
 //                .from(CoordinateConverter.CoordType.COMMON)
-//                .coord(LatLng(bd09ToGcj02.first, bd09ToGcj02.second))
+//                .coord(LatLng(23.015784, 113.1701))
 //
 //
-////转换坐标
+//           //转换坐标
 //            val desLatLng = converter.convert()
 
             locationCallBack?.onLocationSuccess(result)
