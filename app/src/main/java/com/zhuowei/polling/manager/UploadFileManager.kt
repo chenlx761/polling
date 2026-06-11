@@ -270,6 +270,7 @@ object UploadFileManager {
         if (paths[index].startsWith("http")) {
             val uploadFileResult = UploadFileResult()
             uploadFileResult.filePath = paths[index].replace(HttpConstants.BASE_URL, "")
+            uploadFileResult.fileName = paths[index].substring(paths[index].lastIndexOf("/") + 1)
             results.add(uploadFileResult)
             // 上传下一个
             uploadFileInternal(

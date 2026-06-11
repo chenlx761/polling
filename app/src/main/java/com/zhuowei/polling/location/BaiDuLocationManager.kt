@@ -159,11 +159,17 @@ class BaiDuLocationManager private constructor() {
             locType == BDLocation.TypeOffLineLocation
         ) {
 
+
+            var address=if (TextUtils.isEmpty(location.addrStr)) "" else location.addrStr
+            if (location.poiList!=null && location.poiList.size > 0){
+                address=location.poiList[0].addr+location.poiList[0].name
+            }
+
             // 构建定位结果
             val result = LocationResult(
                 latitude = location.latitude,
                 longitude = location.longitude,
-                address = if (TextUtils.isEmpty(location.addrStr)) "" else location.addrStr,
+                address = address,
                 country = location.country ?: "",
                 province = location.province ?: "",
                 city = location.city ?: "",
@@ -177,8 +183,8 @@ class BaiDuLocationManager private constructor() {
 //            val bd09ToGcj02 = MyCoordinateConverter.bd09ToGcj02(location.longitude, location.latitude)
 
 
-            //初始化左边转换工具类，指定源坐标类型和坐标数据
-             //sourceLatLng 待转换坐标
+           // 初始化左边转换工具类，指定源坐标类型和坐标数据
+            // sourceLatLng 待转换坐标
 //            val converter = CoordinateConverter()
 //                .from(CoordinateConverter.CoordType.COMMON)
 //                .coord(LatLng(23.015784, 113.1701))
