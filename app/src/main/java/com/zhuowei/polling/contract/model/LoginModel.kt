@@ -29,7 +29,7 @@ class LoginModel : BaseModel(), ILoginModel {
             RetrofitUtil.Builder(HttpConstants.GET_TS_ID_URL)
                 .addPara("username", userName)
                 .addPara("password", pwd)
-                .addHeader("Host", HttpConstants.BASE_HOST)
+                .addHeader("Host", HttpConstants.getBaseHost())
                 .build()
                 .postJson(
                     LoginResult::class.java, object : OnHttpCallBack<BaseBean<LoginResult>> {
