@@ -183,11 +183,11 @@ class BaiDuLocationManager private constructor() {
 //            val bd09ToGcj02 = MyCoordinateConverter.bd09ToGcj02(location.longitude, location.latitude)
 
 
-           // 初始化左边转换工具类，指定源坐标类型和坐标数据
+            //初始化左边转换工具类，指定源坐标类型和坐标数据
             // sourceLatLng 待转换坐标
 //            val converter = CoordinateConverter()
 //                .from(CoordinateConverter.CoordType.COMMON)
-//                .coord(LatLng(23.015784, 113.1701))
+//                .coord(LatLng(23.021483238957895, 113.09857108054854))
 //
 //
 //           //转换坐标

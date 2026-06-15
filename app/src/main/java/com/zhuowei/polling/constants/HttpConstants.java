@@ -9,7 +9,7 @@ public class HttpConstants {
 
     public static final String BASE_HOST_DEV = "szbl-api.dev.tw.com";//测试服
     public static final String BASE_HOST_RELEASE = "szbl-api.cnhyt.com";//正式服
-    public static final String BASE_HOST_LOCAL = "192.168.3.54:8080";
+    public static final String BASE_HOST_LOCAL = "192.168.3.54:8080";//本地金灵服务器
     public static final String BASE_URL = "http://" + getBaseHost();
 
     public static final String GET_TS_ID_URL = "appLogin";//登录1
@@ -25,8 +25,8 @@ public class HttpConstants {
             return BASE_HOST_LOCAL;
         }
         if (!BuildConfig.DEBUG){
-//            return BASE_HOST_RELEASE;
-            return BASE_HOST_DEV;
+            return BASE_HOST_RELEASE;
+//            return BASE_HOST_DEV;
         }
         return BASE_HOST_DEV;
     }

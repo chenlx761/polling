@@ -109,6 +109,8 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
                     }
 
                     override fun onLoginError(errorCode: Int, errorMsg: String?) {
+                        dismissDialog()
+                        ToastUtil.showShortToast(errorMsg)
                     }
 
                 })
