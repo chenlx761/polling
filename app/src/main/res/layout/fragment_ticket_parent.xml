@@ -10,14 +10,29 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.chenming.common.base.widget.MyTitleBar
-            android:id="@+id/my_title_bar"
+        <RelativeLayout
+            android:id="@+id/rl_top"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fitsSystemWindows="true"
-            app:layout_constraintTop_toTopOf="parent"
-            app:titleBarBackground="@color/white"
-            app:titleBarTitle="@string/main_ticket" />
+            android:fitsSystemWindows="true">
+
+            <com.chenming.common.base.widget.MyTitleBar
+                android:id="@+id/my_title_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:titleBarBackground="@color/white"
+                app:titleBarTitle="@string/main_ticket" />
+
+            <ImageView
+                android:id="@+id/iv_logout"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:layout_alignParentRight="true"
+                android:layout_marginTop="15dp"
+                android:layout_marginRight="20dp"
+                android:src="@mipmap/logout" />
+        </RelativeLayout>
 
 
         <com.google.android.material.tabs.TabLayout
@@ -25,24 +40,24 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@color/white"
-            app:tabGravity="fill"
-            app:tabMode="fixed"
-            app:tabIndicatorColor="@color/primary"
-            app:tabSelectedTextColor="@color/primary"
-            app:tabTextColor="@color/gray_600"
-            app:layout_constraintTop_toBottomOf="@+id/my_title_bar"
-            app:tabIndicatorFullWidth="false"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@+id/rl_top"
+            app:tabGravity="fill"
+            app:tabIndicatorColor="@color/primary"
+            app:tabIndicatorFullWidth="false"
+            app:tabMode="fixed"
+            app:tabSelectedTextColor="@color/primary"
+            app:tabTextColor="@color/gray_600" />
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewPager"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            app:layout_constraintTop_toBottomOf="@id/tabLayout"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/tabLayout" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

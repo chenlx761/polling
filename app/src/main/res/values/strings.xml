@@ -74,6 +74,8 @@
     <string name="download_confirm_message">确定要下载文件 %1$s 吗？</string>
     <string name="common_confirm">确定</string>
     <string name="common_cancel">取消</string>
+    <string name="logout_confirm_title">退出登录</string>
+    <string name="logout_confirm_message">确定要退出当前账号并返回登录页吗？</string>
     <string name="download_cancelled">已取消下载</string>
     <string name="download_in_progress">文件下载中...</string>
     <string name="download_started">开始下载: %1$s</string>

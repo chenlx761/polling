@@ -45,6 +45,12 @@ class HuDunManager private constructor() {
         }
     }
 
+    fun logout() {
+        ITVAPI.getMInstance(HuDunApplication.getInstance().application).logout { i, string ->
+            XLog.e("logoutUser   " + "code:" + i + "     message:" + string)
+        }
+    }
+
     fun login(tsid: String, callBack: LoginFinishCallBack, isDebug: Boolean = false) {
         val macOrSn = ITVAPI.getMInstance(HuDunApplication.getInstance().application).getMacOrSn()
         XLog.e("macOrSn:" + macOrSn)
@@ -74,7 +80,7 @@ class HuDunManager private constructor() {
     fun start(callBack: StartCallBack?) {
         ITVAPI.getMInstance(HuDunApplication.getInstance().application).start { code, message ->
             XLog.e("start  " + "code" + code + ":messgae" + message)
-            if (ErrorCode.SUCCESS == code || ErrorCode.SOME_ROUTE_OR_CLOUD_ABNORMAL==code) {
+            if (ErrorCode.SUCCESS == code || ErrorCode.SOME_ROUTE_OR_CLOUD_ABNORMAL == code) {
                 callBack?.onStartFinish()
             } else {
                 callBack?.onStartError(code, message)
@@ -83,7 +89,7 @@ class HuDunManager private constructor() {
     }
 
 
-    fun release(){
+    fun release() {
         ITVAPI.getMInstance(HuDunApplication.getInstance().application).release()
     }
 }
