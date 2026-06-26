@@ -48,17 +48,20 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         private const val MAX_PHOTO_COUNT = 9
         private const val Ticket_Id = "Ticket_Id"
         private const val Ticket_Status = "Ticket_Status"
+        private const val Ticket_Create_Mode = "Ticket_Create_Mode"
 
         @JvmStatic
         fun newIntent(
             myActivityLauncher: ActivityResultLauncher<Intent>,
             context: Context,
             ticketId: String?,
-            ticketStatus: String?
+            ticketStatus: String?,
+            isCreateMode: Boolean = false
         ) {
             val intent = Intent(context, TicketDetailActivity::class.java)
             intent.putExtra(Ticket_Id, ticketId)
             intent.putExtra(Ticket_Status, ticketStatus)
+            intent.putExtra(Ticket_Create_Mode, isCreateMode)
             myActivityLauncher.launch(intent)
         }
     }
@@ -73,6 +76,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private var mLocationResult: LocationResult? = null
     private var mTicketStatus: String? = null
     private var mTicketId: String? = null
+    private var mIsCreateMode: Boolean = false
 
     private enum class PhotoType {
         SCENE,
@@ -184,6 +188,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
 
         mBinding!!.btnSubmit.setOnClickListener {
+            val submitBean = buildSubmitBean() ?: return@setOnClickListener
             if (mLocationResult == null) {
                 ToastUtil.showShortToast(getString(R.string.location_hint))
                 return@setOnClickListener
@@ -210,18 +215,16 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 object : UploadFileManager.OnUploadAllCallBack {
                     override fun onAllSuccessful(results: List<UploadFileResult>) {
                         XLog.e("完成咯")
-                        mBean?.let { bean ->
-                            val sceneSize = scenePhotos.size
-                            val sceneResults = results.take(sceneSize)
-                            val governmentResults = results.drop(sceneSize)
-                            bean.remark = mBinding!!.etRemark.text.toString()
-                            bean.images = TextUtils.join(",", sceneResults.map { it.filePath })
-                            bean.governmentImages = governmentResults
-                            bean.buildLocation = mLocationResult!!.address
-                            bean.buildLocationCoord =
-                                "${mLocationResult!!.latitude},${mLocationResult!!.longitude}"
-                            mViewModel!!.postTicketDetail(bean)
-                        }
+                        val sceneSize = scenePhotos.size
+                        val sceneResults = results.take(sceneSize)
+                        val governmentResults = results.drop(sceneSize)
+                        submitBean.remark = mBinding!!.etRemark.text.toString().trim()
+                        submitBean.images = TextUtils.join(",", sceneResults.map { it.filePath })
+                        submitBean.governmentImages = governmentResults
+                        submitBean.buildLocation = mLocationResult!!.address
+                        submitBean.buildLocationCoord =
+                            "${mLocationResult!!.latitude},${mLocationResult!!.longitude}"
+                        mViewModel!!.postTicketDetail(submitBean, mIsCreateMode)
                     }
 
                     override fun onError(
@@ -233,12 +236,17 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             )
         }
 
-        mViewModel.getTicketDetail(mTicketId)
+        if (mIsCreateMode) {
+            initCreateModeData()
+        } else {
+            mViewModel.getTicketDetail(mTicketId)
+        }
     }
 
     override fun initData() {
         mTicketStatus = intent.getStringExtra(Ticket_Status)
         mTicketId = intent.getStringExtra(Ticket_Id)
+        mIsCreateMode = intent.getBooleanExtra(Ticket_Create_Mode, false) || mTicketId.isNullOrEmpty()
     }
 
     override fun initViewModel(): TicketDetailVm = createViewModel(TicketDetailVm::class.java)
@@ -249,6 +257,8 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     private fun setData2View() {
         mBean?.let {
+            mScenePhotos.clear()
+            mGovernmentPhotos.clear()
             mBinding!!.etAddress.setText(it.userAddress)
             mBinding!!.etArea.setText(it.workOrderCompany)
             mBinding!!.etName.setText(it.userName)
@@ -269,7 +279,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                     it.buildLocation,
                     ""
                 )
-                mBinding!!.tvLocation.text = it.buildLocationCoord
+                mBinding!!.tvLocation.text = it.buildLocation
             }
         }
     }
@@ -312,6 +322,8 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         mGovernmentPhotoAdapter?.setOnDeleteClickListener { position ->
             removePhotoAt(mGovernmentPhotos, position)
         }
+
+        updateInputMode()
     }
 
 
@@ -362,7 +374,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             override fun onLocationSuccess(result: LocationResult) {
                 XLog.e("定位成功", result.toString())
                 mLocationResult = result
-                mBinding.tvLocation.text = "${result.latitude},${result.longitude}"
+                mBinding.tvLocation.text = result.address.ifEmpty {
+                    "${result.latitude},${result.longitude}"
+                }
                 dismissDialog()
             }
 
@@ -551,5 +565,85 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private fun isImageFile(path: String): Boolean {
         val extension = path.substringAfterLast('.', "").lowercase()
         return extension in setOf("jpg", "jpeg", "png", "webp", "bmp", "gif")
+    }
+
+    private fun initCreateModeData() {
+        mBean = TicketListBean.RowsDTO().apply {
+            surveyStatus = mTicketStatus ?: "0"
+        }
+        mScenePhotos.clear()
+        mGovernmentPhotos.clear()
+        ensureAddPlaceholder(mScenePhotos)
+        ensureAddPlaceholder(mGovernmentPhotos)
+        mBinding!!.etAddress.setText("")
+        mBinding!!.etArea.setText("")
+        mBinding!!.etName.setText("")
+        mBinding!!.etAccount.setText("")
+        mBinding!!.etRemark.setText("")
+        mBinding!!.tvLocation.text = getString(R.string.location_click_hint)
+    }
+
+    private fun updateInputMode() {
+        updateEditTextState(mBinding!!.etArea, mIsCreateMode, R.string.area_input_hint)
+        updateEditTextState(mBinding!!.etAddress, mIsCreateMode, R.string.address_input_hint)
+        updateEditTextState(mBinding!!.etName, mIsCreateMode, R.string.user_name_input_hint)
+        updateEditTextState(mBinding!!.etAccount, mIsCreateMode, R.string.account_input_hint)
+        mBinding!!.btnSubmit.text =
+            getString(if (mIsCreateMode) R.string.create_and_submit else R.string.submit)
+    }
+
+    private fun updateEditTextState(
+        editText: android.widget.EditText,
+        editable: Boolean,
+        hintResId: Int
+    ) {
+        editText.isEnabled = editable
+        editText.isFocusable = editable
+        editText.isFocusableInTouchMode = editable
+        editText.isLongClickable = editable
+        editText.hint = if (editable) getString(hintResId) else ""
+        editText.setBackgroundResource(
+            if (editable) R.drawable.bg_f5f9ff_radius_5 else android.R.color.transparent
+        )
+        val horizontalPadding = if (editable) resources.getDimensionPixelSize(R.dimen.ticket_input_padding_horizontal) else 0
+        val verticalPadding = if (editable) resources.getDimensionPixelSize(R.dimen.ticket_input_padding_vertical) else 0
+        editText.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+    }
+
+    private fun buildSubmitBean(): TicketListBean.RowsDTO? {
+        val area = mBinding!!.etArea.text.toString().trim()
+        val address = mBinding!!.etAddress.text.toString().trim()
+        val userName = mBinding!!.etName.text.toString().trim()
+        val userNo = mBinding!!.etAccount.text.toString().trim()
+
+        if (mIsCreateMode) {
+            if (area.isEmpty()) {
+                ToastUtil.showShortToast(getString(R.string.area_required_hint))
+                return null
+            }
+            if (address.isEmpty()) {
+                ToastUtil.showShortToast(getString(R.string.address_required_hint))
+                return null
+            }
+            if (userName.isEmpty()) {
+                ToastUtil.showShortToast(getString(R.string.user_name_required_hint))
+                return null
+            }
+            if (userNo.isEmpty()) {
+                ToastUtil.showShortToast(getString(R.string.account_required_hint))
+                return null
+            }
+        }
+
+        return (mBean ?: TicketListBean.RowsDTO().apply {
+            surveyStatus = mTicketStatus ?: "0"
+        }).apply {
+            this.workOrderCompany = area
+            this.areaCompany = area
+            this.userAddress = address
+            this.address = address
+            this.userName = userName
+            this.userNo = userNo
+        }
     }
 }

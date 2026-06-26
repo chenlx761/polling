@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="tree_node_indent">30dp</dimen>
+    <dimen name="ticket_input_padding_horizontal">12dp</dimen>
+    <dimen name="ticket_input_padding_vertical">10dp</dimen>
 </resources>

@@ -59,6 +59,8 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
             layoutManager = LinearLayoutManager(requireActivity())
         }
 
+        mBinding!!.fabAddTicket.visibility = if (mTicketStaus == "0") View.GONE else View.GONE
+
         val searchTypes = arrayOf(getString(R.string.user_name_label), getString(R.string.address))
         val adapter = android.widget.ArrayAdapter(
             requireContext(), android.R.layout.simple_spinner_item, searchTypes
@@ -92,11 +94,28 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
                     })!!,
                     requireActivity(),
                     (i as TicketListBean.RowsDTO).id.toString(),
-                    mTicketStaus
+                    mTicketStaus,
+                    false
                 )
             }
 
         })
+
+        mBinding!!.fabAddTicket.setOnClickListener {
+            TicketDetailActivity.newIntent(
+                getActivityLauncher(object : OnActivityResultListener {
+                    override fun onActivityResult(result: ActivityResult?) {
+                        if (result != null && result.resultCode == Activity.RESULT_OK) {
+                            performSearch()
+                        }
+                    }
+                })!!,
+                requireActivity(),
+                null,
+                mTicketStaus,
+                true
+            )
+        }
 
         mBinding!!.spSearchType.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {

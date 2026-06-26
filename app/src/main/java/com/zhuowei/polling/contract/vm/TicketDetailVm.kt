@@ -54,10 +54,15 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
             })
     }
 
-    override fun postTicketDetail(bean: TicketListBean.RowsDTO?) {
+    override fun postTicketDetail(bean: TicketListBean.RowsDTO?, isCreateMode: Boolean) {
         mStartLoadingDialog.postValue(true)
         mModel.postTicketDetail(
-            bean, object : BaseCallBack<BaseBean<Objects>>(HttpConstants.EDIT_TICKET_DETAIL_URL) {
+            bean,
+            isCreateMode,
+            object : BaseCallBack<BaseBean<Objects>>(
+                if (isCreateMode) HttpConstants.ADD_TICKET_DETAIL_URL
+                else HttpConstants.EDIT_TICKET_DETAIL_URL
+            ) {
 
 
                 override fun onSuccessful(t: BaseBean<Objects>?) {

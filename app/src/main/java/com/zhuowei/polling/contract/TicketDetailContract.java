@@ -15,7 +15,7 @@ public class TicketDetailContract {
     public interface ITicketDetailVm extends IBaseViewModel {
 
         void getTicketDetail(String ticketId);
-        void postTicketDetail(TicketListBean.RowsDTO bean);
+        void postTicketDetail(TicketListBean.RowsDTO bean, boolean isCreateMode);
     }
 
     /**
@@ -26,6 +26,6 @@ public class TicketDetailContract {
 
         void getTicketDetail(String ticketId, OnHttpCallBack<BaseBean<TicketListBean.RowsDTO>> callBack);
 
-        void postTicketDetail(TicketListBean.RowsDTO bean, OnHttpCallBack<BaseBean<Objects>> callBack);
+        void postTicketDetail(TicketListBean.RowsDTO bean, boolean isCreateMode, OnHttpCallBack<BaseBean<Objects>> callBack);
     }
 }

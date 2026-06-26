@@ -23,12 +23,23 @@ class TicketDetailModel : BaseModel(), TicketDetailContract.ITicketDetailModel {
 
     override fun postTicketDetail(
         bean: TicketListBean.RowsDTO?,
+        isCreateMode: Boolean,
         callBack: OnHttpCallBack<BaseBean<Objects?>?>?
     ) {
         addDisposable(
-            RetrofitUtil.Builder(HttpConstants.EDIT_TICKET_DETAIL_URL)
+            RetrofitUtil.Builder(
+                if (isCreateMode) HttpConstants.ADD_TICKET_DETAIL_URL
+                else HttpConstants.EDIT_TICKET_DETAIL_URL
+            )
                 .addPara(bean)
-                .build().putJson(Objects::class.java, callBack)
+                .build()
+                .let { builder ->
+                    if (isCreateMode) {
+                        builder.putJson(Objects::class.java, callBack)
+                    } else {
+                        builder.putJson(Objects::class.java, callBack)
+                    }
+                }
         )
     }
 
