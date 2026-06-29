@@ -18,6 +18,7 @@ import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.contract.vm.MainVm
 import com.zhuowei.polling.databinding.FragmentTicketBinding
 import com.zhuowei.polling.ui.activitys.ticket.TicketDetailActivity
+import com.zhuowei.polling.ui.activitys.ticket.UploadTicketFileActivity
 
 class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
 
@@ -102,19 +103,20 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
         })
 
         mBinding!!.fabAddTicket.setOnClickListener {
-            TicketDetailActivity.newIntent(
-                getActivityLauncher(object : OnActivityResultListener {
-                    override fun onActivityResult(result: ActivityResult?) {
-                        if (result != null && result.resultCode == Activity.RESULT_OK) {
-                            performSearch()
-                        }
-                    }
-                })!!,
-                requireActivity(),
-                null,
-                mTicketStaus,
-                true
-            )
+            UploadTicketFileActivity.newInstance(requireActivity())
+//            TicketDetailActivity.newIntent(
+//                getActivityLauncher(object : OnActivityResultListener {
+//                    override fun onActivityResult(result: ActivityResult?) {
+//                        if (result != null && result.resultCode == Activity.RESULT_OK) {
+//                            performSearch()
+//                        }
+//                    }
+//                })!!,
+//                requireActivity(),
+//                null,
+//                mTicketStaus,
+//                true
+//            )
         }
 
         mBinding!!.spSearchType.onItemSelectedListener =

@@ -756,9 +756,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             }
         }
 
-        return (mBean ?: TicketListBean.RowsDTO().apply {
-            surveyStatus = mTicketStatus ?: "0"
-        }).apply {
+        return (mBean ?: TicketListBean.RowsDTO()).apply {
             this.workOrderCompany = area
             this.areaCompany = area
             this.userAddress = address

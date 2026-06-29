@@ -1,5 +1,6 @@
 package com.zhuowei.polling.contract.model
 
+import android.webkit.MimeTypeMap
 import com.chenming.common.base.BaseModel
 import com.chenming.httprequest.http.RetrofitUtil
 import com.chenming.httprequest.http.bean.BaseBean
@@ -15,8 +16,20 @@ class UploadTicketFileModel : BaseModel(), UploadTicketFileContract.IUploadTicke
     ) {
         addDisposable(
             RetrofitUtil.Builder(HttpConstants.UPLOAD_TICKET_FILE_URL)
-                .addPara("file", file)
-                .build().postFile(Any::class.java, callBack)
+                .setFile(
+                    file!!.path,
+                    getMiniType(file),
+                    "file"
+                )
+                .build().postFile(Any::class.java, callBack, HttpConstants.BASE_HOST_WEB)
         )
+    }
+
+    private fun getMiniType(file: File): String {
+        val extension = file.extension
+
+        val mimeType = MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(extension.lowercase())
+        return mimeType!!
     }
 }
