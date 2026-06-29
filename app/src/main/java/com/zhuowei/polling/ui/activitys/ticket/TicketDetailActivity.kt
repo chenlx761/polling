@@ -12,16 +12,18 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.databinding.ObservableArrayList
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
+import com.bigkoo.pickerview.builder.OptionsPickerBuilder
+import com.bigkoo.pickerview.view.OptionsPickerView
 import com.chenming.common.listener.OnItemClickListener
 import com.chenming.common.utils.AppManager
 import com.chenming.common.utils.ToastUtil
 import com.chenming.httprequest.XLog
+import com.contrarywind.interfaces.IPickerViewData
 import com.zhuowei.polling.R
 import com.zhuowei.polling.adapter.AddFileAdapter
 import com.zhuowei.polling.base.MyBaseActivity
@@ -46,6 +48,8 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     companion object {
         private const val MAX_PHOTO_COUNT = 9
+        private const val ROOT_AREA_ID = 1
+        private const val AREA_LEVEL_COUNT = 3
         private const val Ticket_Id = "Ticket_Id"
         private const val Ticket_Status = "Ticket_Status"
         private const val Ticket_Create_Mode = "Ticket_Create_Mode"
@@ -81,6 +85,12 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private enum class PhotoType {
         SCENE,
         GOVERNMENT
+    }
+
+    private data class AreaPickerItem(
+        val option: TicketDetailVm.AreaPickerOption
+    ) : IPickerViewData {
+        override fun getPickerViewText(): String = option.selection.name
     }
 
     private val takePictureLauncher: ActivityResultLauncher<Uri> =
@@ -181,6 +191,12 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     override fun setListener() {
         mBinding!!.myTitleBar.setLeftLayoutClickListener {
             finish()
+        }
+
+        mBinding!!.etArea.setOnClickListener {
+            if (mIsCreateMode) {
+                startAreaSelection()
+            }
         }
 
         mBinding!!.tvLocation.setOnClickListener {
@@ -478,16 +494,16 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 getString(R.string.select_photo),
                 "选择文件"
             )
-            AlertDialog.Builder(this)
-                .setTitle(getString(R.string.select_photo_title))
-                .setItems(options) { _, which ->
-                    when (which) {
-                        0 -> ensureCameraAndTakePhoto()
-                        1 -> pickFromGallery()
-                        2 -> pickFile()
-                    }
+            showBottomOptionsPicker(
+                title = getString(R.string.select_photo_title),
+                options = options.toList()
+            ) { which ->
+                when (which) {
+                    0 -> ensureCameraAndTakePhoto()
+                    1 -> pickFromGallery()
+                    2 -> pickFile()
                 }
-                .show()
+            }
         } else {
             takePhoto()
         }
@@ -584,12 +600,41 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun updateInputMode() {
-        updateEditTextState(mBinding!!.etArea, mIsCreateMode, R.string.area_input_hint)
+        updateAreaInputState()
         updateEditTextState(mBinding!!.etAddress, mIsCreateMode, R.string.address_input_hint)
         updateEditTextState(mBinding!!.etName, mIsCreateMode, R.string.user_name_input_hint)
         updateEditTextState(mBinding!!.etAccount, mIsCreateMode, R.string.account_input_hint)
         mBinding!!.btnSubmit.text =
             getString(if (mIsCreateMode) R.string.create_and_submit else R.string.submit)
+    }
+
+    private fun updateAreaInputState() {
+        val editText = mBinding!!.etArea
+        if (mIsCreateMode) {
+            val horizontalPadding =
+                resources.getDimensionPixelSize(R.dimen.ticket_input_padding_horizontal)
+            val verticalPadding =
+                resources.getDimensionPixelSize(R.dimen.ticket_input_padding_vertical)
+            editText.isEnabled = true
+            editText.isFocusable = false
+            editText.isFocusableInTouchMode = false
+            editText.isCursorVisible = false
+            editText.isLongClickable = false
+            editText.hint = getString(R.string.area_input_hint)
+            editText.setBackgroundResource(R.drawable.bg_f5f9ff_radius_5)
+            editText.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+            editText.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                0,
+                0,
+                android.R.drawable.arrow_down_float,
+                0
+            )
+            editText.compoundDrawablePadding = horizontalPadding
+        } else {
+            updateEditTextState(editText, false, R.string.area_input_hint)
+            editText.isCursorVisible = false
+            editText.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0)
+        }
     }
 
     private fun updateEditTextState(
@@ -609,6 +654,89 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         val verticalPadding = if (editable) resources.getDimensionPixelSize(R.dimen.ticket_input_padding_vertical) else 0
         editText.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
     }
+
+    private fun startAreaSelection() {
+        mViewModel.getAreaPickerData(mBinding!!.etArea.text?.toString()) { pickerData ->
+            if (pickerData.level1Items.isEmpty()) {
+                ToastUtil.showShortToast(getString(R.string.area_empty_hint))
+                return@getAreaPickerData
+            }
+            showAreaPicker(pickerData)
+        }
+    }
+
+    private fun showAreaPicker(pickerData: TicketDetailVm.AreaPickerDisplayData) {
+        val level1Items = pickerData.level1Items.map(::AreaPickerItem)
+        val level2Items = pickerData.level2Items.map { level2List ->
+            level2List.map(::AreaPickerItem)
+        }
+        val level3Items = pickerData.level3Items.map { level3Group ->
+            level3Group.map { level3List ->
+                level3List.map(::AreaPickerItem)
+            }
+        }
+        val pickerView: OptionsPickerView<Any> = OptionsPickerBuilder(this) { option1, option2, option3, _ ->
+            val areaText = mViewModel.buildSelectedAreaText(pickerData, option1, option2, option3)
+                ?: return@OptionsPickerBuilder
+            mBinding!!.etArea.setText(areaText)
+        }
+            .setTitleText(getString(R.string.area_input_hint))
+            .setSubmitColor(ContextCompat.getColor(this, R.color.primary))
+            .setCancelColor(ContextCompat.getColor(this, R.color.primary))
+            .setTextColorCenter(ContextCompat.getColor(this, R.color.gray_700))
+            .setTextColorOut(ContextCompat.getColor(this, R.color.gray_600))
+            .setContentTextSize(18)
+            .isRestoreItem(true)
+            .isCenterLabel(false)
+            .build()
+        pickerView.setSelectOptions(
+            pickerData.selectedLevel1,
+            pickerData.selectedLevel2,
+            pickerData.selectedLevel3
+        )
+        pickerView.setPicker(
+            level1Items,
+            level2Items,
+            level3Items
+        )
+        pickerView.show()
+    }
+
+    private fun showBottomOptionsPicker(
+        title: String,
+        options: List<String>,
+        onSelected: (Int) -> Unit
+    ) {
+        if (options.isEmpty()) return
+        val pickerItems = options.mapIndexed { index, name ->
+            SimplePickerItem(index, name)
+        }
+        val pickerView: OptionsPickerView<Any> = OptionsPickerBuilder(this) { option1, _, _, _ ->
+            onSelected(pickerItems.getOrNull(option1)?.value ?: return@OptionsPickerBuilder)
+        }
+            .setTitleText(title)
+            .setSubmitColor(ContextCompat.getColor(this, R.color.primary))
+            .setCancelColor(ContextCompat.getColor(this, R.color.primary))
+            .setTextColorCenter(ContextCompat.getColor(this, R.color.gray_700))
+            .setTextColorOut(ContextCompat.getColor(this, R.color.gray_600))
+            .setContentTextSize(18)
+            .isRestoreItem(true)
+            .isCenterLabel(false)
+            .build()
+        pickerView.setPicker(pickerItems)
+        pickerView.show()
+    }
+
+    private data class SimplePickerItem(
+        val value: Int,
+        val label: String
+    ) : IPickerViewData {
+        override fun getPickerViewText(): String = label
+    }
+
+
+
+
 
     private fun buildSubmitBean(): TicketListBean.RowsDTO? {
         val area = mBinding!!.etArea.text.toString().trim()

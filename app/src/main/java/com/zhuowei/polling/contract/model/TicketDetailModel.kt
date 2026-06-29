@@ -4,6 +4,7 @@ import com.chenming.common.base.BaseModel
 import com.chenming.httprequest.http.RetrofitUtil
 import com.chenming.httprequest.http.bean.BaseBean
 import com.chenming.httprequest.http.listener.OnHttpCallBack
+import com.zhuowei.polling.bean.AreaListBean
 import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.TicketDetailContract
@@ -40,6 +41,18 @@ class TicketDetailModel : BaseModel(), TicketDetailContract.ITicketDetailModel {
                         builder.putJson(Objects::class.java, callBack)
                     }
                 }
+        )
+    }
+
+    override fun getAreaList(
+        callBack: OnHttpCallBack<BaseBean<AreaListBean>?>?
+    ) {
+        addDisposable(
+            RetrofitUtil.Builder(HttpConstants.GET_AREA_URL)
+                .build().get(
+                    AreaListBean::class.java, callBack,
+                    HttpConstants.BASE_HOST_WEB
+                )
         )
     }
 

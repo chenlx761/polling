@@ -59,7 +59,7 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
             layoutManager = LinearLayoutManager(requireActivity())
         }
 
-        mBinding!!.fabAddTicket.visibility = if (mTicketStaus == "0") View.GONE else View.GONE
+        mBinding!!.fabAddTicket.visibility = if (mTicketStaus == "0") View.VISIBLE else View.GONE
 
         val searchTypes = arrayOf(getString(R.string.user_name_label), getString(R.string.address))
         val adapter = android.widget.ArrayAdapter(
