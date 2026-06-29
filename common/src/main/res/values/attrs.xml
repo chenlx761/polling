@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="MyTitleBar">
+        <attr name="titleBarTitle" format="string" />
+        <attr name="titleBarTitleSize" format="dimension" />
+        <attr name="titleBarTitleColor" format="color|reference" />
+        <attr name="titleBarLeftImg" format="reference" />
+        <attr name="titleBarLeftIcon" format="reference" />
+        <attr name="titleBarLeftImgBg" format="reference" />
+        <attr name="titleBarLeftText" format="string" />
+        <attr name="titleBarRightImg" format="reference" />
+        <attr name="titleBarRight2Img" format="reference" />
+        <attr name="titleBarBackground" format="reference|color" />
+    </declare-styleable>
+    <declare-styleable name="MyMainTabView">
+        <attr name="mainTabHeight" format="dimension" />
+    </declare-styleable>
+
+</resources>

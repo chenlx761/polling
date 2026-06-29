@@ -115,7 +115,7 @@ dependencies {
     implementation 'io.github.h07000223:flycoTabLayout:3.0.0'
     implementation 'com.kyleduo.switchbutton:library:2.1.0'
 
-    implementation("com.github.chenlx761:project_common:v1.0.5")
+    //implementation("com.github.chenlx761:project_common:v1.0.5")
 
     implementation('com.github.bumptech.glide:okhttp3-integration:4.9.0', {
         //exclude module:
@@ -138,7 +138,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata:2.3.1"
     implementation 'com.github.ybq:Android-SpinKit:1.4.0'
     implementation 'com.blankj:utilcodex:1.30.5'
-    implementation 'com.github.chenlx761:http_lib:v1.0.2'
+    //implementation 'com.github.chenlx761:http_lib:v1.0.2'
 
     kapt "com.android.databinding:compiler:3.1.4"
     implementation 'com.alibaba:fastjson:1.2.49'
@@ -153,6 +153,7 @@ dependencies {
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.6.4'
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Util:7.6.4'
     implementation project(path: ':hudun')
+    implementation project(path: ':common')
 
     implementation  'io.github.scwang90:refresh-layout-kernel:3.0.0-alpha'      //核心必须依赖
     implementation  'io.github.scwang90:refresh-header-material:3.0.0-alpha'    //谷歌刷新头

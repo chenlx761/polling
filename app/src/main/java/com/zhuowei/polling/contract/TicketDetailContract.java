@@ -24,7 +24,7 @@ public class TicketDetailContract {
         void getTicketDetail(String ticketId);
         void postTicketDetail(TicketListBean.RowsDTO bean, boolean isCreateMode);
 
-        void getAreaPickerData(String currentAreaText, GetAreaListCallBack callBack);
+        void getAreaPickerData(GetAreaListCallBack callBack);
     }
 
     /**

@@ -1,0 +1,8 @@
+<resources>
+    <string name="ok">ok</string>
+    <string name="cancel">cancel</string>
+    <string name="dialog_title">Warm Tips</string>
+    <string name="forward_to_settings_text">You need to manually grant the necessary permissions in Settings</string>
+    <string name="no_permission_text">no permission</string>
+    <string name="please_wait">please wait…</string>
+</resources>

@@ -24,6 +24,7 @@
     <string name="belonging_area">区域</string>
     <string name="dispatch_time">派工时间:</string>
     <string name="illegal_backfill_title">台账回填</string>
+    <string name="upload_ticket_file_title">导入台账</string>
     <string name="illegal_info">台账信息</string>
     <string name="user_address">地址</string>
     <string name="address">地址</string>

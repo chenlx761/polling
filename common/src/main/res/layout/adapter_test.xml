@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable
+            name="item"
+            type="com.chenming.common.example.TestBean" />
+
+        <variable
+            name="position"
+            type="java.lang.Integer" />
+
+        <variable
+            name="listener"
+            type="com.chenming.common.listener.OnItemClickListener" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/content_cl"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:onClick="@{(view)->listener.onClick(position,item,view)}">
+
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="@{(view)->listener.onClick(position,item,view)}"
+            android:text="@{item.name}" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

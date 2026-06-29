@@ -81,6 +81,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private var mTicketStatus: String? = null
     private var mTicketId: String? = null
     private var mIsCreateMode: Boolean = false
+    private var mSelectedAreaId: Int? = null
 
     private enum class PhotoType {
         SCENE,
@@ -277,6 +278,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             mGovernmentPhotos.clear()
             mBinding!!.etAddress.setText(it.userAddress)
             mBinding!!.etArea.setText(it.workOrderCompany)
+            mSelectedAreaId = null
             mBinding!!.etName.setText(it.userName)
             mBinding!!.etAccount.setText(it.userNo)
             mBinding!!.etRemark.setText(it.remark)
@@ -593,6 +595,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         ensureAddPlaceholder(mGovernmentPhotos)
         mBinding!!.etAddress.setText("")
         mBinding!!.etArea.setText("")
+        mSelectedAreaId = null
         mBinding!!.etName.setText("")
         mBinding!!.etAccount.setText("")
         mBinding!!.etRemark.setText("")
@@ -623,12 +626,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             editText.hint = getString(R.string.area_input_hint)
             editText.setBackgroundResource(R.drawable.bg_f5f9ff_radius_5)
             editText.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
-            editText.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                0,
-                0,
-                android.R.drawable.arrow_down_float,
-                0
-            )
             editText.compoundDrawablePadding = horizontalPadding
         } else {
             updateEditTextState(editText, false, R.string.area_input_hint)
@@ -656,7 +653,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun startAreaSelection() {
-        mViewModel.getAreaPickerData(mBinding!!.etArea.text?.toString()) { pickerData ->
+        mViewModel.getAreaPickerData { pickerData ->
             if (pickerData.level1Items.isEmpty()) {
                 ToastUtil.showShortToast(getString(R.string.area_empty_hint))
                 return@getAreaPickerData
@@ -676,9 +673,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             }
         }
         val pickerView: OptionsPickerView<Any> = OptionsPickerBuilder(this) { option1, option2, option3, _ ->
-            val areaText = mViewModel.buildSelectedAreaText(pickerData, option1, option2, option3)
+            val areaResult = mViewModel.buildSelectedAreaResult(pickerData, option1, option2, option3)
                 ?: return@OptionsPickerBuilder
-            mBinding!!.etArea.setText(areaText)
+            mBinding!!.etArea.setText(areaResult.displayName)
+            mSelectedAreaId = areaResult.areaId
         }
             .setTitleText(getString(R.string.area_input_hint))
             .setSubmitColor(ContextCompat.getColor(this, R.color.primary))
@@ -689,11 +687,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             .isRestoreItem(true)
             .isCenterLabel(false)
             .build()
-        pickerView.setSelectOptions(
-            pickerData.selectedLevel1,
-            pickerData.selectedLevel2,
-            pickerData.selectedLevel3
-        )
         pickerView.setPicker(
             level1Items,
             level2Items,

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+    <string name="dialog_title">温馨提示</string>
+    <string name="forward_to_settings_text">您需要在“设置”中手动授予必要的权限</string>
+    <string name="no_permission_text">权限不足</string>
+    <string name="please_wait">请稍候…</string>
+</resources>

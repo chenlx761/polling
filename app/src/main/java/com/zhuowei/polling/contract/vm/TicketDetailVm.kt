@@ -32,10 +32,12 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
     data class AreaPickerDisplayData(
         val level1Items: List<AreaPickerOption>,
         val level2Items: List<List<AreaPickerOption>>,
-        val level3Items: List<List<List<AreaPickerOption>>>,
-        val selectedLevel1: Int,
-        val selectedLevel2: Int,
-        val selectedLevel3: Int
+        val level3Items: List<List<List<AreaPickerOption>>>
+    )
+
+    data class SelectedAreaResult(
+        val displayName: String,
+        val areaId: Int
     )
 
 
@@ -96,12 +98,9 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
             })
     }
 
-    override fun getAreaPickerData(
-        currentAreaText: String?,
-        callBack: TicketDetailContract.GetAreaListCallBack?
-    ) {
+    override fun getAreaPickerData(callBack: TicketDetailContract.GetAreaListCallBack?) {
         if (mAreaRows.isNotEmpty()) {
-            callBack?.onSuccessful(buildAreaPickerDisplayData(currentAreaText))
+            callBack?.onSuccessful(buildAreaPickerDisplayData())
             return
         }
         mModel.getAreaList(
@@ -110,32 +109,38 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
                     mAreaRows = t?.data?.rows!!
                         .filter(::isAreaNodeValid)
                         .sortedByAreaOrder()
-                    callBack?.onSuccessful(buildAreaPickerDisplayData(currentAreaText))
+                    callBack?.onSuccessful(buildAreaPickerDisplayData())
                 }
             })
     }
 
-    fun buildSelectedAreaText(
+    // 根据 Picker 当前三列下标，得到最终选中的区域结果。
+    // 输入框只显示末级名称，同时把末级对应的 orgId 一并返回给页面保存。
+    fun buildSelectedAreaResult(
         pickerData: AreaPickerDisplayData,
         option1: Int,
         option2: Int,
         option3: Int
-    ): String? {
-        val level1Item = pickerData.level1Items.getOrNull(option1) ?: return null
+    ): SelectedAreaResult? {
+        pickerData.level1Items.getOrNull(option1) ?: return null
         val level2Item =
             pickerData.level2Items.getOrNull(option1)?.getOrNull(option2) ?: return null
         val level3Item =
             pickerData.level3Items.getOrNull(option1)?.getOrNull(option2)?.getOrNull(option3)
-        return buildList {
-            add(level1Item.selection.name)
-            add(level2Item.selection.name)
+        val targetSelection =
             if (level3Item != null && !level3Item.isPlaceholder && level3Item.selection.name.isNotEmpty()) {
-                add(level3Item.selection.name)
+                level3Item.selection
+            } else {
+                level2Item.selection
             }
-        }.joinToString("/")
+        return SelectedAreaResult(
+            displayName = targetSelection.name,
+            areaId = targetSelection.id
+        )
     }
 
-    private fun buildAreaPickerDisplayData(currentAreaText: String?): AreaPickerDisplayData {
+    // 将接口返回的扁平 rows 按 parentId 组装成 Picker 所需的三级结构。
+    private fun buildAreaPickerDisplayData(): AreaPickerDisplayData {
         val childrenByParent = mAreaRows.groupBy { it.parentId }
         val level1Rows = childrenByParent[0].orEmpty().sortedByAreaOrder()
         val level1Items = mutableListOf<AreaPickerOption>()
@@ -160,55 +165,20 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
             )
         }
 
-        val pickerData = AreaPickerDisplayData(
+        return AreaPickerDisplayData(
             level1Items = level1Items,
             level2Items = level2Items,
-            level3Items = level3Items,
-            selectedLevel1 = 0,
-            selectedLevel2 = 0,
-            selectedLevel3 = 0
-        )
-        val (selectedLevel1, selectedLevel2, selectedLevel3) =
-            resolveAreaPickerSelection(currentAreaText, pickerData)
-        return pickerData.copy(
-            selectedLevel1 = selectedLevel1,
-            selectedLevel2 = selectedLevel2,
-            selectedLevel3 = selectedLevel3
+            level3Items = level3Items
         )
     }
 
-    private fun resolveAreaPickerSelection(
-        currentAreaText: String?,
-        pickerData: AreaPickerDisplayData
-    ): Triple<Int, Int, Int> {
-        val currentNames = currentAreaText.orEmpty()
-            .split("/")
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-        if (currentNames.size !in 2..3) {
-            return Triple(0, 0, 0)
-        }
-        val level1Index = pickerData.level1Items.indexOfFirst {
-            it.selection.name == currentNames[0]
-        }.takeIf { it >= 0 } ?: return Triple(0, 0, 0)
-        val level2Index = pickerData.level2Items.getOrNull(level1Index)?.indexOfFirst {
-            it.selection.name == currentNames[1]
-        }?.takeIf { it >= 0 } ?: return Triple(level1Index, 0, 0)
-        if (currentNames.size == 2) {
-            return Triple(level1Index, level2Index, 0)
-        }
-        val level3Index =
-            pickerData.level3Items.getOrNull(level1Index)?.getOrNull(level2Index)?.indexOfFirst {
-                it.selection.name == currentNames[2]
-            }?.takeIf { it >= 0 } ?: return Triple(level1Index, level2Index, 0)
-        return Triple(level1Index, level2Index, level3Index)
-    }
-
+    // 过滤掉接口里无效的区域节点，避免空名称或非法 id 进入 Picker。
     private fun isAreaNodeValid(area: AreaListBean.RowsDTO): Boolean {
         val areaName = area.orgName?.trim().orEmpty()
         return area.orgId > 0 && areaName.isNotEmpty()
     }
 
+    // 将接口节点转换成 Picker 可直接消费的选项模型。
     private fun AreaListBean.RowsDTO.toAreaPickerOption(): AreaPickerOption {
         return AreaPickerOption(
             selection = AreaSelection(
@@ -218,6 +188,8 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
         )
     }
 
+    // 两级数据没有下级节点时，给第三级补一个空白占位项，
+    // 保持三级联动组件的数据结构完整，但界面上不展示额外文案。
     private fun AreaListBean.RowsDTO.toPlaceholderPickerOption(): AreaPickerOption {
         return AreaPickerOption(
             selection = AreaSelection(
@@ -228,6 +200,7 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
         )
     }
 
+    // 按后台配置的排序号优先排序，排序号相同时再按 orgId 兜底，保证顺序稳定。
     private fun List<AreaListBean.RowsDTO>.sortedByAreaOrder(): List<AreaListBean.RowsDTO> {
         return sortedWith(compareBy<AreaListBean.RowsDTO> { it.orderNum }.thenBy { it.orgId })
     }

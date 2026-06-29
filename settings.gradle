@@ -34,3 +34,5 @@ dependencyResolutionManagement {
 rootProject.name = "polling"
 include ':app'
 include ':hudun'
+include ':common'
+include ':http_lib'

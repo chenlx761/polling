@@ -22,6 +22,7 @@ public class HttpConstants {
     public static final String EDIT_TICKET_DETAIL_URL = "app/system/buildRecord";//修改台账信息
     public static final String GET_TICKET_DETAIL_URL = "app/system/buildRecord/getById";//获取详情
     public static final String GET_AREA_URL = "dev-api/system/powerOrg/topDepts";//获取详情
+    public static final String UPLOAD_TICKET_FILE_URL = "dev-api/system/buildRecord/importData";//获取详情
 
 
     public static String getWebBaseUrl(){
