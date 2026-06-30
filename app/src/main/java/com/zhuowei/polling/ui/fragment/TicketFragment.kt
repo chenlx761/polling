@@ -18,7 +18,6 @@ import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.contract.vm.MainVm
 import com.zhuowei.polling.databinding.FragmentTicketBinding
 import com.zhuowei.polling.ui.activitys.ticket.TicketDetailActivity
-import com.zhuowei.polling.ui.activitys.ticket.UploadTicketFileActivity
 
 class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
 
@@ -60,7 +59,6 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
             layoutManager = LinearLayoutManager(requireActivity())
         }
 
-        mBinding!!.fabAddTicket.visibility = if (mTicketStaus == "0") View.VISIBLE else View.GONE
 
         val searchTypes = arrayOf(getString(R.string.user_name_label), getString(R.string.address))
         val adapter = android.widget.ArrayAdapter(
@@ -95,29 +93,13 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
                     })!!,
                     requireActivity(),
                     (i as TicketListBean.RowsDTO).id.toString(),
-                    mTicketStaus,
                     false
                 )
             }
 
         })
 
-        mBinding!!.fabAddTicket.setOnClickListener {
-            UploadTicketFileActivity.newInstance(requireActivity())
-//            TicketDetailActivity.newIntent(
-//                getActivityLauncher(object : OnActivityResultListener {
-//                    override fun onActivityResult(result: ActivityResult?) {
-//                        if (result != null && result.resultCode == Activity.RESULT_OK) {
-//                            performSearch()
-//                        }
-//                    }
-//                })!!,
-//                requireActivity(),
-//                null,
-//                mTicketStaus,
-//                true
-//            )
-        }
+
 
         mBinding!!.spSearchType.onItemSelectedListener =
             object : AdapterView.OnItemSelectedListener {

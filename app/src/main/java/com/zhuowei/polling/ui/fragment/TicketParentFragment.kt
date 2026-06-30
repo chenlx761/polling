@@ -7,7 +7,6 @@ import com.zhuowei.hudun.HuDunManager
 import com.zhuowei.polling.R
 import com.zhuowei.polling.adapter.TicketPagerAdapter
 import com.zhuowei.polling.databinding.FragmentTicketParentBinding
-import com.zhuowei.polling.dialog.LogoutConfirmDialog
 import com.zhuowei.polling.ui.activitys.login.LoginActivity
 
 class TicketParentFragment : BaseFragment<EmptyViewModel, FragmentTicketParentBinding>() {
@@ -37,26 +36,11 @@ class TicketParentFragment : BaseFragment<EmptyViewModel, FragmentTicketParentBi
     override fun setData() {
     }
 
-    private fun logout() {
-        HuDunManager.instance.logout()
-        HuDunManager.instance.release()
-        LoginActivity.newInstance(requireActivity())
-        requireActivity().finish()
-    }
 
-    private fun showLogoutConfirmDialog() {
-        LogoutConfirmDialog(requireContext()) {
-            logout()
-        }.show()
-    }
 
     override fun setListener() {
         val adapter = TicketPagerAdapter(this)
         mBinding!!.viewPager.adapter = adapter
-
-        mBinding!!.ivLogout.setOnClickListener {
-            showLogoutConfirmDialog()
-        }
 
         TabLayoutMediator(mBinding!!.tabLayout, mBinding!!.viewPager) { tab, position ->
             tab.text = tabTitles[position]

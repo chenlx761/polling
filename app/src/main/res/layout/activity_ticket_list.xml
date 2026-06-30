@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <RelativeLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:fitsSystemWindows="true"
+            android:id="@+id/rl_top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.chenming.common.base.widget.MyTitleBar
+
+                android:id="@+id/my_title_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:titleBarBackground="@color/white"
+                app:titleBarLeftImg="@mipmap/top_back"
+                app:titleBarTitle="@string/main_ticket" />
+
+            <ImageView
+                android:layout_margin="15dp"
+                android:layout_alignParentRight="true"
+                android:id="@+id/iv_add_ticket"
+                android:src="@mipmap/add_ticket"
+                android:layout_width="30dp"
+                android:layout_height="30dp"/>
+
+
+        </RelativeLayout>
+
+        <FrameLayout
+            android:layout_below="@+id/rl_top"
+            android:id="@+id/fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+          >
+
+        </FrameLayout>
+
+
+
+    </RelativeLayout>
+</layout>

@@ -31,6 +31,23 @@
         <!-- Android 6.0+ 状态栏图标颜色适配（如果是浅色背景，让图标变成深色） -->
         <item name="android:windowLightStatusBar">true</item>
     </style>
+    <style name="MainAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- 基础颜色配置 -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/primary</item>
+
+        <!-- 移除标题栏 -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <!-- 沉浸式配置 -->
+        <item name="android:windowTranslucentStatus">true</item> <!-- 开启透明状态栏 -->
+        <item name="android:windowTranslucentNavigation">false</item> <!-- 导航栏通常保持默认，除非你也需要透明导航栏 -->
+
+        <!-- Android 6.0+ 状态栏图标颜色适配（如果是浅色背景，让图标变成深色） -->
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 
     <!-- 登录按钮样式 -->
     <style name="LoginButton" parent="Widget.MaterialComponents.Button">

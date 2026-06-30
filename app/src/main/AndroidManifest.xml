@@ -44,7 +44,7 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@style/MyAppTheme"
+            android:theme="@style/MainAppTheme"
             android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".ui.activitys.ticket.TicketDetailActivity"
@@ -61,6 +61,12 @@
             android:theme="@style/MyAppTheme" />
         <activity
             android:name=".ui.activitys.ticket.UploadTicketFileActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/MyAppTheme" />
+        <activity
+            android:name=".ui.activitys.ticket.TicketListActivity"
             android:exported="false"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"

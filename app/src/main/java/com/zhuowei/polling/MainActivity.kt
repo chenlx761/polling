@@ -13,9 +13,8 @@ import com.chenming.common.utils.PermissionXUtil
 import com.flyco.tablayout.listener.CustomTabEntity
 import com.flyco.tablayout.listener.OnTabSelectListener
 import com.zhuowei.polling.databinding.ActivityMainBinding
+import com.zhuowei.polling.ui.fragment.MainFragment
 import com.zhuowei.polling.ui.fragment.MyFragment
-import com.zhuowei.polling.ui.fragment.TicketParentFragment
-import com.zhuowei.polling.ui.fragment.TreeDemoFragment
 
 
 class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
@@ -67,30 +66,27 @@ class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
 
     private fun initTab() {
         mTitles = arrayOf(
-            getString(R.string.main_ticket),
+            getString(R.string.main_first),
             getString(R.string.main_my),
-            getString(R.string.main_tree)
         )
         val mTicketTab = DiscountTab(mTitles!![0], R.mipmap.ticket_select, R.mipmap.ticket_normal)
         val mMyTab = DiscountTab(mTitles!![1], R.mipmap.my_select, R.mipmap.my_normal)
-        val mTreeTab = DiscountTab(mTitles!![2], R.mipmap.ticket_select, R.mipmap.ticket_normal)
 
         mTabEntities.add(mTicketTab)
         mTabEntities.add(mMyTab)
-        mTabEntities.add(mTreeTab)
         mBinding!!.mainTab.setTabData(mTabEntities)
 
     }
 
     private fun initFragmentAndTag() {
-        val ticketFragment = TicketParentFragment.newInstance()
+
+        val mainFragment = MainFragment.newInstance()
         val myFragment = MyFragment.newInstance()
-        val treeDemoFragment = TreeDemoFragment.newInstance()
 
         mFragments = arrayOf(
-            ticketFragment, myFragment, treeDemoFragment
+            mainFragment, myFragment
         )
-        mTags = arrayOf("TICKET", "MY", "TREE")
+        mTags = arrayOf("TICKET", "MY")
 
     }
 
@@ -120,6 +116,10 @@ class MainActivity : BaseActivity<EmptyViewModel, ActivityMainBinding>() {
 
         requestPermission()
 
+    }
+
+    override fun setStatusBarStyle() {
+        setStatusBarThemeBackground(true)
     }
 
 

@@ -51,7 +51,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         private const val ROOT_AREA_ID = 1
         private const val AREA_LEVEL_COUNT = 3
         private const val Ticket_Id = "Ticket_Id"
-        private const val Ticket_Status = "Ticket_Status"
         private const val Ticket_Create_Mode = "Ticket_Create_Mode"
 
         @JvmStatic
@@ -59,12 +58,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             myActivityLauncher: ActivityResultLauncher<Intent>,
             context: Context,
             ticketId: String?,
-            ticketStatus: String?,
             isCreateMode: Boolean = false
         ) {
             val intent = Intent(context, TicketDetailActivity::class.java)
             intent.putExtra(Ticket_Id, ticketId)
-            intent.putExtra(Ticket_Status, ticketStatus)
             intent.putExtra(Ticket_Create_Mode, isCreateMode)
             myActivityLauncher.launch(intent)
         }
@@ -78,7 +75,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private var mCurrentPhotoPath: String? = null
     private var mCurrentPhotoType: PhotoType = PhotoType.SCENE
     private var mLocationResult: LocationResult? = null
-    private var mTicketStatus: String? = null
     private var mTicketId: String? = null
     private var mIsCreateMode: Boolean = false
     private var mSelectedAreaId: Int? = null
@@ -261,7 +257,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     override fun initData() {
-        mTicketStatus = intent.getStringExtra(Ticket_Status)
         mTicketId = intent.getStringExtra(Ticket_Id)
         mIsCreateMode = intent.getBooleanExtra(Ticket_Create_Mode, false) || mTicketId.isNullOrEmpty()
     }
@@ -586,9 +581,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun initCreateModeData() {
-        mBean = TicketListBean.RowsDTO().apply {
-            surveyStatus = mTicketStatus ?: "0"
-        }
+        mBean = TicketListBean.RowsDTO()
         mScenePhotos.clear()
         mGovernmentPhotos.clear()
         ensureAddPlaceholder(mScenePhotos)
@@ -756,13 +749,12 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             }
         }
 
-        return (mBean ?: TicketListBean.RowsDTO()).apply {
+        return (mBean ?: TicketListBean.RowsDTO()).apply {                       
             this.workOrderCompany = area
-            this.areaCompany = area
             this.userAddress = address
-            this.address = address
             this.userName = userName
             this.userNo = userNo
+            this.workOrderOrgId = mSelectedAreaId.toString()
         }
     }
 }

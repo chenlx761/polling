@@ -36,7 +36,7 @@ class TicketDetailModel : BaseModel(), TicketDetailContract.ITicketDetailModel {
                 .build()
                 .let { builder ->
                     if (isCreateMode) {
-                        builder.putJson(Objects::class.java, callBack)
+                        builder.postJson(Objects::class.java, callBack)
                     } else {
                         builder.putJson(Objects::class.java, callBack)
                     }

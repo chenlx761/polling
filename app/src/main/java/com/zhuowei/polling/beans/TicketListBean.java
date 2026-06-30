@@ -41,6 +41,7 @@ public class TicketListBean {
         private String buildLocationCoord;
         private String remark;
         private String workOrderCompany;
+        private String workOrderOrgId;
         private List<UploadFileResult> serverPhotosList;
 
         public List<UploadFileResult> getServerPhotosList() {
@@ -58,6 +59,14 @@ public class TicketListBean {
 
         public void setWorkOrderCompany(String workOrderCompany) {
             this.workOrderCompany = workOrderCompany;
+        }
+
+        public String getWorkOrderOrgId() {
+            return workOrderOrgId;
+        }
+
+        public void setWorkOrderOrgId(String workOrderOrgId) {
+            this.workOrderOrgId = workOrderOrgId;
         }
 
         public String getRemark() {

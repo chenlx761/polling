@@ -10,39 +10,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <RelativeLayout
-            android:id="@+id/rl_top"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fitsSystemWindows="true">
-
-            <com.chenming.common.base.widget.MyTitleBar
-                android:id="@+id/my_title_bar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toTopOf="parent"
-                app:titleBarBackground="@color/white"
-                app:titleBarTitle="@string/main_ticket" />
-
-            <ImageView
-                android:id="@+id/iv_logout"
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_alignParentRight="true"
-                android:layout_marginTop="15dp"
-                android:layout_marginRight="20dp"
-                android:src="@mipmap/logout" />
-        </RelativeLayout>
-
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@color/white"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/rl_top"
             app:tabGravity="fill"
             app:tabIndicatorColor="@color/primary"
             app:tabIndicatorFullWidth="false"
