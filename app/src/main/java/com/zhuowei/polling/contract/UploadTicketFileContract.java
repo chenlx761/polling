@@ -9,6 +9,7 @@ import com.zhuowei.polling.beans.TicketListBean;
 import com.zhuowei.polling.contract.vm.TicketDetailVm;
 
 import java.io.File;
+import java.util.List;
 import java.util.Objects;
 
 public class UploadTicketFileContract {
@@ -25,7 +26,7 @@ public class UploadTicketFileContract {
     public interface IUploadTicketFileModel extends IBaseModel {
 
 
-        void uploadFile(File file, OnHttpCallBack<BaseBean<Object>> callBack);
+        void uploadFile(File file, OnHttpCallBack<BaseBean<List<TicketListBean.RowsDTO>>> callBack);
 
     }
 }

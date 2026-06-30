@@ -40,14 +40,21 @@ class UploadTicketFileActivity : MyBaseActivity<UploadTicketFileVm, ActivityUplo
     }
 
     override fun setListener() {
-        mBinding.clSelectFile.setOnClickListener {
+        mBinding.ivImportHint.setOnClickListener {
             pickXlsxFile()
         }
-        mBinding.tvChooseFile.setOnClickListener {
+        mBinding.tvFileName.setOnClickListener {
+            pickXlsxFile()
+        }
+        mBinding.tvFilePath.setOnClickListener {
             pickXlsxFile()
         }
         mBinding.btnSubmit.setOnClickListener {
-            submitUpload()
+            if (selectedFile == null) {
+                pickXlsxFile()
+            } else {
+                submitUpload()
+            }
         }
     }
 
@@ -64,15 +71,20 @@ class UploadTicketFileActivity : MyBaseActivity<UploadTicketFileVm, ActivityUplo
         mViewModel.mUploadSuccess.observe(this) {
             dismissDialog()
             mBinding.btnSubmit.isEnabled = true
-            ToastUtil.showShortToast(getString(R.string.upload_ticket_file_success))
+
+            UploadTicketResultActivity.newInstance(this@UploadTicketFileActivity,true,"")
             setResult(RESULT_OK)
             finish()
         }
 
         mViewModel.mUploadError.observe(this) { errorMsg ->
             dismissDialog()
-            updateSubmitButtonState()
-            ToastUtil.showShortToast(errorMsg ?: getString(R.string.upload_ticket_file_failed))
+            updateSelectedFile(null, null)
+            UploadTicketResultActivity.newInstance(
+                this@UploadTicketFileActivity,
+                false,
+                errorMsg ?: ""
+            )
         }
     }
 
@@ -129,24 +141,26 @@ class UploadTicketFileActivity : MyBaseActivity<UploadTicketFileVm, ActivityUplo
     private fun updateSelectedFile(file: File?, fileName: String?) {
         selectedFile = file
         val hasFile = file != null
-        mBinding.tvFileName.text = fileName ?: getString(R.string.upload_ticket_file_no_selection)
-        mBinding.tvFilePath.text = if (hasFile) {
-            file?.absolutePath
+        mBinding.tvFileName.visibility = if (hasFile) View.VISIBLE else View.GONE
+        mBinding.tvFilePath.visibility = if (hasFile) View.VISIBLE else View.GONE
+        if (hasFile) {
+            val displayName = fileName ?: file?.name.orEmpty()
+            mBinding.tvFileName.text =
+                getString(R.string.upload_ticket_file_selected_name, displayName)
+            mBinding.tvFilePath.text = file?.absolutePath
         } else {
-            getString(R.string.upload_ticket_file_select_tip)
+            mBinding.tvFileName.text = ""
+            mBinding.tvFilePath.text = ""
         }
-        mBinding.tvFilePath.visibility = View.VISIBLE
-        mBinding.tvSelectedTag.visibility = if (hasFile) View.VISIBLE else View.GONE
-        mBinding.tvChooseFile.text = getString(
-            if (hasFile) R.string.upload_ticket_file_reselect else R.string.upload_ticket_file_choose
+        mBinding.btnSubmit.text = getString(
+            if (hasFile) R.string.upload_ticket_file_submit else R.string.upload_ticket_file_choose_plan
         )
         updateSubmitButtonState()
     }
 
     private fun updateSubmitButtonState() {
-        val enabled = selectedFile != null
-        mBinding.btnSubmit.isEnabled = enabled
-        mBinding.btnSubmit.alpha = if (enabled) 1f else 0.5f
+        mBinding.btnSubmit.isEnabled = true
+        mBinding.btnSubmit.alpha = 1f
     }
 
     private fun isXlsxFile(fileName: String?): Boolean {

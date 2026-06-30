@@ -724,6 +724,47 @@ public class RetrofitUtil {
     }
 
     //上传图片带参数
+    public <T> Disposable postFileReturnList(Class<T> t
+            , final OnHttpCallBack<BaseBean<List<T>>> callBack, String... baseurl) {
+        Map<String, RequestBody> dataMap = new WeakHashMap<>();
+        //遍历map中所有参数到builder
+        if (mRequestMap != null) {
+            for (String key : mRequestMap.keySet()) {
+                dataMap.put(key, RequestBody.create(null, (String) mRequestMap.get(key)));
+            }
+        }
+        MultipartBody.Part file;
+        if (mUploadListener != null) {
+            File uploadFile = new File(mFilePath);
+            ProgressRequestBody requestFile = new ProgressRequestBody(uploadFile, mMediaType, mUploadListener);
+            file = MultipartBody.Part.createFormData(mFileKey, uploadFile.getName(), requestFile);
+        } else {
+
+            file = prepareFilePart(mFileKey, mFilePath, mMediaType);
+        }
+        return HttpManager.api(baseurl).postFile(mUrl, dataMap, file, mHeaderMap)
+                .subscribeOn(Schedulers.io())//在新线程中执行请求
+                .map(getListMap(t))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<BaseBean<List<T>>>() {
+                    @Override
+                    public void accept(BaseBean<List<T>> info) throws Exception {
+                        mUploadListener = null;
+                        if (info.isSuccess()) {
+                            callBack.onSuccessful(info);
+                        } else
+                            callBack.onDataError(info.getMsg(), info);
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        mUploadListener = null;
+                        callBack.onRequestError(ExceptionManager.handleException(throwable).message, throwable);
+                    }
+                });//在主线程中执行
+    }
+
+    //上传图片带参数
     public <T> Disposable postFile(Class<T> t
             , final OnHttpCallBack<BaseBean<T>> callBack, String... baseurl) {
         Map<String, RequestBody> dataMap = new WeakHashMap<>();

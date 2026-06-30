@@ -4,8 +4,9 @@ import androidx.lifecycle.MutableLiveData
 import com.chenming.common.base.BaseViewModel
 import com.chenming.httprequest.http.bean.BaseBean
 import com.zhuowei.polling.MyApplication
-import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.R
+import com.zhuowei.polling.beans.TicketListBean
+import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.UploadTicketFileContract
 import com.zhuowei.polling.contract.model.UploadTicketFileModel
 import java.io.File
@@ -29,12 +30,13 @@ class UploadTicketFileVm : BaseViewModel<UploadTicketFileContract.IUploadTicketF
         }
         mModel.uploadFile(
             file,
-            object : BaseCallBack<BaseBean<in Any>>(HttpConstants.UPLOAD_TICKET_FILE_URL) {
-                override fun onSuccessful(t: BaseBean<in Any>?) {
+            object : BaseCallBack<BaseBean<List<TicketListBean.RowsDTO>>>(HttpConstants.UPLOAD_TICKET_FILE_URL) {
+                override fun onSuccessful(t: BaseBean<List<TicketListBean.RowsDTO>>?) {
+                    MyApplication.getInstance().setUploadTicketUploadResultList(t?.data ?: emptyList())
                     mUploadSuccess.postValue(true)
                 }
 
-                override fun onDataError(errorMsg: String?, t: BaseBean<in Any>?) {
+                override fun onDataError(errorMsg: String?, t: BaseBean<List<TicketListBean.RowsDTO>>?) {
                     super.onDataError(errorMsg, t)
                     mUploadError.postValue(
                         errorMsg ?: MyApplication.getInstance()

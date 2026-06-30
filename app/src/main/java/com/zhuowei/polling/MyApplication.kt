@@ -12,6 +12,7 @@ import com.chenming.httprequest.http.bean.BaseBean
 import com.google.gson.Gson
 import com.zhuowei.hudun.HuDunApplication
 import com.zhuowei.hudun.HuDunManager
+import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.ui.activitys.login.LoginActivity
 import com.zhuowei.polling.utils.SpManager
@@ -24,6 +25,8 @@ import okhttp3.Response
  */
 class MyApplication : Application() {
 
+
+    private val mUploadTicketUploadResultList: MutableList<TicketListBean.RowsDTO> = mutableListOf()
 
     companion object {
         private var instance: MyApplication? = null
@@ -78,7 +81,7 @@ class MyApplication : Application() {
         instance = this
 
 
-      // 是否同意隐私政策，默认为false
+        // 是否同意隐私政策，默认为false
         SDKInitializer.setAgreePrivacy(this, true)
         try {
             // 在使用 SDK 各组间之前初始化 context 信息，传入 ApplicationContext
@@ -117,6 +120,15 @@ class MyApplication : Application() {
                 response
             }
         })
+    }
+
+    fun getUploadTicketUploadResultList(): MutableList<TicketListBean.RowsDTO> {
+        return mUploadTicketUploadResultList
+    }
+
+    fun setUploadTicketUploadResultList(list: List<TicketListBean.RowsDTO>) {
+        mUploadTicketUploadResultList.clear()
+        mUploadTicketUploadResultList.addAll(list)
     }
 
 
