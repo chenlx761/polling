@@ -27,6 +27,7 @@
     <string name="belonging_area">区域</string>
     <string name="dispatch_time">派工时间:</string>
     <string name="illegal_backfill_title">台账回填</string>
+    <string name="illegal_add_title">新增台账</string>
     <string name="upload_ticket_file_title">导入两违待办</string>
     <string name="upload_ticket_file_header">上传 Excel 台账文件</string>
     <string name="upload_ticket_file_desc">请选择需要导入的台账文件，系统当前仅支持 .xlsx 格式。选中文件后点击底部按钮即可开始上传。</string>

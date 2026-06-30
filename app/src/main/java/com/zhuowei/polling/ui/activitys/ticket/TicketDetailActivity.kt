@@ -80,8 +80,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private var mSelectedAreaId: Int? = null
 
     private enum class PhotoType {
-        SCENE,
-        GOVERNMENT
+        SCENE, GOVERNMENT
     }
 
     private data class AreaPickerItem(
@@ -126,8 +125,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 result.data?.data?.let { uri ->
                     try {
                         contentResolver.takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
                         )
                     } catch (_: Exception) {
                     }
@@ -241,12 +239,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                     }
 
                     override fun onError(
-                        errorMsg: String,
-                        failedPaths: List<String>
+                        errorMsg: String, failedPaths: List<String>
                     ) {
                     }
-                }
-            )
+                })
         }
 
         if (mIsCreateMode) {
@@ -258,7 +254,8 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     override fun initData() {
         mTicketId = intent.getStringExtra(Ticket_Id)
-        mIsCreateMode = intent.getBooleanExtra(Ticket_Create_Mode, false) || mTicketId.isNullOrEmpty()
+        mIsCreateMode =
+            intent.getBooleanExtra(Ticket_Create_Mode, false) || mTicketId.isNullOrEmpty()
     }
 
     override fun initViewModel(): TicketDetailVm = createViewModel(TicketDetailVm::class.java)
@@ -298,6 +295,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     override fun setData() {
+
+        if (mIsCreateMode) {
+            mBinding.myTitleBar.setTitle(getString(R.string.illegal_add_title))
+        }
         mAddPhotoAdapter = AddFileAdapter(this, mScenePhotos, MAX_PHOTO_COUNT)
         mGovernmentPhotoAdapter =
             AddFileAdapter(this, mGovernmentPhotos, MAX_PHOTO_COUNT, supportFilePlaceholder = true)
@@ -341,9 +342,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
 
     private fun handlePhotoItemClick(
-        photoList: ObservableArrayList<UploadFileResult>,
-        position: Int,
-        photoType: PhotoType
+        photoList: ObservableArrayList<UploadFileResult>, position: Int, photoType: PhotoType
     ) {
         val item = photoList.getOrNull(position) ?: return
         val filePath = item.filePath.orEmpty()
@@ -362,8 +361,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                     this,
                     filePath,
                     SpManager.getToken(),
-                    item.fileName?.takeIf { it.isNotEmpty() } ?: File(filePath).name
-                )
+                    item.fileName?.takeIf { it.isNotEmpty() } ?: File(filePath).name)
             }
             return
         }
@@ -374,9 +372,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         val previewPosition = previewList.indexOf(filePath)
         if (previewPosition >= 0) {
             ImagePreviewActivity.newInstance(
-                this@TicketDetailActivity,
-                previewList,
-                previewPosition
+                this@TicketDetailActivity, previewList, previewPosition
             )
         }
     }
@@ -410,8 +406,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
 
     private fun addPhotoToList(
-        photoList: ObservableArrayList<UploadFileResult>,
-        path: String
+        photoList: ObservableArrayList<UploadFileResult>, path: String
     ) {
         if (photoList.any { it.filePath == path }) return
         if (getPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
@@ -439,8 +434,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
 
     private fun removePhotoAt(
-        photoList: ObservableArrayList<UploadFileResult>,
-        position: Int
+        photoList: ObservableArrayList<UploadFileResult>, position: Int
     ) {
         if (position < 0 || position >= photoList.size) return
 
@@ -472,8 +466,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
 
     private fun checkPermissionAndShowDialog(
-        photoType: PhotoType,
-        photoList: ObservableArrayList<UploadFileResult>
+        photoType: PhotoType, photoList: ObservableArrayList<UploadFileResult>
     ) {
         if (getPhotoCount(photoList) >= MAX_PHOTO_COUNT) {
             Toast.makeText(this, R.string.photo_count_limit, Toast.LENGTH_SHORT).show()
@@ -487,13 +480,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private fun showPhotoChoiceDialog() {
         if (mCurrentPhotoType == PhotoType.GOVERNMENT) {
             val options = arrayOf(
-                getString(R.string.take_photo),
-                getString(R.string.select_photo),
-                "选择文件"
+                getString(R.string.take_photo), getString(R.string.select_photo), "选择文件"
             )
             showBottomOptionsPicker(
-                title = getString(R.string.select_photo_title),
-                options = options.toList()
+                title = getString(R.string.select_photo_title), options = options.toList()
             ) { which ->
                 when (which) {
                     0 -> ensureCameraAndTakePhoto()
@@ -508,8 +498,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     private fun ensureCameraAndTakePhoto() {
         if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
+                this, Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             takePhoto()
@@ -560,8 +549,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "*/*"
             putExtra(
-                Intent.EXTRA_MIME_TYPES,
-                arrayOf(
+                Intent.EXTRA_MIME_TYPES, arrayOf(
                     "application/pdf",
                     "application/msword",
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -618,7 +606,9 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             editText.isLongClickable = false
             editText.hint = getString(R.string.area_input_hint)
             editText.setBackgroundResource(R.drawable.bg_f5f9ff_radius_5)
-            editText.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
+            editText.setPadding(
+                horizontalPadding, verticalPadding, horizontalPadding, verticalPadding
+            )
             editText.compoundDrawablePadding = horizontalPadding
         } else {
             updateEditTextState(editText, false, R.string.area_input_hint)
@@ -628,9 +618,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun updateEditTextState(
-        editText: android.widget.EditText,
-        editable: Boolean,
-        hintResId: Int
+        editText: android.widget.EditText, editable: Boolean, hintResId: Int
     ) {
         editText.isEnabled = editable
         editText.isFocusable = editable
@@ -640,8 +628,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         editText.setBackgroundResource(
             if (editable) R.drawable.bg_f5f9ff_radius_5 else android.R.color.transparent
         )
-        val horizontalPadding = if (editable) resources.getDimensionPixelSize(R.dimen.ticket_input_padding_horizontal) else 0
-        val verticalPadding = if (editable) resources.getDimensionPixelSize(R.dimen.ticket_input_padding_vertical) else 0
+        val horizontalPadding =
+            if (editable) resources.getDimensionPixelSize(R.dimen.ticket_input_padding_horizontal) else 0
+        val verticalPadding =
+            if (editable) resources.getDimensionPixelSize(R.dimen.ticket_input_padding_vertical) else 0
         editText.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
     }
 
@@ -665,33 +655,27 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
                 level3List.map(::AreaPickerItem)
             }
         }
-        val pickerView: OptionsPickerView<Any> = OptionsPickerBuilder(this) { option1, option2, option3, _ ->
-            val areaResult = mViewModel.buildSelectedAreaResult(pickerData, option1, option2, option3)
-                ?: return@OptionsPickerBuilder
-            mBinding!!.etArea.setText(areaResult.displayName)
-            mSelectedAreaId = areaResult.areaId
-        }
-            .setTitleText(getString(R.string.area_input_hint))
-            .setSubmitColor(ContextCompat.getColor(this, R.color.primary))
-            .setCancelColor(ContextCompat.getColor(this, R.color.primary))
-            .setTextColorCenter(ContextCompat.getColor(this, R.color.gray_700))
-            .setTextColorOut(ContextCompat.getColor(this, R.color.gray_600))
-            .setContentTextSize(18)
-            .isRestoreItem(true)
-            .isCenterLabel(false)
-            .build()
+        val pickerView: OptionsPickerView<Any> =
+            OptionsPickerBuilder(this) { option1, option2, option3, _ ->
+                val areaResult =
+                    mViewModel.buildSelectedAreaResult(pickerData, option1, option2, option3)
+                        ?: return@OptionsPickerBuilder
+                mBinding!!.etArea.setText(areaResult.displayName)
+                mSelectedAreaId = areaResult.areaId
+            }.setTitleText(getString(R.string.area_input_hint))
+                .setSubmitColor(ContextCompat.getColor(this, R.color.primary))
+                .setCancelColor(ContextCompat.getColor(this, R.color.primary))
+                .setTextColorCenter(ContextCompat.getColor(this, R.color.gray_700))
+                .setTextColorOut(ContextCompat.getColor(this, R.color.gray_600))
+                .setContentTextSize(18).isRestoreItem(true).isCenterLabel(false).build()
         pickerView.setPicker(
-            level1Items,
-            level2Items,
-            level3Items
+            level1Items, level2Items, level3Items
         )
         pickerView.show()
     }
 
     private fun showBottomOptionsPicker(
-        title: String,
-        options: List<String>,
-        onSelected: (Int) -> Unit
+        title: String, options: List<String>, onSelected: (Int) -> Unit
     ) {
         if (options.isEmpty()) return
         val pickerItems = options.mapIndexed { index, name ->
@@ -699,29 +683,20 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
         val pickerView: OptionsPickerView<Any> = OptionsPickerBuilder(this) { option1, _, _, _ ->
             onSelected(pickerItems.getOrNull(option1)?.value ?: return@OptionsPickerBuilder)
-        }
-            .setTitleText(title)
-            .setSubmitColor(ContextCompat.getColor(this, R.color.primary))
+        }.setTitleText(title).setSubmitColor(ContextCompat.getColor(this, R.color.primary))
             .setCancelColor(ContextCompat.getColor(this, R.color.primary))
             .setTextColorCenter(ContextCompat.getColor(this, R.color.gray_700))
-            .setTextColorOut(ContextCompat.getColor(this, R.color.gray_600))
-            .setContentTextSize(18)
-            .isRestoreItem(true)
-            .isCenterLabel(false)
-            .build()
+            .setTextColorOut(ContextCompat.getColor(this, R.color.gray_600)).setContentTextSize(18)
+            .isRestoreItem(true).isCenterLabel(false).build()
         pickerView.setPicker(pickerItems)
         pickerView.show()
     }
 
     private data class SimplePickerItem(
-        val value: Int,
-        val label: String
+        val value: Int, val label: String
     ) : IPickerViewData {
         override fun getPickerViewText(): String = label
     }
-
-
-
 
 
     private fun buildSubmitBean(): TicketListBean.RowsDTO? {
@@ -749,7 +724,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             }
         }
 
-        return (mBean ?: TicketListBean.RowsDTO()).apply {                       
+        return (mBean ?: TicketListBean.RowsDTO()).apply {
             this.workOrderCompany = area
             this.userAddress = address
             this.userName = userName

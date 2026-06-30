@@ -8,7 +8,8 @@ import com.chenming.common.base.empty.EmptyViewModel
 import com.zhuowei.polling.R
 import com.zhuowei.polling.databinding.ActivityUploadTicketResultBinding
 
-class UploadTicketResultActivity : BaseActivity<EmptyViewModel, ActivityUploadTicketResultBinding>() {
+class UploadTicketResultActivity :
+    BaseActivity<EmptyViewModel, ActivityUploadTicketResultBinding>() {
     companion object {
         private const val EXTRA_IS_SUCCESS = "extra_is_success"
         private const val EXTRA_ERROR_MESSAGE = "extra_error_message"
