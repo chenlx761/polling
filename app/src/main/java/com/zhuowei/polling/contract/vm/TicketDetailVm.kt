@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import com.chenming.common.base.BaseViewModel
 import com.chenming.httprequest.http.bean.BaseBean
 import com.zhuowei.polling.bean.AreaListBean
+import com.zhuowei.polling.bean.TreeNode
 import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.beans.UploadFileResult
 import com.zhuowei.polling.constants.HttpConstants
@@ -19,20 +20,8 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
     val mDetail: MutableLiveData<TicketListBean.RowsDTO> = MutableLiveData()
     private var mAreaRows: List<AreaListBean.RowsDTO> = emptyList()
 
-    data class AreaSelection(
-        val id: Int,
-        val name: String
-    )
-
-    data class AreaPickerOption(
-        val selection: AreaSelection,
-        val isPlaceholder: Boolean = false
-    )
-
-    data class AreaPickerDisplayData(
-        val level1Items: List<AreaPickerOption>,
-        val level2Items: List<List<AreaPickerOption>>,
-        val level3Items: List<List<List<AreaPickerOption>>>
+    data class AreaTreeDisplayData(
+        val rootNodes: List<TreeNode>
     )
 
     data class SelectedAreaResult(
@@ -98,85 +87,51 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
             })
     }
 
-    override fun getAreaPickerData(callBack: TicketDetailContract.GetAreaListCallBack?) {
+    override fun getAreaTreeData(callBack: TicketDetailContract.GetAreaListCallBack?) {
         if (mAreaRows.isNotEmpty()) {
-            callBack?.onSuccessful(buildAreaPickerDisplayData())
+            callBack?.onSuccessful(buildAreaTreeDisplayData())
             return
         }
         mModel.getAreaList(
             object : BaseCallBack<BaseBean<AreaListBean>>(HttpConstants.GET_AREA_URL) {
                 override fun onSuccessful(t: BaseBean<AreaListBean>?) {
-                    mAreaRows = t?.data?.rows!!
+                    mAreaRows = t?.data?.rows
+                        .orEmpty()
                         .filter(::isAreaNodeValid)
                         .sortedByAreaOrder()
-                    callBack?.onSuccessful(buildAreaPickerDisplayData())
+                    callBack?.onSuccessful(buildAreaTreeDisplayData())
                 }
             })
     }
 
-    // 根据 Picker 当前三列下标，得到最终选中的区域结果。
-    // 输入框只显示末级名称，同时把末级对应的 orgId 一并返回给页面保存。
-    fun buildSelectedAreaResult(
-        pickerData: AreaPickerDisplayData,
-        option1: Int,
-        option2: Int,
-        option3: Int
-    ): SelectedAreaResult? {
-        val level1Item = pickerData.level1Items.getOrNull(option1) ?: return null
-        val level2Item =
-            pickerData.level2Items.getOrNull(option1)?.getOrNull(option2)
-        val level3Item =
-            pickerData.level3Items.getOrNull(option1)?.getOrNull(option2)?.getOrNull(option3)
-        val targetSelection =
-            if (level3Item != null && !level3Item.isPlaceholder && level3Item.selection.name.isNotEmpty()) {
-                level3Item.selection
-            } else if (level2Item != null && !level2Item.isPlaceholder && level2Item.selection.name.isNotEmpty()) {
-                level2Item.selection
-            } else {
-                level1Item.selection
-            }
+    // 树形弹窗点击任意节点后，都以该节点自身作为最终提交的区域。
+    fun buildSelectedAreaResult(selectedNode: TreeNode?): SelectedAreaResult? {
+        val targetNode = selectedNode ?: return null
+        val areaId = targetNode.id.toIntOrNull() ?: return null
+        if (targetNode.name.isEmpty()) {
+            return null
+        }
         return SelectedAreaResult(
-            displayName = targetSelection.name,
-            areaId = targetSelection.id
+            displayName = targetNode.name,
+            areaId = areaId
         )
     }
 
-    // 将接口返回的扁平 rows 按 parentId 组装成 Picker 所需的三级结构。
-    private fun buildAreaPickerDisplayData(): AreaPickerDisplayData {
+    // 将接口返回的扁平 rows 按 parentId 组装成任意层级的树结构。
+    private fun buildAreaTreeDisplayData(): AreaTreeDisplayData {
         val childrenByParent = mAreaRows.groupBy { it.parentId }
-        val level1Rows = childrenByParent[0].orEmpty().sortedByAreaOrder()
-        val level1Items = mutableListOf<AreaPickerOption>()
-        val level2Items = mutableListOf<List<AreaPickerOption>>()
-        val level3Items = mutableListOf<List<List<AreaPickerOption>>>()
-
-        level1Rows.forEach { level1Row ->
-            val level2Rows = childrenByParent[level1Row.orgId].orEmpty().sortedByAreaOrder()
-            level1Items.add(level1Row.toAreaPickerOption())
-            if (level2Rows.isEmpty()) {
-                val placeholderLevel2 = level1Row.toPlaceholderPickerOption()
-                level2Items.add(listOf(placeholderLevel2))
-                level3Items.add(listOf(listOf(level1Row.toPlaceholderPickerOption())))
-            } else {
-                level2Items.add(level2Rows.map { it.toAreaPickerOption() })
-                level3Items.add(
-                    level2Rows.map { level2Row ->
-                        val level3Rows =
-                            childrenByParent[level2Row.orgId].orEmpty().sortedByAreaOrder()
-                        if (level3Rows.isEmpty()) {
-                            listOf(level2Row.toPlaceholderPickerOption())
-                        } else {
-                            level3Rows.map { it.toAreaPickerOption() }
-                        }
-                    }
-                )
+        val rowById = mAreaRows.associateBy { it.orgId }
+        val rootRows = resolveAreaRootRows(rowById)
+        val rootNodes = rootRows.map { rootRow ->
+            buildAreaTreeNode(
+                row = rootRow,
+                childrenByParent = childrenByParent
+            ).apply {
+                isExpand = true
             }
         }
-
-        return AreaPickerDisplayData(
-            level1Items = level1Items,
-            level2Items = level2Items,
-            level3Items = level3Items
-        )
+        rootNodes.forEach { it.refreshPositionInfo() }
+        return AreaTreeDisplayData(rootNodes = rootNodes)
     }
 
     // 过滤掉接口里无效的区域节点，避免空名称或非法 id 进入 Picker。
@@ -185,26 +140,60 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
         return area.orgId > 0 && areaName.isNotEmpty()
     }
 
-    // 将接口节点转换成 Picker 可直接消费的选项模型。
-    private fun AreaListBean.RowsDTO.toAreaPickerOption(): AreaPickerOption {
-        return AreaPickerOption(
-            selection = AreaSelection(
-                id = orgId,
-                name = orgName?.trim().orEmpty()
-            )
-        )
+    // 从扁平区域列表里找出树的第一层节点。
+    // 正常情况下，根节点满足两种特征之一：
+    // 1. parentId <= 0，说明它本身就是顶层；
+    // 2. parentId 在当前数据集中找不到对应父节点，说明后端没有把它的父级一起返回。
+    // 如果这两种方式都找不到根节点，就退回到 ancestors 兜底：
+    // 取 ancestors 链路最短的一批节点，视为当前数据里的最上层节点。
+    private fun resolveAreaRootRows(
+        rowById: Map<Int, AreaListBean.RowsDTO>
+    ): List<AreaListBean.RowsDTO> {
+        val rootRows = mAreaRows.filter { area ->
+            area.parentId <= 0 || !rowById.containsKey(area.parentId)
+        }.sortedByAreaOrder()
+      //  if (rootRows.isNotEmpty()) {
+            return rootRows
+        //}
+//        // ancestors 记录的是祖先 id 链，链路越短，层级越靠上。
+//        // 这里先求出当前列表里最短的祖先深度，再把这批节点作为根节点返回。
+//        val minAncestorDepth = mAreaRows.minOfOrNull { area ->
+//            area.ancestors
+//                ?.split(",")
+//                .orEmpty()
+//                .mapNotNull { it.trim().toIntOrNull() }
+//                .size
+//        } ?: 0
+//        return mAreaRows.filter { area ->
+//            area.ancestors
+//                ?.split(",")
+//                .orEmpty()
+//                .mapNotNull { it.trim().toIntOrNull() }
+//                .size == minAncestorDepth
+//        }.sortedByAreaOrder()
     }
 
-    // 两级数据没有下级节点时，给第三级补一个空白占位项，
-    // 保持三级联动组件的数据结构完整，但界面上不展示额外文案。
-    private fun AreaListBean.RowsDTO.toPlaceholderPickerOption(): AreaPickerOption {
-        return AreaPickerOption(
-            selection = AreaSelection(
-                id = orgId,
-                name = ""
-            ),
-            isPlaceholder = true
+    // 递归构建树节点：
+    // 先把当前 row 转成 TreeNode，再根据 orgId 找它的直属子节点，
+    // 对每个子节点继续递归，直到某个节点没有下级为止。
+    // childrenByParent 是提前按 parentId 分组后的映射，查子节点时不需要每次全表遍历。
+    private fun buildAreaTreeNode(
+        row: AreaListBean.RowsDTO,
+        childrenByParent: Map<Int, List<AreaListBean.RowsDTO>>
+    ): TreeNode {
+        val node = TreeNode(
+            id = row.orgId.toString(),
+            name = row.orgName?.trim().orEmpty()
         )
+        // 当前节点的 orgId，会成为下一级节点的 parentId。
+        childrenByParent[row.orgId]
+            .orEmpty()
+            .sortedByAreaOrder()
+            .forEach { childRow ->
+                // addChild 内部会顺带补 parent、level 等树结构信息。
+                node.addChild(buildAreaTreeNode(childRow, childrenByParent))
+            }
+        return node
     }
 
     // 按后台配置的排序号优先排序，排序号相同时再按 orgId 兜底，保证顺序稳定。

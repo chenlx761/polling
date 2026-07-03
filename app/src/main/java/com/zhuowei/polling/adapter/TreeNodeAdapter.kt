@@ -2,6 +2,7 @@ package com.zhuowei.polling.adapter
 
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.zhuowei.polling.R
 import com.zhuowei.polling.bean.TreeNode
@@ -15,59 +16,49 @@ class TreeNodeAdapter(
     private var allNodes: MutableList<TreeNode> = mutableListOf()
 ) : RecyclerView.Adapter<TreeNodeAdapter.ViewHolder>() {
 
+    private var rootNodes: List<TreeNode> = emptyList()
     private var onNodeClickListener: ((TreeNode) -> Unit)? = null
+    private var selectedNodeId: String? = null
+    private var showNodeIcon: Boolean = true
 
     fun setOnNodeClickListener(listener: (TreeNode) -> Unit) {
         this.onNodeClickListener = listener
     }
 
-    fun setData(rootNodes: List<TreeNode>) {
-        allNodes.clear()
-
-        rootNodes.forEach { node ->
-            allNodes.addAll(node.getAllVisibleNodes())
-        }
+    fun setSelectedNode(nodeId: String?) {
+        selectedNodeId = nodeId
         notifyDataSetChanged()
+    }
+
+    fun setShowNodeIcon(show: Boolean) {
+        showNodeIcon = show
+    }
+
+    fun setData(rootNodes: List<TreeNode>) {
+        this.rootNodes = rootNodes
+        refreshVisibleNodes()
     }
 
     fun collapseNode(node: TreeNode) {
         if (node.isLeaf) return
 
         node.isExpand = false
-        val position = allNodes.indexOf(node)
-        if (position < 0) return
-
-        val startIndex = position + 1
-        val removeCount = collectDescendants(node, startIndex)
-        if (removeCount > 0) {
-            allNodes.subList(startIndex, startIndex + removeCount).clear()
-            notifyItemRangeRemoved(startIndex, removeCount)
-        }
-        notifyItemChanged(position)
+        refreshVisibleNodes()
     }
 
     fun expandNode(node: TreeNode) {
         if (node.isLeaf) return
 
         node.isExpand = true
-        val position = allNodes.indexOf(node)
-        if (position < 0) return
-
-        val startIndex = position + 1
-        val newNodes = node.getAllVisibleNodes().drop(1)
-        allNodes.addAll(startIndex, newNodes)
-        notifyItemRangeInserted(startIndex, newNodes.size)
-        notifyItemChanged(position)
+        refreshVisibleNodes()
     }
 
-    private fun collectDescendants(node: TreeNode, startIndex: Int): Int {
-        var count = 0
-        for (i in startIndex until allNodes.size) {
-            val currentNode = allNodes[i]
-            if (currentNode.level <= node.level) break
-            count++
+    private fun refreshVisibleNodes() {
+        allNodes.clear()
+        rootNodes.forEach { node ->
+            allNodes.addAll(node.getAllVisibleNodes())
         }
-        return count
+        notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -103,8 +94,15 @@ class TreeNodeAdapter(
             } else {
                 binding.ivExpand.visibility = View.VISIBLE
                 binding.ivExpand.setImageResource(
-                    if (node.isExpand) R.drawable.ic_collapse else R.drawable.ic_expand
+                    if (node.isExpand) R.mipmap.shrink else R.mipmap.spread
                 )
+            }
+
+            if (showNodeIcon) {
+                binding.ivNodeIcon.visibility = View.VISIBLE
+                binding.ivNodeIcon.setImageResource(node.icon ?: R.drawable.ic_user)
+            } else {
+                binding.ivNodeIcon.visibility = View.GONE
             }
 
             // 连接线控制
@@ -113,11 +111,26 @@ class TreeNodeAdapter(
                 View.GONE
             } else if (node.level > 0) View.VISIBLE else View.GONE
 
-            // 点击事件
+            val context = binding.root.context
+            val isSelected = selectedNodeId == node.id
+            binding.root.setBackgroundResource(
+                if (isSelected) R.drawable.bg_f5f9ff_radius_5 else android.R.color.transparent
+            )
+            binding.tvNodeName.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    if (isSelected) R.color.primary else R.color.black
+                )
+            )
+
+            // 选中逻辑交给外部决定，当前适配器只负责把点击事件透出。
             binding.root.setOnClickListener {
                 onNodeClickListener?.invoke(node)
-                if (node.isLeaf) return@setOnClickListener
+            }
 
+            // 展开/收起单独交给箭头按钮，避免父节点点击时被展开逻辑打断选中状态。
+            binding.ivExpand.setOnClickListener {
+                if (node.isLeaf) return@setOnClickListener
                 if (node.isExpand) {
                     collapseNode(node)
                 } else {

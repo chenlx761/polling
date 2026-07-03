@@ -16,7 +16,7 @@ import java.util.Objects;
 public class TicketDetailContract {
 
     public interface GetAreaListCallBack {
-        void onSuccessful(TicketDetailVm.AreaPickerDisplayData data);
+        void onSuccessful(TicketDetailVm.AreaTreeDisplayData data);
     }
 
     public interface ITicketDetailVm extends IBaseViewModel {
@@ -24,7 +24,7 @@ public class TicketDetailContract {
         void getTicketDetail(String ticketId);
         void postTicketDetail(TicketListBean.RowsDTO bean, boolean isCreateMode);
 
-        void getAreaPickerData(GetAreaListCallBack callBack);
+        void getAreaTreeData(GetAreaListCallBack callBack);
     }
 
     /**

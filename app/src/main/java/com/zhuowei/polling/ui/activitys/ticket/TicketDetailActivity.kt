@@ -31,6 +31,7 @@ import com.zhuowei.polling.beans.TicketListBean
 import com.zhuowei.polling.beans.UploadFileResult
 import com.zhuowei.polling.contract.vm.TicketDetailVm
 import com.zhuowei.polling.databinding.ActivityTicketDetailBinding
+import com.zhuowei.polling.dialog.AreaTreePickerDialog
 import com.zhuowei.polling.location.BaiDuLocationManager
 import com.zhuowei.polling.location.LocationCallBack
 import com.zhuowei.polling.location.LocationResult
@@ -48,8 +49,6 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     companion object {
         private const val MAX_PHOTO_COUNT = 9
-        private const val ROOT_AREA_ID = 1
-        private const val AREA_LEVEL_COUNT = 3
         private const val Ticket_Id = "Ticket_Id"
         private const val Ticket_Create_Mode = "Ticket_Create_Mode"
 
@@ -78,15 +77,10 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private var mTicketId: String? = null
     private var mIsCreateMode: Boolean = false
     private var mSelectedAreaId: Int? = null
+    private var mAreaTreeDialog: AreaTreePickerDialog? = null
 
     private enum class PhotoType {
         SCENE, GOVERNMENT
-    }
-
-    private data class AreaPickerItem(
-        val option: TicketDetailVm.AreaPickerOption
-    ) : IPickerViewData {
-        override fun getPickerViewText(): String = option.selection.name
     }
 
     private val takePictureLauncher: ActivityResultLauncher<Uri> =
@@ -153,6 +147,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     override fun getLayoutId(): Int = R.layout.activity_ticket_detail
 
     override fun onDestroy() {
+        mAreaTreeDialog?.dismiss()
         super.onDestroy()
         BaiDuLocationManager.instance.release()
     }
@@ -637,42 +632,31 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     }
 
     private fun startAreaSelection() {
-        mViewModel.getAreaPickerData { pickerData ->
-            if (pickerData.level1Items.isEmpty()) {
+        mViewModel.getAreaTreeData { treeData ->
+            if (treeData.rootNodes.isEmpty()) {
                 ToastUtil.showShortToast(getString(R.string.area_empty_hint))
-                return@getAreaPickerData
+                return@getAreaTreeData
             }
-            showAreaPicker(pickerData)
+            showAreaTreeDialog(treeData)
         }
     }
 
-    private fun showAreaPicker(pickerData: TicketDetailVm.AreaPickerDisplayData) {
-        val level1Items = pickerData.level1Items.map(::AreaPickerItem)
-        val level2Items = pickerData.level2Items.map { level2List ->
-            level2List.map(::AreaPickerItem)
-        }
-        val level3Items = pickerData.level3Items.map { level3Group ->
-            level3Group.map { level3List ->
-                level3List.map(::AreaPickerItem)
+    private fun showAreaTreeDialog(treeData: TicketDetailVm.AreaTreeDisplayData) {
+        mAreaTreeDialog?.dismiss()
+        mAreaTreeDialog = AreaTreePickerDialog(
+            context = this,
+            rootNodes = treeData.rootNodes,
+            currentSelectedAreaId = mSelectedAreaId
+        ) { selectedNode ->
+            val areaResult = mViewModel.buildSelectedAreaResult(selectedNode)
+            if (areaResult == null) {
+                ToastUtil.showShortToast(getString(R.string.area_required_hint))
+                return@AreaTreePickerDialog
             }
+            mBinding!!.etArea.setText(areaResult.displayName)
+            mSelectedAreaId = areaResult.areaId
         }
-        val pickerView: OptionsPickerView<Any> =
-            OptionsPickerBuilder(this) { option1, option2, option3, _ ->
-                val areaResult =
-                    mViewModel.buildSelectedAreaResult(pickerData, option1, option2, option3)
-                        ?: return@OptionsPickerBuilder
-                mBinding!!.etArea.setText(areaResult.displayName)
-                mSelectedAreaId = areaResult.areaId
-            }.setTitleText(getString(R.string.area_input_hint))
-                .setSubmitColor(ContextCompat.getColor(this, R.color.primary))
-                .setCancelColor(ContextCompat.getColor(this, R.color.primary))
-                .setTextColorCenter(ContextCompat.getColor(this, R.color.gray_700))
-                .setTextColorOut(ContextCompat.getColor(this, R.color.gray_600))
-                .setContentTextSize(18).isRestoreItem(true).isCenterLabel(false).build()
-        pickerView.setPicker(
-            level1Items, level2Items, level3Items
-        )
-        pickerView.show()
+        mAreaTreeDialog?.show()
     }
 
     private fun showBottomOptionsPicker(
