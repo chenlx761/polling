@@ -152,8 +152,8 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
         val rootRows = mAreaRows.filter { area ->
             area.parentId <= 0 || !rowById.containsKey(area.parentId)
         }.sortedByAreaOrder()
-      //  if (rootRows.isNotEmpty()) {
-            return rootRows
+        //  if (rootRows.isNotEmpty()) {
+        return rootRows
         //}
 //        // ancestors 记录的是祖先 id 链，链路越短，层级越靠上。
 //        // 这里先求出当前列表里最短的祖先深度，再把这批节点作为根节点返回。
