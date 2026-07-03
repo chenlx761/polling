@@ -122,16 +122,18 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
         option2: Int,
         option3: Int
     ): SelectedAreaResult? {
-        pickerData.level1Items.getOrNull(option1) ?: return null
+        val level1Item = pickerData.level1Items.getOrNull(option1) ?: return null
         val level2Item =
-            pickerData.level2Items.getOrNull(option1)?.getOrNull(option2) ?: return null
+            pickerData.level2Items.getOrNull(option1)?.getOrNull(option2)
         val level3Item =
             pickerData.level3Items.getOrNull(option1)?.getOrNull(option2)?.getOrNull(option3)
         val targetSelection =
             if (level3Item != null && !level3Item.isPlaceholder && level3Item.selection.name.isNotEmpty()) {
                 level3Item.selection
-            } else {
+            } else if (level2Item != null && !level2Item.isPlaceholder && level2Item.selection.name.isNotEmpty()) {
                 level2Item.selection
+            } else {
+                level1Item.selection
             }
         return SelectedAreaResult(
             displayName = targetSelection.name,
@@ -149,20 +151,25 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
 
         level1Rows.forEach { level1Row ->
             val level2Rows = childrenByParent[level1Row.orgId].orEmpty().sortedByAreaOrder()
-            if (level2Rows.isEmpty()) return@forEach
-
             level1Items.add(level1Row.toAreaPickerOption())
-            level2Items.add(level2Rows.map { it.toAreaPickerOption() })
-            level3Items.add(
-                level2Rows.map { level2Row ->
-                    val level3Rows = childrenByParent[level2Row.orgId].orEmpty().sortedByAreaOrder()
-                    if (level3Rows.isEmpty()) {
-                        listOf(level2Row.toPlaceholderPickerOption())
-                    } else {
-                        level3Rows.map { it.toAreaPickerOption() }
+            if (level2Rows.isEmpty()) {
+                val placeholderLevel2 = level1Row.toPlaceholderPickerOption()
+                level2Items.add(listOf(placeholderLevel2))
+                level3Items.add(listOf(listOf(level1Row.toPlaceholderPickerOption())))
+            } else {
+                level2Items.add(level2Rows.map { it.toAreaPickerOption() })
+                level3Items.add(
+                    level2Rows.map { level2Row ->
+                        val level3Rows =
+                            childrenByParent[level2Row.orgId].orEmpty().sortedByAreaOrder()
+                        if (level3Rows.isEmpty()) {
+                            listOf(level2Row.toPlaceholderPickerOption())
+                        } else {
+                            level3Rows.map { it.toAreaPickerOption() }
+                        }
                     }
-                }
-            )
+                )
+            }
         }
 
         return AreaPickerDisplayData(

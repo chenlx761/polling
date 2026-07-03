@@ -302,7 +302,8 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         mAddPhotoAdapter = AddFileAdapter(this, mScenePhotos, MAX_PHOTO_COUNT)
         mGovernmentPhotoAdapter =
             AddFileAdapter(this, mGovernmentPhotos, MAX_PHOTO_COUNT, supportFilePlaceholder = true)
-
+        mAddPhotoAdapter?.setShowEmptyIcon(false)
+        mGovernmentPhotoAdapter?.setShowEmptyIcon(false)
         mBinding!!.rvPhoto.apply {
             adapter = mAddPhotoAdapter
             layoutManager = GridLayoutManager(this@TicketDetailActivity, 3)

@@ -76,6 +76,10 @@ class MyApplication : Application() {
         return BuildConfig.FLAVOR.equals("locationTest")
     }
 
+    private fun ignoreAllCertificateValidation() {
+        HttpManager.trustAllCertificates()
+    }
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -91,6 +95,7 @@ class MyApplication : Application() {
 
         HuDunApplication.getInstance().application = this
         CommApplication.setInstance(this)
+        ignoreAllCertificateValidation()
         HttpManager.setBaseUrl(HttpConstants.BASE_URL)
         //添加请求头拦截器
         HttpManager.addInterceptor { chain ->

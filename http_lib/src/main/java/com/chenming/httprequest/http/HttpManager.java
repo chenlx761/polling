@@ -6,6 +6,11 @@ import android.text.TextUtils;
 import java.io.IOException;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +23,12 @@ import androidx.annotation.NonNull;
 import com.chenming.httprequest.BuildConfig;
 import com.chenming.httprequest.XLog;
 import com.chenming.httprequest.http.constant.HttpBaseUrl;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import me.jessyan.progressmanager.ProgressManager;
 import okhttp3.Cookie;
@@ -48,6 +59,9 @@ public class HttpManager {
     private static Map<String, Object> mPublicParameters = new HashMap<>();
     private static Map<String, String> mPublicHeaders = new HashMap<>();
     private static String mCurBaseUrl;
+    private static SSLSocketFactory mSslSocketFactory;
+    private static X509TrustManager mTrustManager;
+    private static HostnameVerifier mHostnameVerifier;
 
     public static Map<String, Object> getPublicParameters() {
         return mPublicParameters;
@@ -134,6 +148,41 @@ public class HttpManager {
         mRequestSuccessCode = requestSuccessCode;
     }
 
+    public static void trustAllCertificates() {
+        try {
+            X509TrustManager trustAllManager = new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                }
+
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[0];
+                }
+            };
+            TrustManager[] trustManagers = new TrustManager[]{trustAllManager};
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustManagers, new SecureRandom());
+            mTrustManager = trustAllManager;
+            mSslSocketFactory = sslContext.getSocketFactory();
+            mHostnameVerifier = new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, javax.net.ssl.SSLSession session) {
+                    return true;
+                }
+            };
+            okHttpClient = null;
+            apiService = null;
+            mOtherApiService.clear();
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            throw new IllegalStateException("Failed to trust all certificates", e);
+        }
+    }
+
     /**
      * 在第一次调用api()前使用
      * 添加网络拦截器
@@ -203,6 +252,10 @@ public class HttpManager {
                 .readTimeout(10, TimeUnit.SECONDS)
                 .addNetworkInterceptor(httpLoggingInterceptor)
                 .writeTimeout(10, TimeUnit.SECONDS);
+        if (mSslSocketFactory != null && mTrustManager != null && mHostnameVerifier != null) {
+            builder.sslSocketFactory(mSslSocketFactory, mTrustManager)
+                    .hostnameVerifier(mHostnameVerifier);
+        }
         //如果还是一会儿就timeout 就用下面这两句代码
         //.pingInterval(15, TimeUnit.SECONDS)
         //.retryOnConnectionFailure(false)

@@ -27,6 +27,9 @@ class TicketListActivity : BaseActivity<EmptyViewModel, ActivityTicketListBindin
     }
 
     override fun setListener() {
+        mBinding.myTitleBar.setLeftLayoutClickListener {
+            finish()
+        }
         mBinding.ivAddTicket.setOnClickListener {
 //            UploadTicketFileActivity.newInstance(requireActivity())
             TicketDetailActivity.newIntent(
