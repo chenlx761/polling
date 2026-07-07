@@ -1,6 +1,7 @@
 package com.zhuowei.polling.ui.activitys.test
 
 import android.text.InputType
+import com.zhuowei.polling.location.LocationResult
 
 data class FormItem(
     val id: String,
@@ -13,6 +14,8 @@ data class FormItem(
     val options: List<String> = emptyList(),
     val description: String = "",
     var checked: Boolean = false,
+    val selectedOptions: MutableList<String> = mutableListOf(),
+    var locationResult: LocationResult? = null,
     val buttonText: String = "",
     val maxCount: Int = 1,
     val selectedAttachments: MutableList<FormAttachment> = mutableListOf()
@@ -20,6 +23,8 @@ data class FormItem(
     companion object {
         const val KEY_INPUT = "input"
         const val KEY_SELECT = "select"
+        const val KEY_MULTI_SELECT = "multi_select"
+        const val KEY_LOCATION = "location"
         const val KEY_DATE = "date"
         const val KEY_SWITCH = "switch"
         const val KEY_TEXTAREA = "textarea"

@@ -22,6 +22,9 @@ import com.chenming.common.utils.ToastUtil
 import com.zhuowei.polling.R
 import com.zhuowei.polling.base.MyBaseActivity
 import com.zhuowei.polling.databinding.ActivityTestFormBinding
+import com.zhuowei.polling.location.BaiDuLocationManager
+import com.zhuowei.polling.location.LocationCallBack
+import com.zhuowei.polling.location.LocationResult
 import com.zhuowei.polling.ui.activitys.image.ImagePreviewActivity
 import com.zhuowei.polling.utils.GetPhotoUtils
 import java.io.File
@@ -139,10 +142,25 @@ class TestFormActivity : MyBaseActivity<EmptyViewModel, ActivityTestFormBinding>
                 required = true
             ),
             FormItem(
+                id = "hazard_types",
+                key = FormItem.KEY_MULTI_SELECT,
+                label = "隐患类型",
+                options = listOf("消防通道", "电气线路", "器材缺失", "标识损坏", "环境卫生"),
+                selectedOptions = mutableListOf("消防通道", "器材缺失"),
+                value = "消防通道、器材缺失",
+                required = true
+            ),
+            FormItem(
                 id = "inspect_date",
                 key = FormItem.KEY_DATE,
                 label = "巡检日期",
                 value = "2026-07-07",
+                required = true
+            ),
+            FormItem(
+                id = "inspect_location",
+                key = FormItem.KEY_LOCATION,
+                label = "巡检定位",
                 required = true
             ),
             FormItem(
@@ -167,6 +185,13 @@ class TestFormActivity : MyBaseActivity<EmptyViewModel, ActivityTestFormBinding>
                 maxCount = 3
             ),
             FormItem(
+                id = "rectify_images2",
+                key = FormItem.KEY_IMAGE_PICKER,
+                label = "整改图片",
+                required = true,
+                maxCount = 4
+            ),
+            FormItem(
                 id = "attachments",
                 key = FormItem.KEY_FILE_PICKER,
                 label = "附件材料",
@@ -185,6 +210,8 @@ class TestFormActivity : MyBaseActivity<EmptyViewModel, ActivityTestFormBinding>
             FormActionType.ITEM_CLICK -> {
                 when (action.item.key) {
                     FormItem.KEY_SELECT -> showSelectDialog(action.item, action.itemPosition)
+                    FormItem.KEY_MULTI_SELECT -> showMultiSelectDialog(action.item, action.itemPosition)
+                    FormItem.KEY_LOCATION -> getLocation(action.item, action.itemPosition)
                     FormItem.KEY_DATE -> showDateDialog(action.item, action.itemPosition)
                     FormItem.KEY_IMAGE_PICKER -> showImageSourceDialog(action.item)
                     FormItem.KEY_FILE_PICKER -> openFilePicker(action.item)
@@ -233,6 +260,52 @@ class TestFormActivity : MyBaseActivity<EmptyViewModel, ActivityTestFormBinding>
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         ).show()
+    }
+
+    private fun getLocation(item: FormItem, position: Int) {
+        showLoading()
+        BaiDuLocationManager.instance.requestLocation(this, object : LocationCallBack {
+            override fun onLocationSuccess(result: LocationResult) {
+                item.locationResult = result
+                item.value = result.address.ifEmpty {
+                    "${result.latitude},${result.longitude}"
+                }
+                formAdapter.notifyItemChanged(position)
+                dismissDialog()
+            }
+
+            override fun onLocationError(errorCode: Int, errorMessage: String) {
+                ToastUtil.showShortToast(errorMessage)
+                dismissDialog()
+            }
+        })
+    }
+
+    private fun showMultiSelectDialog(item: FormItem, position: Int) {
+        val checkedItems = item.options.map { option ->
+            item.selectedOptions.contains(option)
+        }.toBooleanArray()
+        val selectedValues = item.selectedOptions.toMutableList()
+        AlertDialog.Builder(this)
+            .setTitle(item.label)
+            .setMultiChoiceItems(item.options.toTypedArray(), checkedItems) { _, which, isChecked ->
+                val option = item.options[which]
+                if (isChecked) {
+                    if (!selectedValues.contains(option)) {
+                        selectedValues.add(option)
+                    }
+                } else {
+                    selectedValues.remove(option)
+                }
+            }
+            .setPositiveButton("确定") { _, _ ->
+                item.selectedOptions.clear()
+                item.selectedOptions.addAll(selectedValues)
+                item.value = item.selectedOptions.joinToString("、")
+                formAdapter.notifyItemChanged(position)
+            }
+            .setNegativeButton("取消", null)
+            .show()
     }
 
     private fun showImageSourceDialog(item: FormItem) {
@@ -404,8 +477,17 @@ class TestFormActivity : MyBaseActivity<EmptyViewModel, ActivityTestFormBinding>
                         appendLine("${item.label}：${item.value.ifBlank { "未填写" }}")
                     }
 
-                    FormItem.KEY_SELECT, FormItem.KEY_DATE -> {
+                    FormItem.KEY_SELECT, FormItem.KEY_DATE, FormItem.KEY_LOCATION -> {
                         appendLine("${item.label}：${item.value.ifBlank { "未选择" }}")
+                    }
+
+                    FormItem.KEY_MULTI_SELECT -> {
+                        appendLine(
+                            "${item.label}：${
+                                if (item.selectedOptions.isEmpty()) "未选择"
+                                else item.selectedOptions.joinToString("、")
+                            }"
+                        )
                     }
 
                     FormItem.KEY_SWITCH -> {
@@ -426,5 +508,10 @@ class TestFormActivity : MyBaseActivity<EmptyViewModel, ActivityTestFormBinding>
             }
         }.trim()
         Toast.makeText(this, submitText, Toast.LENGTH_LONG).show()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        BaiDuLocationManager.instance.release()
     }
 }

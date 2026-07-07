@@ -10,9 +10,10 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.zhuowei.polling.R
-import com.zhuowei.polling.databinding.ItemFormAttachmentBinding
 import com.zhuowei.polling.databinding.ItemFormDateBinding
+import com.zhuowei.polling.databinding.ItemFormFileAttachmentBinding
 import com.zhuowei.polling.databinding.ItemFormInputBinding
+import com.zhuowei.polling.databinding.ItemFormImageAttachmentBinding
 import com.zhuowei.polling.databinding.ItemFormSelectBinding
 import com.zhuowei.polling.databinding.ItemFormSubmitBinding
 import com.zhuowei.polling.databinding.ItemFormSwitchBinding
@@ -29,6 +30,8 @@ class DynamicFormAdapter(
         return when (items[position].key) {
             FormItem.KEY_INPUT -> VIEW_TYPE_INPUT
             FormItem.KEY_SELECT -> VIEW_TYPE_SELECT
+            FormItem.KEY_MULTI_SELECT -> VIEW_TYPE_MULTI_SELECT
+            FormItem.KEY_LOCATION -> VIEW_TYPE_LOCATION
             FormItem.KEY_DATE -> VIEW_TYPE_DATE
             FormItem.KEY_SWITCH -> VIEW_TYPE_SWITCH
             FormItem.KEY_TEXTAREA -> VIEW_TYPE_TEXTAREA
@@ -50,6 +53,14 @@ class DynamicFormAdapter(
                 ItemFormSelectBinding.inflate(inflater, parent, false)
             )
 
+            VIEW_TYPE_MULTI_SELECT -> MultiSelectViewHolder(
+                ItemFormSelectBinding.inflate(inflater, parent, false)
+            )
+
+            VIEW_TYPE_LOCATION -> LocationViewHolder(
+                ItemFormSelectBinding.inflate(inflater, parent, false)
+            )
+
             VIEW_TYPE_DATE -> DateViewHolder(
                 ItemFormDateBinding.inflate(inflater, parent, false)
             )
@@ -62,8 +73,12 @@ class DynamicFormAdapter(
                 ItemFormTextareaBinding.inflate(inflater, parent, false)
             )
 
-            VIEW_TYPE_IMAGE_ATTACHMENT, VIEW_TYPE_FILE_ATTACHMENT -> AttachmentViewHolder(
-                ItemFormAttachmentBinding.inflate(inflater, parent, false)
+            VIEW_TYPE_IMAGE_ATTACHMENT -> ImageAttachmentViewHolder(
+                ItemFormImageAttachmentBinding.inflate(inflater, parent, false)
+            )
+
+            VIEW_TYPE_FILE_ATTACHMENT -> FileAttachmentViewHolder(
+                ItemFormFileAttachmentBinding.inflate(inflater, parent, false)
             )
 
             VIEW_TYPE_SUBMIT -> SubmitViewHolder(
@@ -79,12 +94,13 @@ class DynamicFormAdapter(
         when (item.key) {
             FormItem.KEY_INPUT -> (holder as InputViewHolder).bind(item)
             FormItem.KEY_SELECT -> (holder as SelectViewHolder).bind(item, onAction)
+            FormItem.KEY_MULTI_SELECT -> (holder as MultiSelectViewHolder).bind(item, onAction)
+            FormItem.KEY_LOCATION -> (holder as LocationViewHolder).bind(item, onAction)
             FormItem.KEY_DATE -> (holder as DateViewHolder).bind(item, onAction)
             FormItem.KEY_SWITCH -> (holder as SwitchViewHolder).bind(item)
             FormItem.KEY_TEXTAREA -> (holder as TextAreaViewHolder).bind(item)
-            FormItem.KEY_IMAGE_PICKER, FormItem.KEY_FILE_PICKER -> {
-                (holder as AttachmentViewHolder).bind(item, onAction)
-            }
+            FormItem.KEY_IMAGE_PICKER -> (holder as ImageAttachmentViewHolder).bind(item, onAction)
+            FormItem.KEY_FILE_PICKER -> (holder as FileAttachmentViewHolder).bind(item, onAction)
             FormItem.KEY_SUBMIT -> (holder as SubmitViewHolder).bind(item, onAction)
         }
     }
@@ -160,6 +176,58 @@ class DynamicFormAdapter(
         }
     }
 
+    inner class LocationViewHolder(
+        private val binding: ItemFormSelectBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(item: FormItem, onAction: (FormAdapterAction) -> Unit) {
+            val actionCallback = onAction
+            binding.tvLabel.text = buildLabel(item.label, item.required)
+            val hasValue = item.value.isNotBlank()
+            binding.tvValue.text = if (hasValue) item.value else "点击获取定位"
+            binding.tvValue.setTextColor(
+                ContextCompat.getColor(
+                    binding.root.context,
+                    if (hasValue) R.color.gray_700 else R.color.gray_600
+                )
+            )
+            binding.root.setOnClickListener {
+                val currentPosition = adapterPosition
+                if (currentPosition != RecyclerView.NO_POSITION) {
+                    actionCallback(FormAdapterAction(item, currentPosition, FormActionType.ITEM_CLICK))
+                }
+            }
+        }
+    }
+
+    inner class MultiSelectViewHolder(
+        private val binding: ItemFormSelectBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(item: FormItem, onAction: (FormAdapterAction) -> Unit) {
+            val actionCallback = onAction
+            binding.tvLabel.text = buildLabel(item.label, item.required)
+            val hasValue = item.selectedOptions.isNotEmpty()
+            binding.tvValue.text = if (hasValue) {
+                item.selectedOptions.joinToString("、")
+            } else {
+                "请选择，可多选"
+            }
+            binding.tvValue.setTextColor(
+                ContextCompat.getColor(
+                    binding.root.context,
+                    if (hasValue) R.color.gray_700 else R.color.gray_600
+                )
+            )
+            binding.root.setOnClickListener {
+                val currentPosition = adapterPosition
+                if (currentPosition != RecyclerView.NO_POSITION) {
+                    actionCallback(FormAdapterAction(item, currentPosition, FormActionType.ITEM_CLICK))
+                }
+            }
+        }
+    }
+
     inner class SwitchViewHolder(
         private val binding: ItemFormSwitchBinding
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -214,41 +282,24 @@ class DynamicFormAdapter(
         }
     }
 
-    inner class AttachmentViewHolder(
-        private val binding: ItemFormAttachmentBinding
+    inner class ImageAttachmentViewHolder(
+        private val binding: ItemFormImageAttachmentBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(item: FormItem, onAction: (FormAdapterAction) -> Unit) {
             binding.tvLabel.text = buildLabel(item.label, item.required)
             binding.tvCount.text = "已选择 ${item.selectedAttachments.size}/${item.maxCount}"
-            binding.tvEmpty.text = if (item.selectedAttachments.isEmpty()) {
-                when (item.key) {
-                    FormItem.KEY_IMAGE_PICKER -> "暂未选择图片"
-                    FormItem.KEY_FILE_PICKER -> "暂未选择文件"
-                    else -> "暂无内容"
-                }
-            } else {
-                ""
-            }
+            binding.tvEmpty.text = if (item.selectedAttachments.isEmpty()) "暂未选择图片" else ""
             binding.tvEmpty.isVisible = item.selectedAttachments.isEmpty()
             binding.rvAttachmentList.isVisible = item.selectedAttachments.isNotEmpty()
-            binding.btnAdd.text = when (item.key) {
-                FormItem.KEY_IMAGE_PICKER -> "拍照/选择图片"
-                FormItem.KEY_FILE_PICKER -> "选择文件"
-                else -> "添加"
-            }
             val canAddMore = item.selectedAttachments.size < item.maxCount
             binding.btnAdd.isEnabled = canAddMore
             binding.btnAdd.alpha = if (canAddMore) 1f else 0.6f
 
             if (binding.rvAttachmentList.adapter == null) {
-                binding.rvAttachmentList.layoutManager = if (item.key == FormItem.KEY_IMAGE_PICKER) {
-                    GridLayoutManager(binding.root.context, 3)
-                } else {
-                    LinearLayoutManager(binding.root.context)
-                }
+                binding.rvAttachmentList.layoutManager = GridLayoutManager(binding.root.context, 3)
                 binding.rvAttachmentList.adapter = FormAttachmentAdapter(
-                    itemKey = item.key,
+                    itemKey = FormItem.KEY_IMAGE_PICKER,
                     onPreviewClick = { attachmentPosition ->
                         val currentPosition = adapterPosition
                         if (currentPosition != RecyclerView.NO_POSITION) {
@@ -277,7 +328,53 @@ class DynamicFormAdapter(
                     }
                 )
             }
-            (binding.rvAttachmentList.adapter as? FormAttachmentAdapter)?.submitList(item.selectedAttachments)
+            (binding.rvAttachmentList.adapter as? FormAttachmentAdapter)
+                ?.submitList(item.selectedAttachments)
+            binding.btnAdd.setOnClickListener {
+                val currentPosition = adapterPosition
+                if (currentPosition != RecyclerView.NO_POSITION) {
+                    onAction(FormAdapterAction(item, currentPosition, FormActionType.ITEM_CLICK))
+                }
+            }
+        }
+    }
+
+    inner class FileAttachmentViewHolder(
+        private val binding: ItemFormFileAttachmentBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(item: FormItem, onAction: (FormAdapterAction) -> Unit) {
+            binding.tvLabel.text = buildLabel(item.label, item.required)
+            binding.tvCount.text = "已选择 ${item.selectedAttachments.size}/${item.maxCount}"
+            binding.tvEmpty.text = if (item.selectedAttachments.isEmpty()) "暂未选择文件" else ""
+            binding.tvEmpty.isVisible = item.selectedAttachments.isEmpty()
+            binding.rvAttachmentList.isVisible = item.selectedAttachments.isNotEmpty()
+            val canAddMore = item.selectedAttachments.size < item.maxCount
+            binding.btnAdd.isEnabled = canAddMore
+            binding.btnAdd.alpha = if (canAddMore) 1f else 0.6f
+
+            if (binding.rvAttachmentList.adapter == null) {
+                binding.rvAttachmentList.layoutManager = LinearLayoutManager(binding.root.context)
+                binding.rvAttachmentList.adapter = FormAttachmentAdapter(
+                    itemKey = FormItem.KEY_FILE_PICKER,
+                    onPreviewClick = {},
+                    onDeleteClick = { attachmentPosition ->
+                        val currentPosition = adapterPosition
+                        if (currentPosition != RecyclerView.NO_POSITION) {
+                            onAction(
+                                FormAdapterAction(
+                                    item = item,
+                                    itemPosition = currentPosition,
+                                    type = FormActionType.ATTACHMENT_DELETE,
+                                    attachmentPosition = attachmentPosition
+                                )
+                            )
+                        }
+                    }
+                )
+            }
+            (binding.rvAttachmentList.adapter as? FormAttachmentAdapter)
+                ?.submitList(item.selectedAttachments)
             binding.btnAdd.setOnClickListener {
                 val currentPosition = adapterPosition
                 if (currentPosition != RecyclerView.NO_POSITION) {
@@ -290,12 +387,14 @@ class DynamicFormAdapter(
     companion object {
         private const val VIEW_TYPE_INPUT = 1
         private const val VIEW_TYPE_SELECT = 2
-        private const val VIEW_TYPE_DATE = 3
-        private const val VIEW_TYPE_SWITCH = 4
-        private const val VIEW_TYPE_TEXTAREA = 5
-        private const val VIEW_TYPE_SUBMIT = 6
-        private const val VIEW_TYPE_IMAGE_ATTACHMENT = 7
-        private const val VIEW_TYPE_FILE_ATTACHMENT = 8
+        private const val VIEW_TYPE_MULTI_SELECT = 3
+        private const val VIEW_TYPE_LOCATION = 4
+        private const val VIEW_TYPE_DATE = 5
+        private const val VIEW_TYPE_SWITCH = 6
+        private const val VIEW_TYPE_TEXTAREA = 7
+        private const val VIEW_TYPE_SUBMIT = 8
+        private const val VIEW_TYPE_IMAGE_ATTACHMENT = 9
+        private const val VIEW_TYPE_FILE_ATTACHMENT = 10
 
         private fun buildLabel(label: String, required: Boolean): String {
             return if (required) "$label *" else label
