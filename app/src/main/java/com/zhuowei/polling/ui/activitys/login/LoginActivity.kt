@@ -23,7 +23,6 @@ import com.zhuowei.polling.base.MyBaseActivity
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.vm.LoginVm
 import com.zhuowei.polling.databinding.ActivityLoginBinding
-import com.zhuowei.polling.ui.activitys.test.TestFormActivity
 import com.zhuowei.polling.utils.AppCrashHandleCallback
 import com.zhuowei.polling.utils.SpManager
 
@@ -48,7 +47,7 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
     }
 
 
-    private fun requestFilePermission(){
+    private fun requestFilePermission() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
@@ -64,25 +63,25 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
 
         mBinding.btnLogin.setOnClickListener {
 
-            TestFormActivity.newInstance(this@LoginActivity)
-//            if (mBinding.etUsername.text.isNullOrEmpty() || mBinding.etPassword.text.isNullOrEmpty()) {
-//                showInfo(R.string.username_or_password_empty)
-//                return@setOnClickListener
-//            }
-//
-//
-//            showLoading()
-//            SpManager.setUserName(mBinding.etUsername.text.toString())
-//            if (mBinding.cbRemember.isChecked) {
-//                SpManager.setUserPwd(mBinding.etPassword.text.toString())
-//            } else {
-//                SpManager.setUserPwd("")
-//            }
-//            SpManager.setUserRemember(mBinding.cbRemember.isChecked)
-//
-//            mViewModel!!.getTsId(
-//                mBinding.etUsername.text.toString(), mBinding.etPassword.text.toString()
-//            )
+//            TestFormActivity.newInstance(this@LoginActivity)
+            if (mBinding.etUsername.text.isNullOrEmpty() || mBinding.etPassword.text.isNullOrEmpty()) {
+                showInfo(R.string.username_or_password_empty)
+                return@setOnClickListener
+            }
+
+
+            showLoading()
+            SpManager.setUserName(mBinding.etUsername.text.toString())
+            if (mBinding.cbRemember.isChecked) {
+                SpManager.setUserPwd(mBinding.etPassword.text.toString())
+            } else {
+                SpManager.setUserPwd("")
+            }
+            SpManager.setUserRemember(mBinding.cbRemember.isChecked)
+
+            mViewModel!!.getTsId(
+                mBinding.etUsername.text.toString(), mBinding.etPassword.text.toString()
+            )
         }
     }
 
@@ -100,8 +99,7 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
                 HuDunManager.instance.login(it.tsid, object : LoginFinishCallBack {
                     override fun onLoginFinish() {
                         HuDunManager.instance.prepareVpn(
-                            this@LoginActivity,
-                            object : PrepareVpnCallBack {
+                            this@LoginActivity, object : PrepareVpnCallBack {
                                 override fun onPrepareIntentNull() {
                                     onActivityResult(
                                         ErrorCode.REQUEST_START_VPN, RESULT_OK, null
@@ -145,7 +143,7 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
         initHunDun()
     }
 
-    private fun initHunDun(){
+    private fun initHunDun() {
         showLoading()
         HuDunManager.instance.initSDK(object : InitFinishCallBack {
             override fun onInitFinish(hudunBaseUrl: String?) {
