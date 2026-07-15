@@ -13,7 +13,7 @@ class MainModel : BaseModel(), IMainModel {
     override fun getTicketList(
         page: Int,
         size: Int,
-        ticketStaus: String, account: String, address: String,
+        ticketStaus: String, account: String, address: String,number:String,
         callBack: OnHttpCallBack<BaseBean<List<TicketListBean.RowsDTO>?>?>
     ) {
 
@@ -24,6 +24,7 @@ class MainModel : BaseModel(), IMainModel {
                 .addPara("surveyStatus", ticketStaus)
                 .addPara("userName", account)
                 .addPara("userAddress", address)
+                .addPara("userNo", number)
                 .build()
                 .getList(TicketListBean.RowsDTO::class.java, callBack)
         )

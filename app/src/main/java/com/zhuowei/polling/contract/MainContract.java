@@ -15,9 +15,9 @@ public class MainContract {
     public interface IMainVm extends IBaseViewModel {
 
 
-        void flashTicketList(String ticketStaus,String account,String address);
+        void flashTicketList(String ticketStaus,String account,String address,String number);
 
-        void loadMoreTicketList(String ticketStaus,String account,String address);
+        void loadMoreTicketList(String ticketStaus,String account,String address,String number);
 
     }
 
@@ -26,6 +26,6 @@ public class MainContract {
      */
     public interface IMainModel extends IBaseModel {
 
-        void getTicketList(int page, int size,String ticketStaus,String account,String address, OnHttpCallBack<BaseBean<List<TicketListBean.RowsDTO>>> callBack);
+        void getTicketList(int page, int size,String ticketStaus,String account,String address,String number, OnHttpCallBack<BaseBean<List<TicketListBean.RowsDTO>>> callBack);
     }
 }

@@ -21,7 +21,7 @@ class MainVm : BaseViewModel<IMainModel>(), IMainVm {
     }
 
 
-    override fun flashTicketList(ticketStaus: String, account: String, address: String) {
+    override fun flashTicketList(ticketStaus: String, account: String, address: String,number:String) {
 
         mCurPage = 1
         mModel.getTicketList(
@@ -30,6 +30,7 @@ class MainVm : BaseViewModel<IMainModel>(), IMainVm {
             ticketStaus,
             account,
             address,
+            number,
             object :
                 BaseCallBack<BaseBean<List<TicketListBean.RowsDTO>>>(HttpConstants.GET_TICKET_LIST_URL) {
                 override fun onSuccessful(t: BaseBean<List<TicketListBean.RowsDTO>>?) {
@@ -55,7 +56,7 @@ class MainVm : BaseViewModel<IMainModel>(), IMainVm {
             })
     }
 
-    override fun loadMoreTicketList(ticketStaus: String, account: String, address: String) {
+    override fun loadMoreTicketList(ticketStaus: String, account: String, address: String,number:String) {
         mCurPage++
         mModel.getTicketList(
             mCurPage,
@@ -63,6 +64,7 @@ class MainVm : BaseViewModel<IMainModel>(), IMainVm {
             ticketStaus,
             account,
             address,
+            number,
             object :
                 BaseCallBack<BaseBean<List<TicketListBean.RowsDTO>>>(HttpConstants.GET_TICKET_LIST_URL) {
 

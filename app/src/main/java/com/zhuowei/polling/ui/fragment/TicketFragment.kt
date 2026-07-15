@@ -23,7 +23,7 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
 
     private var mMainOrderAdapter: MainOrderAdapter? = null
     private var mTicketStaus: String = "0"
-    private var mSearchType: Int = 0 // 0=用户名, 1=地址
+    private var mSearchType: Int = 0 // 0=用户名, 1=地址,2户号
     private var mIsInitializing: Boolean = true
 
     companion object {
@@ -60,7 +60,7 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
         }
 
 
-        val searchTypes = arrayOf(getString(R.string.user_name_label), getString(R.string.address))
+        val searchTypes = arrayOf(getString(R.string.user_name_label), getString(R.string.address),getString(R.string.account_number))
         val adapter = android.widget.ArrayAdapter(
             requireContext(), android.R.layout.simple_spinner_item, searchTypes
         )
@@ -139,7 +139,7 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
             performLoadMore()
         }
         mBinding!!.srlFlash.postDelayed({
-            mViewModel!!.flashTicketList(mTicketStaus, "", "")
+            mViewModel!!.flashTicketList(mTicketStaus, "", "","")
             mIsInitializing = false
         }, 500)
 
@@ -150,14 +150,16 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
         val keyword = mBinding!!.etSearch.text.toString().trim()
         val account = if (mSearchType == 0) keyword else ""
         val address = if (mSearchType == 1) keyword else ""
-        mViewModel!!.flashTicketList(mTicketStaus, account, address)
+        val number = if (mSearchType == 2) keyword else ""
+        mViewModel!!.flashTicketList(mTicketStaus, account, address,number)
     }
 
     private fun performLoadMore() {
         val keyword = mBinding!!.etSearch.text.toString().trim()
         val account = if (mSearchType == 0) keyword else ""
         val address = if (mSearchType == 1) keyword else ""
-        mViewModel!!.loadMoreTicketList(mTicketStaus, account, address)
+        val number = if (mSearchType == 1) keyword else ""
+        mViewModel!!.loadMoreTicketList(mTicketStaus, account, address,number)
     }
 
 
