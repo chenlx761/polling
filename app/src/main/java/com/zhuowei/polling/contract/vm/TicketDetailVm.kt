@@ -7,6 +7,7 @@ import com.chenming.httprequest.http.bean.BaseBean
 import com.zhuowei.polling.bean.AreaListBean
 import com.zhuowei.polling.bean.TreeNode
 import com.zhuowei.polling.beans.TicketListBean
+import com.zhuowei.polling.beans.TicketUserInfoUpdateBean
 import com.zhuowei.polling.beans.UploadFileResult
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.TicketDetailContract
@@ -17,6 +18,7 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
     TicketDetailContract.ITicketDetailVm {
 
     val mUpdateFinish: MutableLiveData<Boolean> = MutableLiveData()
+    val mUserInfoUpdateFinish: MutableLiveData<TicketUserInfoUpdateBean> = MutableLiveData()
     val mDetail: MutableLiveData<TicketListBean.RowsDTO> = MutableLiveData()
     private var mAreaRows: List<AreaListBean.RowsDTO> = emptyList()
 
@@ -87,14 +89,30 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
             })
     }
 
+    override fun updateTicketUserInfo(bean: TicketUserInfoUpdateBean?) {
+        if (bean == null) return
+        mStartLoadingDialog.postValue(true)
+        mModel.updateTicketUserInfo(
+            bean,
+            object : BaseCallBack<BaseBean<Objects>>(HttpConstants.UPDATE_TICKET_USER_INFO_URL) {
+                override fun onSuccessful(t: BaseBean<Objects>?) {
+                    mStartLoadingDialog.postValue(false)
+                    mUserInfoUpdateFinish.postValue(bean)
+                }
+            }
+        )
+    }
+
     override fun getAreaTreeData(callBack: TicketDetailContract.GetAreaListCallBack?) {
         if (mAreaRows.isNotEmpty()) {
             callBack?.onSuccessful(buildAreaTreeDisplayData())
             return
         }
+        mStartLoadingDialog.postValue(true)
         mModel.getAreaList(
             object : BaseCallBack<BaseBean<AreaListBean>>(HttpConstants.GET_AREA_URL) {
                 override fun onSuccessful(t: BaseBean<AreaListBean>?) {
+                    mStartLoadingDialog.postValue(false)
                     mAreaRows = t?.data?.rows
                         .orEmpty()
                         .filter(::isAreaNodeValid)
@@ -152,25 +170,8 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
         val rootRows = mAreaRows.filter { area ->
             area.parentId <= 0 || !rowById.containsKey(area.parentId)
         }.sortedByAreaOrder()
-        //  if (rootRows.isNotEmpty()) {
         return rootRows
-        //}
-//        // ancestors 记录的是祖先 id 链，链路越短，层级越靠上。
-//        // 这里先求出当前列表里最短的祖先深度，再把这批节点作为根节点返回。
-//        val minAncestorDepth = mAreaRows.minOfOrNull { area ->
-//            area.ancestors
-//                ?.split(",")
-//                .orEmpty()
-//                .mapNotNull { it.trim().toIntOrNull() }
-//                .size
-//        } ?: 0
-//        return mAreaRows.filter { area ->
-//            area.ancestors
-//                ?.split(",")
-//                .orEmpty()
-//                .mapNotNull { it.trim().toIntOrNull() }
-//                .size == minAncestorDepth
-//        }.sortedByAreaOrder()
+
     }
 
     // 递归构建树节点：

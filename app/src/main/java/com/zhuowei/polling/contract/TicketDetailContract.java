@@ -8,6 +8,7 @@ import com.zhuowei.polling.bean.AreaListBean;
 import com.zhuowei.polling.beans.LoginResult;
 import com.zhuowei.polling.beans.TicketDetail;
 import com.zhuowei.polling.beans.TicketListBean;
+import com.zhuowei.polling.beans.TicketUserInfoUpdateBean;
 import com.zhuowei.polling.contract.vm.TicketDetailVm;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class TicketDetailContract {
 
         void getTicketDetail(String ticketId);
         void postTicketDetail(TicketListBean.RowsDTO bean, boolean isCreateMode);
+        void updateTicketUserInfo(TicketUserInfoUpdateBean bean);
 
         void getAreaTreeData(GetAreaListCallBack callBack);
     }
@@ -36,6 +38,8 @@ public class TicketDetailContract {
         void getTicketDetail(String ticketId, OnHttpCallBack<BaseBean<TicketListBean.RowsDTO>> callBack);
 
         void postTicketDetail(TicketListBean.RowsDTO bean, boolean isCreateMode, OnHttpCallBack<BaseBean<Objects>> callBack);
+
+        void updateTicketUserInfo(TicketUserInfoUpdateBean bean, OnHttpCallBack<BaseBean<Objects>> callBack);
 
         void getAreaList(OnHttpCallBack<BaseBean<AreaListBean>> callBack);
     }

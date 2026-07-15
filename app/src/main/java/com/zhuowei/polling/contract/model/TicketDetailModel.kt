@@ -6,6 +6,7 @@ import com.chenming.httprequest.http.bean.BaseBean
 import com.chenming.httprequest.http.listener.OnHttpCallBack
 import com.zhuowei.polling.bean.AreaListBean
 import com.zhuowei.polling.beans.TicketListBean
+import com.zhuowei.polling.beans.TicketUserInfoUpdateBean
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.TicketDetailContract
 import java.util.Objects
@@ -53,6 +54,18 @@ class TicketDetailModel : BaseModel(), TicketDetailContract.ITicketDetailModel {
                     AreaListBean::class.java, callBack,
                     HttpConstants.BASE_HOST_WEB
                 )
+        )
+    }
+
+    override fun updateTicketUserInfo(
+        bean: TicketUserInfoUpdateBean?,
+        callBack: OnHttpCallBack<BaseBean<Objects?>?>?
+    ) {
+        addDisposable(
+            RetrofitUtil.Builder(HttpConstants.UPDATE_TICKET_USER_INFO_URL)
+                .addPara(bean)
+                .build()
+                .putJson(Objects::class.java, callBack)
         )
     }
 

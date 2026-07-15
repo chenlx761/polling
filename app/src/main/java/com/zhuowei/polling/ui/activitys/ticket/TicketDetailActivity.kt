@@ -28,10 +28,12 @@ import com.zhuowei.polling.R
 import com.zhuowei.polling.adapter.AddFileAdapter
 import com.zhuowei.polling.base.MyBaseActivity
 import com.zhuowei.polling.beans.TicketListBean
+import com.zhuowei.polling.beans.TicketUserInfoUpdateBean
 import com.zhuowei.polling.beans.UploadFileResult
 import com.zhuowei.polling.contract.vm.TicketDetailVm
 import com.zhuowei.polling.databinding.ActivityTicketDetailBinding
 import com.zhuowei.polling.dialog.AreaTreePickerDialog
+import com.zhuowei.polling.dialog.TicketUserInfoEditDialog
 import com.zhuowei.polling.location.BaiDuLocationManager
 import com.zhuowei.polling.location.LocationCallBack
 import com.zhuowei.polling.location.LocationResult
@@ -78,6 +80,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
     private var mIsCreateMode: Boolean = false
     private var mSelectedAreaId: Int? = null
     private var mAreaTreeDialog: AreaTreePickerDialog? = null
+    private var mUserInfoEditDialog: TicketUserInfoEditDialog? = null
 
     private enum class PhotoType {
         SCENE, GOVERNMENT
@@ -148,6 +151,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
     override fun onDestroy() {
         mAreaTreeDialog?.dismiss()
+        mUserInfoEditDialog?.dismiss()
         super.onDestroy()
         BaiDuLocationManager.instance.release()
     }
@@ -176,6 +180,28 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             mBean = it
             setData2View()
         }
+
+        mViewModel.mUserInfoUpdateFinish.observe(this) { updatedInfo ->
+            mBean?.apply {
+                workOrderOrgId = updatedInfo.workOrderOrgId
+                workOrderCompany = updatedInfo.workOrderCompany
+                userAddress = updatedInfo.userAddress
+                userName = updatedInfo.userName
+                userNo = updatedInfo.userNo
+            }
+            mSelectedAreaId = updatedInfo.workOrderOrgId.toIntOrNull()
+            mBinding!!.etArea.setText(updatedInfo.workOrderCompany)
+            mBinding!!.etAddress.setText(updatedInfo.userAddress)
+            mBinding!!.etName.setText(updatedInfo.userName)
+            mBinding!!.etAccount.setText(updatedInfo.userNo)
+            mUserInfoEditDialog?.dismiss()
+            mUserInfoEditDialog = null
+            ToastUtil.showShortToast(getString(R.string.edit_user_info_success))
+        }
+
+        mViewModel.mOnRequestError.observe(this) {
+            mUserInfoEditDialog?.setSubmitting(false)
+        }
     }
 
     override fun setListener() {
@@ -185,8 +211,15 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
 
         mBinding!!.etArea.setOnClickListener {
             if (mIsCreateMode) {
-                startAreaSelection()
+                startAreaSelection(mSelectedAreaId) { areaName, areaId ->
+                    mBinding!!.etArea.setText(areaName)
+                    mSelectedAreaId = areaId
+                }
             }
+        }
+
+        mBinding!!.btnEditUserInfo.setOnClickListener {
+            showUserInfoEditDialog()
         }
 
         mBinding!!.tvLocation.setOnClickListener {
@@ -265,7 +298,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
             mGovernmentPhotos.clear()
             mBinding!!.etAddress.setText(it.userAddress)
             mBinding!!.etArea.setText(it.workOrderCompany)
-            mSelectedAreaId = null
+            mSelectedAreaId = it.workOrderOrgId?.toIntOrNull()
             mBinding!!.etName.setText(it.userName)
             mBinding!!.etAccount.setText(it.userNo)
             mBinding!!.etRemark.setText(it.remark)
@@ -294,6 +327,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         if (mIsCreateMode) {
             mBinding.myTitleBar.setTitle(getString(R.string.illegal_add_title))
         }
+        mBinding.btnEditUserInfo.visibility = if (mIsCreateMode) View.GONE else View.VISIBLE
         mAddPhotoAdapter = AddFileAdapter(this, mScenePhotos, MAX_PHOTO_COUNT)
         mGovernmentPhotoAdapter =
             AddFileAdapter(this, mGovernmentPhotos, MAX_PHOTO_COUNT, supportFilePlaceholder = true)
@@ -631,30 +665,36 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         editText.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
     }
 
-    private fun startAreaSelection() {
+    private fun startAreaSelection(
+        currentAreaId: Int?,
+        onSelected: (String, Int) -> Unit
+    ) {
         mViewModel.getAreaTreeData { treeData ->
             if (treeData.rootNodes.isEmpty()) {
                 ToastUtil.showShortToast(getString(R.string.area_empty_hint))
                 return@getAreaTreeData
             }
-            showAreaTreeDialog(treeData)
+            showAreaTreeDialog(treeData, currentAreaId, onSelected)
         }
     }
 
-    private fun showAreaTreeDialog(treeData: TicketDetailVm.AreaTreeDisplayData) {
+    private fun showAreaTreeDialog(
+        treeData: TicketDetailVm.AreaTreeDisplayData,
+        currentAreaId: Int?,
+        onSelected: (String, Int) -> Unit
+    ) {
         mAreaTreeDialog?.dismiss()
         mAreaTreeDialog = AreaTreePickerDialog(
             context = this,
             rootNodes = treeData.rootNodes,
-            currentSelectedAreaId = mSelectedAreaId
+            currentSelectedAreaId = currentAreaId
         ) { selectedNode ->
             val areaResult = mViewModel.buildSelectedAreaResult(selectedNode)
             if (areaResult == null) {
                 ToastUtil.showShortToast(getString(R.string.area_required_hint))
                 return@AreaTreePickerDialog
             }
-            mBinding!!.etArea.setText(areaResult.displayName)
-            mSelectedAreaId = areaResult.areaId
+            onSelected(areaResult.displayName, areaResult.areaId)
         }
         mAreaTreeDialog?.show()
     }
@@ -681,6 +721,60 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         val value: Int, val label: String
     ) : IPickerViewData {
         override fun getPickerViewText(): String = label
+    }
+
+    private fun showUserInfoEditDialog() {
+        val bean = mBean ?: return
+        mUserInfoEditDialog?.dismiss()
+        mUserInfoEditDialog = TicketUserInfoEditDialog(
+            context = this,
+            initialData = TicketUserInfoEditDialog.FormData(
+                areaId = bean.workOrderOrgId?.toIntOrNull(),
+                areaName = bean.workOrderCompany.orEmpty(),
+                address = bean.userAddress.orEmpty(),
+                userName = bean.userName.orEmpty(),
+                userNo = bean.userNo.orEmpty()
+            ),
+            onAreaClick = { dialog ->
+                startAreaSelection(dialog.getSelectedAreaId()) { areaName, areaId ->
+                    dialog.setArea(areaId, areaName)
+                }
+            },
+            onConfirm = { formData -> submitUserInfoUpdate(formData) }
+        ).also { it.show() }
+    }
+
+    private fun submitUserInfoUpdate(formData: TicketUserInfoEditDialog.FormData) {
+        val areaId = formData.areaId
+        if (formData.areaName.isEmpty() || areaId == null) {
+            ToastUtil.showShortToast(getString(R.string.area_required_hint))
+            return
+        }
+        if (formData.address.isEmpty()) {
+            ToastUtil.showShortToast(getString(R.string.address_required_hint))
+            return
+        }
+        if (formData.userName.isEmpty()) {
+            ToastUtil.showShortToast(getString(R.string.user_name_required_hint))
+            return
+        }
+        if (formData.userNo.isEmpty()) {
+            ToastUtil.showShortToast(getString(R.string.account_required_hint))
+            return
+        }
+
+        val bean = mBean ?: return
+        mUserInfoEditDialog?.setSubmitting(true)
+        mViewModel.updateTicketUserInfo(
+            TicketUserInfoUpdateBean(
+                id = bean.id,
+                workOrderOrgId = areaId.toString(),
+                workOrderCompany = formData.areaName,
+                userAddress = formData.address,
+                userName = formData.userName,
+                userNo = formData.userNo
+            )
+        )
     }
 
 
@@ -710,11 +804,13 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         }
 
         return (mBean ?: TicketListBean.RowsDTO()).apply {
-            this.workOrderCompany = area
-            this.userAddress = address
-            this.userName = userName
-            this.userNo = userNo
-            this.workOrderOrgId = mSelectedAreaId.toString()
+            if (mIsCreateMode) {
+                this.workOrderCompany = area
+                this.userAddress = address
+                this.userName = userName
+                this.userNo = userNo
+                mSelectedAreaId?.let { this.workOrderOrgId = it.toString() }
+            }
         }
     }
 }

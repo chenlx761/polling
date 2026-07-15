@@ -84,6 +84,9 @@
     <string name="area_empty_hint">暂无可选区域</string>
     <string name="area_tree_picker_tip">点击节点可展开或收起，选中目标节点后点确定</string>
     <string name="area_select_none">当前未选择区域</string>
+    <string name="edit_user_info">编辑</string>
+    <string name="edit_user_info_title">编辑用户信息</string>
+    <string name="edit_user_info_success">用户信息修改成功</string>
     <string name="max_photo_count">最多只能选择%d张图片</string>
     <string name="take_photo">拍照</string>
     <string name="select_photo">从相册选择</string>

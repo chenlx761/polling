@@ -158,7 +158,7 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
         val keyword = mBinding!!.etSearch.text.toString().trim()
         val account = if (mSearchType == 0) keyword else ""
         val address = if (mSearchType == 1) keyword else ""
-        val number = if (mSearchType == 1) keyword else ""
+        val number = if (mSearchType == 2) keyword else ""
         mViewModel!!.loadMoreTicketList(mTicketStaus, account, address,number)
     }
 
