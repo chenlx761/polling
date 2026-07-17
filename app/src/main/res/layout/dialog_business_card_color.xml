@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/business_card_surface"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:id="@+id/tv_color_dialog_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/business_card_choose_color"
+            android:textColor="@color/business_card_text_primary"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            style="@style/BusinessCard.PropertyLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/business_card_preset_colors" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/swatch_white"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_business_card_swatch_white"
+                    android:contentDescription="@string/business_card_color_white"
+                    app:srcCompat="@drawable/ic_business_card_swatch_check"
+                    app:tint="@color/business_card_swatch_check_tint" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/swatch_black"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_business_card_swatch_black"
+                    android:contentDescription="@string/business_card_color_black"
+                    app:srcCompat="@drawable/ic_business_card_swatch_check"
+                    app:tint="@color/business_card_swatch_check_tint" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/swatch_gray"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_business_card_swatch_gray"
+                    android:contentDescription="@string/business_card_color_gray"
+                    app:srcCompat="@drawable/ic_business_card_swatch_check"
+                    app:tint="@color/business_card_swatch_check_tint" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/swatch_blue"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_business_card_swatch_blue"
+                    android:contentDescription="@string/business_card_color_blue"
+                    app:srcCompat="@drawable/ic_business_card_swatch_check"
+                    app:tint="@color/business_card_swatch_check_tint" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/swatch_red"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_business_card_swatch_red"
+                    android:contentDescription="@string/business_card_color_red"
+                    app:srcCompat="@drawable/ic_business_card_swatch_check"
+                    app:tint="@color/business_card_swatch_check_tint" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/swatch_green"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_business_card_swatch_green"
+                    android:contentDescription="@string/business_card_color_green"
+                    app:srcCompat="@drawable/ic_business_card_swatch_check"
+                    app:tint="@color/business_card_swatch_check_tint" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <TextView
+            style="@style/BusinessCard.PropertyLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/business_card_custom_color" />
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/et_color_hex"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/bg_business_card_input"
+            android:digits="#0123456789aAbBcCdDeEfF"
+            android:hint="@string/business_card_hex_hint"
+            android:imeOptions="actionDone"
+            android:inputType="textVisiblePassword|textCapCharacters"
+            android:maxLength="9"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="@color/business_card_text_primary"
+            android:textColorHint="@color/business_card_text_secondary"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_color_cancel"
+                android:layout_width="88dp"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_business_card_secondary"
+                android:text="@string/business_card_cancel"
+                android:textAllCaps="false"
+                android:textColor="@color/business_card_primary"
+                android:textSize="15sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_color_confirm"
+                android:layout_width="88dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_business_card_primary"
+                android:text="@string/business_card_confirm"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </LinearLayout>
+</layout>

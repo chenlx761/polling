@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/business_card_text_primary"
+        android:pathData="M12,2L2,7l10,5 10,-5L12,2zM4.65,7L12,3.33 19.35,7 12,10.67 4.65,7zM2,12l10,5 10,-5v2l-10,5 -10,-5v-2zM2,17l10,5 10,-5v2l-10,5 -10,-5v-2z" />
+</vector>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/business_card_text_primary"
+        android:pathData="M12,3C7.03,3 3,6.58 3,11c0,3.87 3.13,7 7,7h1.35c0.83,0 1.5,-0.67 1.5,-1.5 0,-0.39 -0.15,-0.75 -0.4,-1.02 -0.24,-0.26 -0.39,-0.61 -0.39,-0.98 0,-0.83 0.67,-1.5 1.5,-1.5H16c2.76,0 5,-2.24 5,-5 0,-2.76 -4.03,-5 -9,-5zM6.5,12C5.67,12 5,11.33 5,10.5S5.67,9 6.5,9 8,9.67 8,10.5 7.33,12 6.5,12zM9,8C8.17,8 7.5,7.33 7.5,6.5S8.17,5 9,5s1.5,0.67 1.5,1.5S9.83,8 9,8zM14,8c-0.83,0 -1.5,-0.67 -1.5,-1.5S13.17,5 14,5s1.5,0.67 1.5,1.5S14.83,8 14,8zM17.5,12c-0.83,0 -1.5,-0.67 -1.5,-1.5S16.67,9 17.5,9s1.5,0.67 1.5,1.5S18.33,12 17.5,12z" />
+</vector>

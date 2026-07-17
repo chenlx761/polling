@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/business_card_editor_background">
+
+        <com.chenming.common.base.widget.MyTitleBar
+            android:id="@+id/my_title_bar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:fitsSystemWindows="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:titleBarBackground="@color/white"
+            app:titleBarLeftImg="@mipmap/top_back"
+            app:titleBarTitle="@string/business_card_editor_title"
+            app:titleBarTitleColor="@color/business_card_text_primary" />
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/editor_scroll"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="ifContentScrolls"
+            app:layout_constraintBottom_toTopOf="@id/bottom_action_bar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/my_title_bar">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginEnd="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/BusinessCard.SectionTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/business_card_canvas_section" />
+
+                    <RadioGroup
+                        android:id="@+id/orientation_group"
+                        android:layout_width="164dp"
+                        android:layout_height="52dp"
+                        android:background="@drawable/bg_business_card_segment_group"
+                        android:checkedButton="@id/radio_landscape"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/radio_landscape"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_business_card_segment"
+                            android:button="@null"
+                            android:gravity="center"
+                            android:text="@string/business_card_orientation_landscape"
+                            android:textColor="@color/business_card_segment_text"
+                            android:textSize="13sp" />
+
+                        <RadioButton
+                            android:id="@+id/radio_portrait"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_business_card_segment"
+                            android:button="@null"
+                            android:gravity="center"
+                            android:text="@string/business_card_orientation_portrait"
+                            android:textColor="@color/business_card_segment_text"
+                            android:textSize="13sp" />
+                    </RadioGroup>
+                </LinearLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="16dp">
+
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/card_canvas_container"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        app:cardBackgroundColor="@color/white"
+                        app:cardCornerRadius="4dp"
+                        app:cardElevation="3dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintDimensionRatio="5:3"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <com.zhuowei.polling.businesscard.BusinessCardCanvasView
+                            android:id="@+id/business_card_canvas"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@color/white"
+                            android:contentDescription="@string/business_card_canvas_section" />
+                    </androidx.cardview.widget.CardView>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:clipToPadding="false"
+                    android:fillViewport="true"
+                    android:overScrollMode="never"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_add_text"
+                            style="@style/BusinessCard.ToolbarButton"
+                            android:drawableStart="@drawable/ic_business_card_text"
+                            android:text="@string/business_card_add_text" />
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_add_image"
+                            style="@style/BusinessCard.ToolbarButton"
+                            android:layout_marginStart="8dp"
+                            android:drawableStart="@drawable/ic_business_card_image"
+                            android:text="@string/business_card_add_image" />
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_canvas_color"
+                            style="@style/BusinessCard.ToolbarButton"
+                            android:layout_marginStart="8dp"
+                            android:drawableStart="@drawable/ic_business_card_palette"
+                            android:text="@string/business_card_canvas_color" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="18dp"
+                    android:background="@color/business_card_border" />
+
+                <TextView
+                    style="@style/BusinessCard.SectionTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:text="@string/business_card_property_section" />
+
+                <TextView
+                    android:id="@+id/selection_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginEnd="16dp"
+                    android:gravity="center_vertical"
+                    android:text="@string/business_card_no_selection"
+                    android:textColor="@color/business_card_text_secondary"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:id="@+id/text_property_panel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="16dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/BusinessCard.PropertyLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:labelFor="@id/et_text_content"
+                        android:text="@string/business_card_text_content" />
+
+                    <androidx.appcompat.widget.AppCompatEditText
+                        android:id="@+id/et_text_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="7dp"
+                        android:background="@drawable/bg_business_card_input"
+                        android:hint="@string/business_card_text_hint"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:maxLength="100"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textColor="@color/business_card_text_primary"
+                        android:textColorHint="@color/business_card_text_secondary"
+                        android:textSize="15sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="15dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/BusinessCard.PropertyLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:labelFor="@id/font_size_seek_bar"
+                            android:text="@string/business_card_font_size" />
+
+                        <TextView
+                            android:id="@+id/tv_font_size_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/business_card_font_size_value"
+                            android:textColor="@color/business_card_primary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.AppCompatSeekBar
+                        android:id="@+id/font_size_seek_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:contentDescription="@string/business_card_font_size"
+                        android:max="170"
+                        android:progress="50"
+                        android:progressTint="@color/business_card_primary"
+                        android:thumbTint="@color/business_card_primary" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_text_color"
+                            style="@style/BusinessCard.PropertyActionButton"
+                            android:drawableStart="@drawable/ic_business_card_palette"
+                            android:text="@string/business_card_text_color" />
+
+                        <View
+                            android:id="@+id/text_color_preview"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="10dp"
+                            android:background="@drawable/bg_business_card_color_preview"
+                            android:contentDescription="@string/business_card_text_color" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/image_property_panel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="16dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/BusinessCard.PropertyLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:labelFor="@id/image_size_seek_bar"
+                            android:text="@string/business_card_image_size" />
+
+                        <TextView
+                            android:id="@+id/tv_image_size_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/business_card_image_size_value"
+                            android:textColor="@color/business_card_primary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.AppCompatSeekBar
+                        android:id="@+id/image_size_seek_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:contentDescription="@string/business_card_image_size"
+                        android:max="100"
+                        android:progress="30"
+                        android:progressTint="@color/business_card_primary"
+                        android:thumbTint="@color/business_card_primary" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/element_action_panel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/BusinessCard.PropertyLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:text="@string/business_card_layer_section" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:clipToPadding="false"
+                        android:fillViewport="true"
+                        android:overScrollMode="never"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btn_delete_element"
+                                style="@style/BusinessCard.PropertyActionButton"
+                                android:drawableStart="@drawable/ic_business_card_delete"
+                                android:text="@string/business_card_delete"
+                                android:textColor="@color/business_card_danger" />
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btn_move_down"
+                                style="@style/BusinessCard.PropertyActionButton"
+                                android:layout_marginStart="8dp"
+                                android:drawableStart="@drawable/ic_business_card_layer_down"
+                                android:text="@string/business_card_move_down" />
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btn_move_up"
+                                style="@style/BusinessCard.PropertyActionButton"
+                                android:layout_marginStart="8dp"
+                                android:drawableStart="@drawable/ic_business_card_layer_up"
+                                android:text="@string/business_card_move_up" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+        <LinearLayout
+            android:id="@+id/bottom_action_bar"
+            android:layout_width="0dp"
+            android:layout_height="72dp"
+            android:background="@color/business_card_surface"
+            android:elevation="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_preview"
+                style="@style/BusinessCard.BottomButton"
+                android:background="@drawable/bg_business_card_secondary"
+                android:drawableStart="@drawable/ic_business_card_preview"
+                android:text="@string/business_card_preview"
+                android:textColor="@color/business_card_primary" />
+
+            <Space
+                android:layout_width="12dp"
+                android:layout_height="1dp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_complete"
+                style="@style/BusinessCard.BottomButton"
+                android:background="@drawable/bg_business_card_primary"
+                android:drawableStart="@drawable/ic_business_card_done"
+                android:text="@string/business_card_complete"
+                android:textColor="@color/white" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
