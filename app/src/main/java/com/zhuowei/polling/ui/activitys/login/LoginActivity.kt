@@ -23,7 +23,6 @@ import com.zhuowei.polling.base.MyBaseActivity
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.vm.LoginVm
 import com.zhuowei.polling.databinding.ActivityLoginBinding
-import com.zhuowei.polling.ui.activitys.test.TestTemplateBusinessCardActivity
 import com.zhuowei.polling.utils.AppCrashHandleCallback
 import com.zhuowei.polling.utils.SpManager
 
@@ -63,9 +62,9 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
         requestFilePermission()
 
         mBinding.btnLogin.setOnClickListener {
-            val createIntent = TestTemplateBusinessCardActivity.createIntent(this@LoginActivity)
-            startActivity(createIntent)
-            return@setOnClickListener
+//            val createIntent = TestTemplateBusinessCardActivity.createIntent(this@LoginActivity)
+//            startActivity(createIntent)
+//            return@setOnClickListener
 //            TestFormActivity.newInstance(this@LoginActivity)
 //            if (mBinding.etUsername.text.isNullOrEmpty() || mBinding.etPassword.text.isNullOrEmpty()) {
 //                showInfo(R.string.username_or_password_empty)
