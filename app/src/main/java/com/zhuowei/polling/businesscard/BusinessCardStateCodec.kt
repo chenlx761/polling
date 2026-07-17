@@ -22,6 +22,9 @@ class BusinessCardStateException(
 typealias BusinessCardValidationException = BusinessCardStateException
 
 object BusinessCardStateCodec {
+    private const val LEGACY_SCHEMA_VERSION = 1
+    private const val LEGACY_LOCAL_URI_WIRE_VALUE = "local_uri"
+    private const val LOCAL_ASSET_DIRECTORY_NAME = "business_card_assets"
     private const val MIN_FONT_SIZE_RATIO = 0.03f
     private const val MAX_FONT_SIZE_RATIO = 0.20f
     private const val FLOAT_TOLERANCE = 0.00001f
@@ -60,12 +63,12 @@ object BusinessCardStateCodec {
         return if (upperCase.length == 7) "#FF${upperCase.substring(1)}" else upperCase
     }
 
-    fun localAssetUris(state: BusinessCardState): List<String> {
+    fun localAssetPaths(state: BusinessCardState): List<String> {
         val normalized = normalizeAndValidate(state)
         return normalized.elements
             .asSequence()
             .mapNotNull { it.image }
-            .filter { it.sourceKind == BusinessCardImageSourceKind.LOCAL_URI }
+            .filter { it.sourceKind == BusinessCardImageSourceKind.LOCAL_PATH }
             .map { it.sourceValue }
             .distinct()
             .toList()
@@ -161,14 +164,21 @@ object BusinessCardStateCodec {
     private fun parseImage(json: JsonObject, path: String): BusinessCardImage {
         checkKeys(json, IMAGE_KEYS, path)
         val sourceKindValue = requiredString(json, "sourceKind", "$path.sourceKind")
-        val sourceKind = BusinessCardImageSourceKind.fromWireValue(sourceKindValue)
-            ?: fail("$path.sourceKind is not supported")
+        val sourceValue = requiredString(json, "sourceValue", "$path.sourceValue")
+        val declaredSourceKind = BusinessCardImageSourceKind.fromWireValue(sourceKindValue)
+        if (declaredSourceKind == null &&
+            !(sourceKindValue == LEGACY_LOCAL_URI_WIRE_VALUE && isHttpSource(sourceValue))
+        ) {
+            fail("$path.sourceKind is not supported")
+        }
+        val sourceKind = inferSourceKind(declaredSourceKind, sourceValue)
+            ?: BusinessCardImageSourceKind.REMOTE_URL
         val contentScaleValue = requiredString(json, "contentScale", "$path.contentScale")
         val contentScale = BusinessCardContentScale.fromWireValue(contentScaleValue)
             ?: fail("$path.contentScale is not supported")
         return BusinessCardImage(
             sourceKind = sourceKind,
-            sourceValue = requiredString(json, "sourceValue", "$path.sourceValue"),
+            sourceValue = sourceValue,
             intrinsicAspectRatio = requiredFloat(
                 json,
                 "intrinsicAspectRatio",
@@ -179,7 +189,12 @@ object BusinessCardStateCodec {
     }
 
     private fun normalizeAndValidate(state: BusinessCardState): BusinessCardState {
-        if (state.schemaVersion != BUSINESS_CARD_SCHEMA_VERSION) {
+        val canMigrateRemoteOnlyV1 = state.schemaVersion == LEGACY_SCHEMA_VERSION &&
+            state.elements.all { element ->
+                element.type != BusinessCardElementType.IMAGE ||
+                    element.image?.sourceKind == BusinessCardImageSourceKind.REMOTE_URL
+            }
+        if (state.schemaVersion != BUSINESS_CARD_SCHEMA_VERSION && !canMigrateRemoteOnlyV1) {
             fail("Unsupported schemaVersion: ${state.schemaVersion}")
         }
 
@@ -283,27 +298,39 @@ object BusinessCardStateCodec {
         if (image.intrinsicAspectRatio <= 0f) {
             fail("$path.intrinsicAspectRatio must be greater than 0")
         }
-        validateImageLocation(image, path)
-        return image.copy()
+        val normalized = image.copy(
+            sourceKind = inferSourceKind(image.sourceKind, image.sourceValue)
+                ?: fail("$path.sourceKind is not supported")
+        )
+        validateImageLocation(normalized, path)
+        return normalized
     }
 
     private fun validateImageLocation(image: BusinessCardImage, path: String) {
-        val uri = try {
-            URI(image.sourceValue)
-        } catch (error: URISyntaxException) {
-            throw BusinessCardStateException("$path.sourceValue is not a valid URI", error)
-        }
         when (image.sourceKind) {
-            BusinessCardImageSourceKind.LOCAL_URI -> {
-                if (!uri.scheme.equals("content", ignoreCase = true) ||
-                    uri.isOpaque ||
-                    uri.rawAuthority.isNullOrBlank()
+            BusinessCardImageSourceKind.LOCAL_PATH -> {
+                val segments = image.sourceValue.split('/').drop(1)
+                val hasInvalidSegment = segments.any {
+                    it.isBlank() || it == "." || it == ".."
+                }
+                val isBusinessCardAsset = segments.size >= 2 &&
+                    segments[segments.lastIndex - 1] == LOCAL_ASSET_DIRECTORY_NAME
+                if (!image.sourceValue.startsWith('/') ||
+                    image.sourceValue.endsWith('/') ||
+                    '\u0000' in image.sourceValue ||
+                    hasInvalidSegment ||
+                    !isBusinessCardAsset
                 ) {
-                    fail("$path.sourceValue must be a hierarchical content:// URI with an authority")
+                    fail("$path.sourceValue must be an absolute business card asset path")
                 }
             }
 
             BusinessCardImageSourceKind.REMOTE_URL -> {
+                val uri = try {
+                    URI(image.sourceValue)
+                } catch (error: URISyntaxException) {
+                    throw BusinessCardStateException("$path.sourceValue is not a valid URL", error)
+                }
                 val isHttp = uri.scheme.equals("http", ignoreCase = true) ||
                     uri.scheme.equals("https", ignoreCase = true)
                 if (!isHttp || uri.host.isNullOrBlank()) {
@@ -311,6 +338,27 @@ object BusinessCardStateCodec {
                 }
             }
         }
+    }
+
+    private fun inferSourceKind(
+        declared: BusinessCardImageSourceKind?,
+        sourceValue: String
+    ): BusinessCardImageSourceKind? {
+        return when {
+            isHttpSource(sourceValue) -> BusinessCardImageSourceKind.REMOTE_URL
+            else -> declared
+        }
+    }
+
+    private fun isHttpSource(sourceValue: String): Boolean {
+        val uri = try {
+            URI(sourceValue)
+        } catch (_: URISyntaxException) {
+            return false
+        }
+        val isHttp = uri.scheme.equals("http", ignoreCase = true) ||
+            uri.scheme.equals("https", ignoreCase = true)
+        return isHttp && !uri.host.isNullOrBlank()
     }
 
     private fun requireFullyInside(element: BusinessCardElement, path: String) {

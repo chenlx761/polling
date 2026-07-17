@@ -27,6 +27,7 @@ class BusinessCardAssetStoreTest {
         val sourceFile = File(sourceDirectory, "card_source_${UUID.randomUUID()}.jpg")
         createJpeg(sourceFile)
         val store = BusinessCardAssetStore(context)
+        var importedFile: File? = null
 
         try {
             val sourceUri = FileProvider.getUriForFile(
@@ -35,23 +36,26 @@ class BusinessCardAssetStoreTest {
                 sourceFile
             )
             val imported = store.importImage(sourceUri)
-            val importedFile = File(imported.absolutePath)
+            val importedPathFile = File(imported.absolutePath)
+            importedFile = importedPathFile
+            val assetDirectory = File(context.filesDir, BusinessCardAssetStore.DIRECTORY_NAME)
 
-            assertTrue(importedFile.isFile)
-            assertTrue(
-                importedFile.canonicalPath.startsWith(
-                    File(context.filesDir, BusinessCardAssetStore.DIRECTORY_NAME).canonicalPath
-                )
-            )
-            assertArrayEquals(sourceFile.readBytes(), importedFile.readBytes())
+            assertTrue(importedPathFile.isFile)
             assertEquals(
-                importedFile.canonicalPath,
-                store.pathForSource(imported.contentUri.toString())
+                assetDirectory.canonicalFile,
+                importedPathFile.canonicalFile.parentFile
+            )
+            assertArrayEquals(sourceFile.readBytes(), importedPathFile.readBytes())
+            assertEquals(
+                importedPathFile.canonicalPath,
+                store.pathForSource(imported.absolutePath)
             )
             assertFalse(store.deletePath(sourceFile.absolutePath))
+            assertTrue(sourceFile.isFile)
             assertTrue(store.deletePath(imported.absolutePath))
-            assertNull(store.pathForSource(imported.contentUri.toString()))
+            assertNull(store.pathForSource(imported.absolutePath))
         } finally {
+            importedFile?.delete()
             sourceFile.delete()
         }
     }

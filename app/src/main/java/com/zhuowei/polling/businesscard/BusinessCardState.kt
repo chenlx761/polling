@@ -2,7 +2,7 @@ package com.zhuowei.polling.businesscard
 
 import com.google.gson.annotations.SerializedName
 
-const val BUSINESS_CARD_SCHEMA_VERSION = 1
+const val BUSINESS_CARD_SCHEMA_VERSION = 2
 const val BUSINESS_CARD_LANDSCAPE_ASPECT_RATIO = 1.666667f
 const val BUSINESS_CARD_PORTRAIT_ASPECT_RATIO = 0.6f
 
@@ -76,8 +76,8 @@ enum class BusinessCardElementType(val wireValue: String) {
 }
 
 enum class BusinessCardImageSourceKind(val wireValue: String) {
-    @SerializedName("local_uri")
-    LOCAL_URI("local_uri"),
+    @SerializedName("local_path")
+    LOCAL_PATH("local_path"),
 
     @SerializedName("remote_url")
     REMOTE_URL("remote_url");

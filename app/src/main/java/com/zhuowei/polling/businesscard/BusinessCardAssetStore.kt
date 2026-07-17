@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
-import androidx.core.content.FileProvider
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -14,7 +13,6 @@ import java.util.UUID
 
 class BusinessCardAssetStore(context: Context) {
     data class ImportedAsset(
-        val contentUri: Uri,
         val absolutePath: String
     )
 
@@ -51,12 +49,7 @@ class BusinessCardAssetStore(context: Context) {
                 throw IOException("Unable to finalize the selected image")
             }
 
-            val contentUri = FileProvider.getUriForFile(
-                appContext,
-                "${appContext.packageName}.fileprovider",
-                destination
-            )
-            return ImportedAsset(contentUri, destination.canonicalPath)
+            return ImportedAsset(destination.canonicalPath)
         } catch (error: Exception) {
             temporary.delete()
             destination.delete()
@@ -66,15 +59,7 @@ class BusinessCardAssetStore(context: Context) {
     }
 
     fun pathForSource(sourceValue: String): String? {
-        val uri = runCatching { Uri.parse(sourceValue) }.getOrNull() ?: return null
-        if (uri.scheme != "content" ||
-            uri.authority != "${appContext.packageName}.fileprovider"
-        ) {
-            return null
-        }
-        val segments = uri.pathSegments
-        if (segments.size != 2 || segments[0] != PROVIDER_PATH_NAME) return null
-        val file = File(assetDirectory, segments[1])
+        val file = File(sourceValue)
         return try {
             file.takeIf { isDirectChild(it) && it.isFile }?.canonicalPath
         } catch (_: IOException) {
@@ -156,7 +141,6 @@ class BusinessCardAssetStore(context: Context) {
 
     companion object {
         const val DIRECTORY_NAME = "business_card_assets"
-        const val PROVIDER_PATH_NAME = "business_card_assets"
 
         private const val DEFAULT_EXTENSION = "jpg"
         private const val TEMP_FILE_SUFFIX = ".part"

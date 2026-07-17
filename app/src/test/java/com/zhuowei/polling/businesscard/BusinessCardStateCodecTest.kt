@@ -13,7 +13,7 @@ class BusinessCardStateCodecTest {
         assertEquals("张三", decoded.elements[0].text?.value)
         assertEquals("#FF112233", decoded.elements[0].text?.color)
         assertEquals("#FFFFFFFF", decoded.canvas.backgroundColor)
-        assertEquals(BusinessCardImageSourceKind.LOCAL_URI, decoded.elements[1].image?.sourceKind)
+        assertEquals(BusinessCardImageSourceKind.LOCAL_PATH, decoded.elements[1].image?.sourceKind)
 
         val encoded = BusinessCardStateCodec.toJson(decoded)
         assertEquals(
@@ -48,6 +48,70 @@ class BusinessCardStateCodecTest {
     }
 
     @Test
+    fun fromJson_httpSourceNormalizesDeclaredLocalPathToRemoteUrl() {
+        val remoteJson = BusinessCardStateCodec.encode(
+            BusinessCardState(
+                elements = mutableListOf(
+                    imageElement(
+                        sourceKind = BusinessCardImageSourceKind.REMOTE_URL,
+                        sourceValue = "http://example.com/assets/card.png"
+                    )
+                )
+            )
+        )
+        val declaredLocalJson = remoteJson.replaceFirst(
+            "\"sourceKind\":\"remote_url\"",
+            "\"sourceKind\":\"local_path\""
+        )
+
+        val decoded = BusinessCardStateCodec.decode(declaredLocalJson)
+
+        assertEquals(BusinessCardImageSourceKind.REMOTE_URL, decoded.elements.single().image?.sourceKind)
+        assertEquals("http://example.com/assets/card.png", decoded.elements.single().image?.sourceValue)
+    }
+
+    @Test
+    fun fromJson_migratesV1RemoteOnlyAndLegacyLocalUriHttpToV2() {
+        val v2RemoteJson = BusinessCardStateCodec.encode(
+            BusinessCardState(
+                elements = mutableListOf(
+                    imageElement(
+                        sourceKind = BusinessCardImageSourceKind.REMOTE_URL,
+                        sourceValue = "https://example.com/assets/legacy.png"
+                    )
+                )
+            )
+        )
+        val v1RemoteJson = v2RemoteJson.replaceFirst(
+            "\"schemaVersion\":2",
+            "\"schemaVersion\":1"
+        )
+        val migratedRemote = BusinessCardStateCodec.decode(v1RemoteJson)
+        assertEquals(BUSINESS_CARD_SCHEMA_VERSION, migratedRemote.schemaVersion)
+        assertEquals(
+            BusinessCardImageSourceKind.REMOTE_URL,
+            migratedRemote.elements.single().image?.sourceKind
+        )
+
+        val staleKindJson = v1RemoteJson.replaceFirst(
+            "\"sourceKind\":\"remote_url\"",
+            "\"sourceKind\":\"local_uri\""
+        )
+        val migratedStaleKind = BusinessCardStateCodec.decode(staleKindJson)
+        assertEquals(BUSINESS_CARD_SCHEMA_VERSION, migratedStaleKind.schemaVersion)
+        assertEquals(
+            BusinessCardImageSourceKind.REMOTE_URL,
+            migratedStaleKind.elements.single().image?.sourceKind
+        )
+
+        val v1LocalJson = LANDSCAPE_TEMPLATE_JSON.replaceFirst(
+            "\"schemaVersion\": 2",
+            "\"schemaVersion\": 1"
+        )
+        assertInvalid { BusinessCardStateCodec.decode(v1LocalJson) }
+    }
+
+    @Test
     fun toJson_ordersElementsByContinuousZIndexWithoutMutatingInput() {
         val top = textElement(id = "top", zIndex = 1)
         val bottom = imageElement(id = "bottom", zIndex = 0)
@@ -60,21 +124,21 @@ class BusinessCardStateCodecTest {
     }
 
     @Test
-    fun localAssetUris_returnsDistinctUrisInLayerOrder() {
-        val first = imageElement("first", 0, sourceValue = "content://cards/one")
+    fun localAssetPaths_returnsDistinctPathsInLayerOrder() {
+        val first = imageElement("first", 0, sourceValue = LOCAL_IMAGE_PATH)
         val remote = imageElement(
             "remote",
             1,
             BusinessCardImageSourceKind.REMOTE_URL,
             "https://example.com/two.png"
         )
-        val duplicate = imageElement("duplicate", 2, sourceValue = "content://cards/one")
-        val second = imageElement("second", 3, sourceValue = "content://cards/three")
+        val duplicate = imageElement("duplicate", 2, sourceValue = LOCAL_IMAGE_PATH)
+        val second = imageElement("second", 3, sourceValue = SECOND_LOCAL_IMAGE_PATH)
         val state = BusinessCardState(elements = mutableListOf(second, duplicate, remote, first))
 
         assertEquals(
-            listOf("content://cards/one", "content://cards/three"),
-            BusinessCardStateCodec.localAssetUris(state)
+            listOf(LOCAL_IMAGE_PATH, SECOND_LOCAL_IMAGE_PATH),
+            BusinessCardStateCodec.localAssetPaths(state)
         )
     }
 
@@ -92,14 +156,14 @@ class BusinessCardStateCodecTest {
         assertInvalid { BusinessCardStateCodec.fromJson("[]") }
         assertInvalid {
             BusinessCardStateCodec.fromJson(
-                LANDSCAPE_TEMPLATE_JSON.replace("\"schemaVersion\": 1", "\"schemaVersion\": 2")
+                LANDSCAPE_TEMPLATE_JSON.replace("\"schemaVersion\": 2", "\"schemaVersion\": 3")
             )
         }
         assertInvalid {
             BusinessCardStateCodec.fromJson(
                 LANDSCAPE_TEMPLATE_JSON.replace(
-                    "\"schemaVersion\": 1,",
-                    "\"schemaVersion\": 1, \"unexpected\": true,"
+                    "\"schemaVersion\": 2,",
+                    "\"schemaVersion\": 2, \"unexpected\": true,"
                 )
             )
         }
@@ -145,8 +209,8 @@ class BusinessCardStateCodecTest {
     fun validation_rejectsWrongElementPayloadAndInvalidText() {
         val wrongPayload = textElement().apply {
             image = BusinessCardImage(
-                BusinessCardImageSourceKind.LOCAL_URI,
-                "content://cards/image",
+                BusinessCardImageSourceKind.LOCAL_PATH,
+                LOCAL_IMAGE_PATH,
                 1f
             )
         }
@@ -172,23 +236,42 @@ class BusinessCardStateCodecTest {
         )
         assertInvalid { BusinessCardStateCodec.validate(mismatchedCanvas) }
 
-        val localHttp = imageElement(
-            sourceKind = BusinessCardImageSourceKind.LOCAL_URI,
-            sourceValue = "https://example.com/image.png"
-        )
-        assertInvalid { BusinessCardStateCodec.validate(BusinessCardState(elements = mutableListOf(localHttp))) }
-
         val remoteContent = imageElement(
             sourceKind = BusinessCardImageSourceKind.REMOTE_URL,
             sourceValue = "content://cards/image"
         )
         assertInvalid { BusinessCardStateCodec.validate(BusinessCardState(elements = mutableListOf(remoteContent))) }
+    }
 
-        val opaqueContent = imageElement(sourceValue = "content:cards/image")
-        assertInvalid { BusinessCardStateCodec.validate(BusinessCardState(elements = mutableListOf(opaqueContent))) }
+    @Test
+    fun validation_rejectsContentFileAndRelativeLocalSources() {
+        listOf(
+            "content://cards/image",
+            "file:///data/user/0/com.zhuowei.polling/files/business_card_assets/image.jpg",
+            "business_card_assets/image.jpg"
+        ).forEach { invalidSource ->
+            val state = BusinessCardState(
+                elements = mutableListOf(imageElement(sourceValue = invalidSource))
+            )
+            assertInvalid { BusinessCardStateCodec.validate(state) }
+        }
 
-        val missingAuthority = imageElement(sourceValue = "content:///image")
-        assertInvalid { BusinessCardStateCodec.validate(BusinessCardState(elements = mutableListOf(missingAuthority))) }
+        val legacyContentJson = LANDSCAPE_TEMPLATE_JSON
+            .replace("\"sourceKind\": \"local_path\"", "\"sourceKind\": \"local_uri\"")
+            .replace("\"sourceValue\": \"$GOLDEN_LOCAL_IMAGE_PATH\"", "\"sourceValue\": \"content://cards/image\"")
+        assertInvalid { BusinessCardStateCodec.decode(legacyContentJson) }
+    }
+
+    @Test
+    fun fromJson_rejectsUnknownKindEvenWhenSourceIsHttp() {
+        val invalidJson = LANDSCAPE_TEMPLATE_JSON
+            .replace("\"sourceKind\": \"local_path\"", "\"sourceKind\": \"unknown_kind\"")
+            .replace(
+                "\"sourceValue\": \"$GOLDEN_LOCAL_IMAGE_PATH\"",
+                "\"sourceValue\": \"https://example.com/image.png\""
+            )
+
+        assertInvalid { BusinessCardStateCodec.decode(invalidJson) }
     }
 
     private fun sampleState(): BusinessCardState = BusinessCardStateCodec.fromJson(LANDSCAPE_TEMPLATE_JSON)
@@ -208,8 +291,8 @@ class BusinessCardStateCodecTest {
     private fun imageElement(
         id: String = "image",
         zIndex: Int = 0,
-        sourceKind: BusinessCardImageSourceKind = BusinessCardImageSourceKind.LOCAL_URI,
-        sourceValue: String = "content://cards/image"
+        sourceKind: BusinessCardImageSourceKind = BusinessCardImageSourceKind.LOCAL_PATH,
+        sourceValue: String = LOCAL_IMAGE_PATH
     ): BusinessCardElement = BusinessCardElement(
         id = id,
         type = BusinessCardElementType.IMAGE,
@@ -228,7 +311,7 @@ class BusinessCardStateCodecTest {
     companion object {
         private val LANDSCAPE_TEMPLATE_JSON = """
             {
-              "schemaVersion": 1,
+              "schemaVersion": 2,
               "canvas": {
                 "orientation": "landscape",
                 "aspectRatio": 1.666667,
@@ -261,8 +344,8 @@ class BusinessCardStateCodecTest {
                   "heightRatio": 0.22,
                   "zIndex": 1,
                   "image": {
-                    "sourceKind": "local_uri",
-                    "sourceValue": "content://cards/photo",
+                    "sourceKind": "local_path",
+                    "sourceValue": "/data/user/0/com.zhuowei.polling/files/business_card_assets/photo.jpg",
                     "intrinsicAspectRatio": 1.5,
                     "contentScale": "fit"
                   }
@@ -273,7 +356,7 @@ class BusinessCardStateCodecTest {
 
         private val EXPECTED_NORMALIZED_LANDSCAPE_JSON = """
             {
-              "schemaVersion": 1,
+              "schemaVersion": 2,
               "canvas": {
                 "orientation": "landscape",
                 "aspectRatio": 1.666667,
@@ -306,8 +389,8 @@ class BusinessCardStateCodecTest {
                   "heightRatio": 0.22,
                   "zIndex": 1,
                   "image": {
-                    "sourceKind": "local_uri",
-                    "sourceValue": "content://cards/photo",
+                    "sourceKind": "local_path",
+                    "sourceValue": "/data/user/0/com.zhuowei.polling/files/business_card_assets/photo.jpg",
                     "intrinsicAspectRatio": 1.5,
                     "contentScale": "fit"
                   }
@@ -315,5 +398,12 @@ class BusinessCardStateCodecTest {
               ]
             }
         """.trimIndent()
+
+        private const val LOCAL_IMAGE_PATH =
+            "/data/user/0/com.zhuowei.polling/files/business_card_assets/image.jpg"
+        private const val SECOND_LOCAL_IMAGE_PATH =
+            "/data/user/0/com.zhuowei.polling/files/business_card_assets/second.png"
+        private const val GOLDEN_LOCAL_IMAGE_PATH =
+            "/data/user/0/com.zhuowei.polling/files/business_card_assets/photo.jpg"
     }
 }

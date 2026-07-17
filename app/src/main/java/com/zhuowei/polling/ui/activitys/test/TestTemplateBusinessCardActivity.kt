@@ -21,11 +21,12 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.ImageViewCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.whenResumed
-import com.chenming.common.base.empty.EmptyViewModel
 import com.bumptech.glide.Glide
+import com.chenming.common.base.empty.EmptyViewModel
 import com.google.gson.Gson
 import com.zhuowei.polling.R
 import com.zhuowei.polling.base.MyBaseActivity
+import com.zhuowei.polling.businesscard.BUSINESS_CARD_SCHEMA_VERSION
 import com.zhuowei.polling.businesscard.BusinessCardAssetStore
 import com.zhuowei.polling.businesscard.BusinessCardCanvasView
 import com.zhuowei.polling.businesscard.BusinessCardElement
@@ -41,6 +42,7 @@ import com.zhuowei.polling.databinding.DialogBusinessCardColorBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
@@ -50,7 +52,6 @@ class TestTemplateBusinessCardActivity :
     companion object {
         const val EXTRA_INITIAL_TEMPLATE_JSON = "extra_initial_template_json"
         const val EXTRA_TEMPLATE_JSON = "extra_template_json"
-        const val EXTRA_LOCAL_ASSET_URIS = "extra_local_asset_uris"
         const val EXTRA_LOCAL_ASSET_PATHS = "extra_local_asset_paths"
 
         private const val FONT_SIZE_MIN_RATIO = 0.03f
@@ -60,8 +61,7 @@ class TestTemplateBusinessCardActivity :
         private const val STATE_EDITOR_JSON = "state_editor_json"
         private const val STATE_INITIAL_JSON = "state_initial_json"
         private const val STATE_LOAD_ERROR = "state_load_error"
-        private const val STATE_VERIFIED_URIS = "state_verified_uris"
-        private const val STATE_NEW_URIS = "state_new_uris"
+        private const val STATE_VERIFIED_PATHS = "state_verified_paths"
         private const val STATE_NEW_ASSET_PATHS = "state_new_asset_paths"
 
         fun createIntent(context: Context, initialTemplateJson: String? = null): Intent {
@@ -80,15 +80,8 @@ class TestTemplateBusinessCardActivity :
     }
 
     private data class ImportedImage(
-        val sourceValue: String,
         val absolutePath: String,
         val aspectRatio: Float
-    )
-
-    private data class CompletionPayload(
-        val json: String,
-        val localAssetUris: List<String>,
-        val localAssetPaths: List<String>
     )
 
     private var initialState = BusinessCardState()
@@ -99,20 +92,17 @@ class TestTemplateBusinessCardActivity :
     private var restoredInitialJson: String? = null
     private var restoredLoadError: String? = null
     private var validatingImages = false
-    private var completing = false
-    private var keepUriPermissionsOnFinish = false
+    private var keepPrivateAssetsOnFinish = false
     private var suppressBaseRestoreFinish = false
     private val internalGson = Gson()
     private val assetStore by lazy { BusinessCardAssetStore(this) }
-    private val verifiedLocalUris = mutableSetOf<String>()
-    private val newlyPersistedUris = mutableSetOf<String>()
+    private val verifiedLocalPaths = mutableSetOf<String>()
     private val newlyCreatedAssetPaths = mutableSetOf<String>()
 
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri ?: return@registerForActivityResult
-        val acquiredPermission = persistReadPermissionForImport(uri)
         lifecycleScope.launch {
             showLoading(false)
             var createdPath: String? = null
@@ -125,7 +115,6 @@ class TestTemplateBusinessCardActivity :
                 }
             } finally {
                 if (importedImage == null) createdPath?.let(assetStore::deletePath)
-                if (acquiredPermission) releasePersistedUri(uri.toString())
                 dismissDialog()
             }
             val image = importedImage
@@ -141,10 +130,10 @@ class TestTemplateBusinessCardActivity :
             var addedToCanvas = false
             try {
                 lifecycle.whenResumed {
-                    verifiedLocalUris.add(image.sourceValue)
+                    verifiedLocalPaths.add(image.absolutePath)
                     mBinding.businessCardCanvas.addImageElement(
-                        sourceKind = BusinessCardImageSourceKind.LOCAL_URI,
-                        sourceValue = image.sourceValue,
+                        sourceKind = BusinessCardImageSourceKind.LOCAL_PATH,
+                        sourceValue = image.absolutePath,
                         intrinsicAspectRatio = image.aspectRatio
                     )
                     addedToCanvas = true
@@ -176,11 +165,8 @@ class TestTemplateBusinessCardActivity :
         restoredEditorJson = savedInstanceState?.getString(STATE_EDITOR_JSON)
         restoredInitialJson = savedInstanceState?.getString(STATE_INITIAL_JSON)
         restoredLoadError = savedInstanceState?.getString(STATE_LOAD_ERROR)
-        verifiedLocalUris.addAll(
-            savedInstanceState?.getStringArrayList(STATE_VERIFIED_URIS).orEmpty()
-        )
-        newlyPersistedUris.addAll(
-            savedInstanceState?.getStringArrayList(STATE_NEW_URIS).orEmpty()
+        verifiedLocalPaths.addAll(
+            savedInstanceState?.getStringArrayList(STATE_VERIFIED_PATHS).orEmpty()
         )
         newlyCreatedAssetPaths.addAll(
             savedInstanceState?.getStringArrayList(STATE_NEW_ASSET_PATHS).orEmpty()
@@ -199,14 +185,26 @@ class TestTemplateBusinessCardActivity :
 
     override fun initData() {
         restoredEditorJson?.let { restored ->
-            initialState = try {
+            val restoredState = try {
                 internalGson.fromJson(restored, BusinessCardState::class.java)
                     ?: BusinessCardState()
             } catch (_: Exception) {
                 BusinessCardState()
             }
+            val hasUnsupportedImage = restoredState.elements.any { element ->
+                element.type == BusinessCardElementType.IMAGE &&
+                    element.image?.sourceKind == null
+            }
+            initialState = if (restoredState.schemaVersion == BUSINESS_CARD_SCHEMA_VERSION &&
+                !hasUnsupportedImage
+            ) {
+                restoredState
+            } else {
+                loadError = "Saved editor state uses an unsupported image source"
+                BusinessCardState()
+            }
             initialCanonicalJson = restoredInitialJson.orEmpty()
-            loadError = restoredLoadError
+            loadError = loadError ?: restoredLoadError
             return
         }
 
@@ -274,13 +272,12 @@ class TestTemplateBusinessCardActivity :
         mBinding.btnDeleteElement.setOnClickListener {
             val removedSource = mBinding.businessCardCanvas.getSelectedElement()
                 ?.image
-                ?.takeIf { it.sourceKind == BusinessCardImageSourceKind.LOCAL_URI }
+                ?.takeIf { it.sourceKind == BusinessCardImageSourceKind.LOCAL_PATH }
                 ?.sourceValue
             if (mBinding.businessCardCanvas.deleteSelected() && removedSource != null) {
                 val stillUsed = mBinding.businessCardCanvas.getState().elements
                     .any { it.image?.sourceValue == removedSource }
                 if (!stillUsed) {
-                    releasePersistedUri(removedSource)
                     deleteNewPrivateAsset(removedSource)
                 }
             }
@@ -418,64 +415,31 @@ class TestTemplateBusinessCardActivity :
     }
 
     private fun completeEditing() {
-        if (completing) return
-        validateImagesAndRun { _, state ->
-            if (isFinishing || completing) return@validateImagesAndRun
-            completing = true
-            lifecycleScope.launch {
-                showLoading(false)
-                val importedPaths = mutableSetOf<String>()
-                var payload: CompletionPayload? = null
-                try {
-                    payload = withContext(Dispatchers.IO) {
-                        prepareCompletionPayload(state, importedPaths)
-                    }
-                } finally {
-                    if (payload == null) importedPaths.forEach(assetStore::deletePath)
-                    dismissDialog()
-                    completing = false
-                }
-
-                val completion = payload
-                if (completion == null) {
-                    Toast.makeText(
-                        this@TestTemplateBusinessCardActivity,
-                        R.string.business_card_image_save_failed,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@launch
-                }
-
-                newlyCreatedAssetPaths.addAll(importedPaths)
-                var resultDelivered = false
-                try {
-                    lifecycle.whenResumed {
-                        val result = Intent().apply {
-                            putExtra(EXTRA_TEMPLATE_JSON, completion.json)
-                            putStringArrayListExtra(
-                                EXTRA_LOCAL_ASSET_URIS,
-                                ArrayList(completion.localAssetUris)
-                            )
-                            putStringArrayListExtra(
-                                EXTRA_LOCAL_ASSET_PATHS,
-                                ArrayList(completion.localAssetPaths)
-                            )
-                        }
-                        cleanupPrivateAssetsForCompletion(
-                            completion.localAssetPaths.toSet()
-                        )
-                        setResult(RESULT_OK, result)
-                        keepUriPermissionsOnFinish = true
-                        resultDelivered = true
-                        finish()
-                    }
-                } finally {
-                    if (!resultDelivered) {
-                        importedPaths.forEach(assetStore::deletePath)
-                        newlyCreatedAssetPaths.removeAll(importedPaths)
-                    }
-                }
+        validateImagesAndRun { json, state ->
+            if (isFinishing) return@validateImagesAndRun
+            val localAssetPaths = BusinessCardStateCodec.localAssetPaths(state)
+            val hasInvalidPath = localAssetPaths.any { path ->
+                assetStore.pathForSource(path) != path
             }
+            if (hasInvalidPath) {
+                Toast.makeText(
+                    this,
+                    R.string.business_card_local_image_invalid,
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@validateImagesAndRun
+            }
+            val result = Intent().apply {
+                putExtra(EXTRA_TEMPLATE_JSON, json)
+                putStringArrayListExtra(
+                    EXTRA_LOCAL_ASSET_PATHS,
+                    ArrayList(localAssetPaths)
+                )
+            }
+            cleanupPrivateAssetsForCompletion(localAssetPaths.toSet())
+            setResult(RESULT_OK, result)
+            keepPrivateAssetsOnFinish = true
+            finish()
         }
     }
 
@@ -485,8 +449,8 @@ class TestTemplateBusinessCardActivity :
             return null
         }
         return try {
-            val state = mBinding.businessCardCanvas.getState()
-            BusinessCardStateCodec.encode(state) to state
+            val json = BusinessCardStateCodec.encode(mBinding.businessCardCanvas.getState())
+            json to BusinessCardStateCodec.decode(json)
         } catch (error: BusinessCardStateException) {
             Toast.makeText(
                 this,
@@ -500,9 +464,9 @@ class TestTemplateBusinessCardActivity :
     private fun validateImagesAndRun(onValid: (String, BusinessCardState) -> Unit) {
         if (validatingImages) return
         val validated = validatedState() ?: return
-        val pendingUris = BusinessCardStateCodec.localAssetUris(validated.second)
-            .filterNot { it in verifiedLocalUris }
-        if (pendingUris.isEmpty()) {
+        val pendingPaths = BusinessCardStateCodec.localAssetPaths(validated.second)
+            .filterNot { it in verifiedLocalPaths }
+        if (pendingPaths.isEmpty()) {
             onValid(validated.first, validated.second)
             return
         }
@@ -510,15 +474,18 @@ class TestTemplateBusinessCardActivity :
         validatingImages = true
         lifecycleScope.launch {
             showLoading(false)
-            val invalidUri = try {
+            val invalidPath = try {
                 withContext(Dispatchers.IO) {
-                    pendingUris.firstOrNull { inspectLocalImage(Uri.parse(it)) == null }
+                    pendingPaths.firstOrNull { path ->
+                        val ownedPath = assetStore.pathForSource(path)
+                        ownedPath == null || inspectLocalImage(ownedPath) == null
+                    }
                 }
             } finally {
                 dismissDialog()
                 validatingImages = false
             }
-            if (invalidUri != null) {
+            if (invalidPath != null) {
                 Toast.makeText(
                     this@TestTemplateBusinessCardActivity,
                     R.string.business_card_local_image_invalid,
@@ -526,7 +493,7 @@ class TestTemplateBusinessCardActivity :
                 ).show()
                 return@launch
             }
-            verifiedLocalUris.addAll(pendingUris)
+            verifiedLocalPaths.addAll(pendingPaths)
             lifecycle.whenResumed {
                 validatedState()?.let { latest -> onValid(latest.first, latest.second) }
             }
@@ -609,80 +576,21 @@ class TestTemplateBusinessCardActivity :
             Log.w(TAG, "Failed to save image from ${sourceUri.authority}", error)
             return null
         }
-        val aspectRatio = inspectLocalImage(asset.contentUri)
+        val aspectRatio = inspectLocalImage(asset.absolutePath)
         if (aspectRatio == null) {
             assetStore.deletePath(asset.absolutePath)
             return null
         }
         return ImportedImage(
-            sourceValue = asset.contentUri.toString(),
             absolutePath = asset.absolutePath,
             aspectRatio = aspectRatio
         )
     }
 
-    private fun prepareCompletionPayload(
-        state: BusinessCardState,
-        importedPaths: MutableSet<String>
-    ): CompletionPayload? {
-        val resultState = try {
-            BusinessCardStateCodec.decode(BusinessCardStateCodec.encode(state))
-        } catch (error: BusinessCardStateException) {
-            Log.w(TAG, "Failed to prepare the business card result", error)
-            return null
-        }
-
-        val replacements = mutableMapOf<String, ImportedImage>()
-        BusinessCardStateCodec.localAssetUris(resultState).forEach { sourceValue ->
-            if (assetStore.pathForSource(sourceValue) != null) return@forEach
-            val imported = importSelectedImage(Uri.parse(sourceValue)) ?: return null
-            replacements[sourceValue] = imported
-            importedPaths.add(imported.absolutePath)
-        }
-
-        if (replacements.isNotEmpty()) {
-            resultState.elements.forEach { element ->
-                val image = element.image ?: return@forEach
-                if (image.sourceKind != BusinessCardImageSourceKind.LOCAL_URI) return@forEach
-                val replacement = replacements[image.sourceValue] ?: return@forEach
-                image.sourceValue = replacement.sourceValue
-                image.intrinsicAspectRatio = replacement.aspectRatio
-            }
-        }
-
-        return try {
-            val json = BusinessCardStateCodec.encode(resultState)
-            val localAssetUris = BusinessCardStateCodec.localAssetUris(resultState)
-            val localAssetPaths = localAssetUris.map { sourceValue ->
-                assetStore.pathForSource(sourceValue) ?: return null
-            }
-            CompletionPayload(json, localAssetUris, localAssetPaths)
-        } catch (error: BusinessCardStateException) {
-            Log.w(TAG, "Failed to encode the business card result", error)
-            null
-        }
-    }
-
-    private fun persistReadPermissionForImport(uri: Uri): Boolean {
-        if (hasPersistedReadPermission(uri)) return false
-        return try {
-            contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            newlyPersistedUris.add(uri.toString())
-            true
-        } catch (error: Exception) {
-            // The temporary OpenDocument grant is sufficient for the immediate private copy.
-            Log.w(TAG, "Provider does not support persistent access: ${uri.authority}", error)
-            false
-        }
-    }
-
-    private fun inspectLocalImage(uri: Uri): Float? {
+    private fun inspectLocalImage(path: String): Float? {
         val future = Glide.with(applicationContext)
             .asBitmap()
-            .load(uri)
+            .load(File(path))
             .override(IMAGE_INSPECTION_SIZE_PX, IMAGE_INSPECTION_SIZE_PX)
             .submit()
         return try {
@@ -693,7 +601,7 @@ class TestTemplateBusinessCardActivity :
                 null
             }
         } catch (error: Exception) {
-            Log.w(TAG, "Failed to decode image from ${uri.authority}", error)
+            Log.w(TAG, "Failed to decode a private business card image", error)
             null
         } finally {
             Glide.with(applicationContext).clear(future)
@@ -726,7 +634,6 @@ class TestTemplateBusinessCardActivity :
 
     private fun handleBack() {
         if (!hasUnsavedChanges()) {
-            releaseAllNewUriPermissions()
             deleteAllNewPrivateAssets()
             finish()
             return
@@ -736,7 +643,6 @@ class TestTemplateBusinessCardActivity :
             .setMessage(R.string.business_card_discard_message)
             .setNegativeButton(R.string.business_card_cancel, null)
             .setPositiveButton(R.string.business_card_discard) { _, _ ->
-                releaseAllNewUriPermissions()
                 deleteAllNewPrivateAssets()
                 finish()
             }
@@ -763,8 +669,7 @@ class TestTemplateBusinessCardActivity :
         )
         outState.putString(STATE_INITIAL_JSON, initialCanonicalJson)
         outState.putString(STATE_LOAD_ERROR, loadError)
-        outState.putStringArrayList(STATE_VERIFIED_URIS, ArrayList(verifiedLocalUris))
-        outState.putStringArrayList(STATE_NEW_URIS, ArrayList(newlyPersistedUris))
+        outState.putStringArrayList(STATE_VERIFIED_PATHS, ArrayList(verifiedLocalPaths))
         outState.putStringArrayList(
             STATE_NEW_ASSET_PATHS,
             ArrayList(newlyCreatedAssetPaths)
@@ -773,8 +678,7 @@ class TestTemplateBusinessCardActivity :
     }
 
     override fun onDestroy() {
-        if (isFinishing && !isChangingConfigurations && !keepUriPermissionsOnFinish) {
-            releaseAllNewUriPermissions()
+        if (isFinishing && !isChangingConfigurations && !keepPrivateAssetsOnFinish) {
             deleteAllNewPrivateAssets()
         }
         super.onDestroy()
@@ -783,29 +687,6 @@ class TestTemplateBusinessCardActivity :
     override fun finish() {
         if (suppressBaseRestoreFinish) return
         super.finish()
-    }
-
-    private fun releasePersistedUri(uriValue: String) {
-        if (newlyPersistedUris.remove(uriValue)) {
-            try {
-                contentResolver.releasePersistableUriPermission(
-                    Uri.parse(uriValue),
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            } catch (_: Exception) {
-            }
-        }
-        verifiedLocalUris.remove(uriValue)
-    }
-
-    private fun hasPersistedReadPermission(uri: Uri): Boolean {
-        return contentResolver.persistedUriPermissions.any { permission ->
-            permission.uri == uri && permission.isReadPermission
-        }
-    }
-
-    private fun releaseAllNewUriPermissions() {
-        newlyPersistedUris.toList().forEach(::releasePersistedUri)
     }
 
     private fun deleteNewPrivateAsset(sourceValue: String) {

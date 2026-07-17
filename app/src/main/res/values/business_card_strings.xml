@@ -39,9 +39,7 @@
     <string name="business_card_color_red">红色</string>
     <string name="business_card_color_green">绿色</string>
     <string name="business_card_color_invalid">请输入 #RRGGBB 或 #AARRGGBB 格式的颜色</string>
-    <string name="business_card_image_read_failed">无法读取所选图片，请重新选择</string>
     <string name="business_card_image_save_failed">无法保存所选图片，请重新选择</string>
-    <string name="business_card_image_permission_failed">无法长期访问所选图片，请从系统文件选择器重新选择</string>
     <string name="business_card_local_image_invalid">模板中的本地图片已失效，请删除后重新选择</string>
     <string name="business_card_data_invalid">名片数据无效：%1$s</string>
     <string name="business_card_invalid_template_title">模板无法打开</string>

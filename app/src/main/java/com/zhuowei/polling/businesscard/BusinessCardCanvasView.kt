@@ -9,7 +9,6 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Build
 import android.util.AttributeSet
 import android.view.MotionEvent
@@ -18,6 +17,7 @@ import android.view.ViewConfiguration
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import java.io.File
 import java.util.UUID
 import kotlin.math.abs
 import kotlin.math.hypot
@@ -50,6 +50,7 @@ class BusinessCardCanvasView @JvmOverloads constructor(
     }
 
     private val density = resources.displayMetrics.density
+    private val assetStore = BusinessCardAssetStore(context)
     private val selectionPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = SELECTION_COLOR
         style = Paint.Style.STROKE
@@ -383,7 +384,7 @@ class BusinessCardCanvasView @JvmOverloads constructor(
                         return "图片资源无效，请重新选择"
                     }
                     if (checkLocalImages &&
-                        image.sourceKind == BusinessCardImageSourceKind.LOCAL_URI &&
+                        image.sourceKind == BusinessCardImageSourceKind.LOCAL_PATH &&
                         !canDecodeLocalImage(image.sourceValue)
                     ) {
                         return "本地图片无法读取，请重新选择"
@@ -799,6 +800,17 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         if (key in bitmaps || key in bitmapTargets || key in failedBitmapKeys || !isAttachedToWindow) {
             return
         }
+        val source: Any = when (image.sourceKind) {
+            BusinessCardImageSourceKind.LOCAL_PATH -> {
+                val path = assetStore.pathForSource(image.sourceValue)
+                if (path == null) {
+                    failedBitmapKeys.add(key)
+                    return
+                }
+                File(path)
+            }
+            BusinessCardImageSourceKind.REMOTE_URL -> image.sourceValue
+        }
         val target = object : CustomTarget<Bitmap>() {
             override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
                 bitmaps[key] = resource
@@ -817,10 +829,6 @@ class BusinessCardCanvasView @JvmOverloads constructor(
             }
         }
         bitmapTargets[key] = target
-        val source: Any = when (image.sourceKind) {
-            BusinessCardImageSourceKind.LOCAL_URI -> Uri.parse(image.sourceValue)
-            BusinessCardImageSourceKind.REMOTE_URL -> image.sourceValue
-        }
         val targetWidth = bounds.width().roundToInt().coerceIn(1, MAX_IMAGE_DECODE_SIZE_PX)
         val targetHeight = bounds.height().roundToInt().coerceIn(1, MAX_IMAGE_DECODE_SIZE_PX)
         Glide.with(this)
@@ -842,10 +850,9 @@ class BusinessCardCanvasView @JvmOverloads constructor(
 
     private fun canDecodeLocalImage(sourceValue: String): Boolean {
         return try {
+            val path = assetStore.pathForSource(sourceValue) ?: return false
             val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            context.contentResolver.openInputStream(Uri.parse(sourceValue))?.use { input ->
-                BitmapFactory.decodeStream(input, null, options)
-            } ?: return false
+            BitmapFactory.decodeFile(path, options)
             options.outWidth > 0 && options.outHeight > 0
         } catch (_: Exception) {
             false
