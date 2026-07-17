@@ -40,6 +40,29 @@
                 android:textColor="@color/white"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp">
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/btn_save_preview"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/business_card_save_preview"
+                    android:padding="12dp"
+                    app:srcCompat="@drawable/ic_business_card_download" />
+
+                <ProgressBar
+                    android:id="@+id/save_preview_progress"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:indeterminateTint="@color/white"
+                    android:visibility="gone" />
+            </FrameLayout>
         </LinearLayout>
 
         <androidx.cardview.widget.CardView

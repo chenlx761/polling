@@ -15,8 +15,16 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
+import com.bumptech.glide.request.FutureTarget
+import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.util.UUID
 import kotlin.math.abs
@@ -48,6 +56,13 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         DRAG,
         RESIZE
     }
+
+    private data class ExportImageRequest(
+        val key: String,
+        val source: Any,
+        val widthPx: Int,
+        val heightPx: Int
+    )
 
     private val density = resources.displayMetrics.density
     private val assetStore = BusinessCardAssetStore(context)
@@ -136,6 +151,106 @@ class BusinessCardCanvasView @JvmOverloads constructor(
     }
 
     fun isEditingEnabled(): Boolean = editingEnabled
+
+    suspend fun exportBitmap(targetWidthPx: Int, targetHeightPx: Int): Bitmap {
+        require(targetWidthPx > 0 && targetHeightPx > 0) {
+            "Export dimensions must be greater than zero"
+        }
+        require(targetWidthPx.toLong() * targetHeightPx <= MAX_EXPORT_PIXELS) {
+            "Export dimensions are too large"
+        }
+        require(width > 0 && height > 0) { "Canvas must be laid out before export" }
+
+        val stateSnapshot = getState().also(BusinessCardStateCodec::validate)
+        val actualAspectRatio = targetWidthPx.toFloat() / targetHeightPx
+        require(abs(actualAspectRatio - stateSnapshot.canvas.aspectRatio) <= EXPORT_ASPECT_TOLERANCE) {
+            "Export dimensions do not match the canvas aspect ratio"
+        }
+
+        val requestsByKey = linkedMapOf<String, ExportImageRequest>()
+        stateSnapshot.elements.forEach { element ->
+            val image = element.image ?: return@forEach
+            val source = resolveImageSource(image)
+                ?: throw IllegalStateException("A local business card image is unavailable")
+            val key = image.cacheKey()
+            val requestedWidth = (element.widthRatio * targetWidthPx)
+                .roundToInt()
+                .coerceIn(1, MAX_IMAGE_DECODE_SIZE_PX)
+            val requestedHeight = (element.heightRatio * targetHeightPx)
+                .roundToInt()
+                .coerceIn(1, MAX_IMAGE_DECODE_SIZE_PX)
+            val previous = requestsByKey[key]
+            requestsByKey[key] = ExportImageRequest(
+                key = key,
+                source = source,
+                widthPx = max(previous?.widthPx ?: 1, requestedWidth),
+                heightPx = max(previous?.heightPx ?: 1, requestedHeight)
+            )
+        }
+        require(requestsByKey.size <= MAX_EXPORT_IMAGE_REQUESTS) {
+            "The template contains too many unique images to export"
+        }
+        val requestedImagePixels = requestsByKey.values.fold(0L) { total, request ->
+            total + request.widthPx.toLong() * request.heightPx
+        }
+        require(requestedImagePixels <= MAX_EXPORT_IMAGE_PIXELS) {
+            "The template contains too many high-resolution images to export"
+        }
+
+        val requestManager = Glide.with(context.applicationContext)
+        val futures = mutableListOf<Pair<ExportImageRequest, FutureTarget<Bitmap>>>()
+        return try {
+            val exportBitmaps = mutableMapOf<String, Bitmap>()
+            withTimeout(EXPORT_IMAGE_BATCH_TIMEOUT_MILLIS) {
+                withContext(Dispatchers.IO) {
+                    requestsByKey.values.forEach { request ->
+                        val future = requestManager
+                            .asBitmap()
+                            .apply(
+                                RequestOptions()
+                                    .downsample(DownsampleStrategy.CENTER_INSIDE)
+                                    .disallowHardwareConfig()
+                            )
+                            .load(request.source)
+                            .override(request.widthPx, request.heightPx)
+                            .submit()
+                        futures.add(request to future)
+                    }
+                }
+                futures.forEach { (request, future) ->
+                    exportBitmaps[request.key] = runInterruptible(Dispatchers.IO) {
+                        future.get()
+                    }
+                }
+            }
+            withContext(Dispatchers.Main.immediate) {
+                val output = Bitmap.createBitmap(
+                    targetWidthPx,
+                    targetHeightPx,
+                    Bitmap.Config.ARGB_8888
+                )
+                try {
+                    val outputCanvas = Canvas(output)
+                    drawState(
+                        canvas = outputCanvas,
+                        state = stateSnapshot,
+                        availableBitmaps = exportBitmaps,
+                        loadMissingImages = false,
+                        renderWidth = targetWidthPx.toFloat(),
+                        renderHeight = targetHeightPx.toFloat()
+                    )
+                    output
+                } catch (error: Throwable) {
+                    output.recycle()
+                    throw error
+                }
+            }
+        } finally {
+            withContext(NonCancellable + Dispatchers.Main.immediate) {
+                futures.forEach { (_, future) -> requestManager.clear(future) }
+            }
+        }
+    }
 
     fun addTextElement(
         value: String = DEFAULT_TEXT,
@@ -435,15 +550,45 @@ class BusinessCardCanvasView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawColor(parseColor(cardState.canvas.backgroundColor, Color.WHITE))
-        cardState.elements.sortedBy { it.zIndex }.forEach { element ->
-            when (element.type) {
-                BusinessCardElementType.TEXT -> drawTextElement(canvas, element)
-                BusinessCardElementType.IMAGE -> drawImageElement(canvas, element)
-            }
-        }
+        drawState(
+            canvas = canvas,
+            state = cardState,
+            availableBitmaps = bitmaps,
+            loadMissingImages = true,
+            renderWidth = width.toFloat(),
+            renderHeight = height.toFloat()
+        )
         if (editingEnabled) {
             selectedElement()?.let { drawSelection(canvas, it) }
+        }
+    }
+
+    private fun drawState(
+        canvas: Canvas,
+        state: BusinessCardState,
+        availableBitmaps: Map<String, Bitmap>,
+        loadMissingImages: Boolean,
+        renderWidth: Float,
+        renderHeight: Float
+    ) {
+        canvas.drawColor(parseColor(state.canvas.backgroundColor, Color.WHITE))
+        state.elements.sortedBy { it.zIndex }.forEach { element ->
+            when (element.type) {
+                BusinessCardElementType.TEXT -> drawTextElement(
+                    canvas,
+                    element,
+                    renderWidth,
+                    renderHeight
+                )
+                BusinessCardElementType.IMAGE -> drawImageElement(
+                    canvas,
+                    element,
+                    availableBitmaps,
+                    loadMissingImages,
+                    renderWidth,
+                    renderHeight
+                )
+            }
         }
     }
 
@@ -594,10 +739,15 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         }
     }
 
-    private fun drawTextElement(canvas: Canvas, element: BusinessCardElement) {
+    private fun drawTextElement(
+        canvas: Canvas,
+        element: BusinessCardElement,
+        renderWidth: Float,
+        renderHeight: Float
+    ) {
         val text = element.text ?: return
-        configureTextPaint(text)
-        val bounds = elementBounds(element)
+        configureTextPaint(text, min(renderWidth, renderHeight))
+        val bounds = elementBounds(element, renderWidth, renderHeight)
         val fontMetrics = textPaint.fontMetrics
         val baseline = bounds.centerY() - (fontMetrics.ascent + fontMetrics.descent) / 2f
         val inset = textPaint.textSize * TEXT_HORIZONTAL_PADDING_FACTOR
@@ -617,14 +767,23 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         canvas.restore()
     }
 
-    private fun drawImageElement(canvas: Canvas, element: BusinessCardElement) {
+    private fun drawImageElement(
+        canvas: Canvas,
+        element: BusinessCardElement,
+        availableBitmaps: Map<String, Bitmap>,
+        loadMissingImage: Boolean,
+        renderWidth: Float,
+        renderHeight: Float
+    ) {
         val image = element.image ?: return
-        val bounds = elementBounds(element)
+        val bounds = elementBounds(element, renderWidth, renderHeight)
         val key = image.cacheKey()
-        val bitmap = bitmaps[key]
+        val bitmap = availableBitmaps[key]
         if (bitmap == null || bitmap.isRecycled) {
-            drawImagePlaceholder(canvas, bounds)
-            ensureBitmapLoaded(image, bounds)
+            if (loadMissingImage) {
+                drawImagePlaceholder(canvas, bounds)
+                ensureBitmapLoaded(image, bounds)
+            }
             return
         }
 
@@ -750,11 +909,18 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         element.centerYRatio = element.centerYRatio.coerceIn(halfHeight, 1f - halfHeight)
     }
 
-    private fun elementBounds(element: BusinessCardElement): RectF {
-        val centerX = element.centerXRatio * width
-        val centerY = element.centerYRatio * height
-        val halfWidth = element.widthRatio * width / 2f
-        val halfHeight = element.heightRatio * height / 2f
+    private fun elementBounds(element: BusinessCardElement): RectF =
+        elementBounds(element, width.toFloat(), height.toFloat())
+
+    private fun elementBounds(
+        element: BusinessCardElement,
+        renderWidth: Float,
+        renderHeight: Float
+    ): RectF {
+        val centerX = element.centerXRatio * renderWidth
+        val centerY = element.centerYRatio * renderHeight
+        val halfWidth = element.widthRatio * renderWidth / 2f
+        val halfHeight = element.heightRatio * renderHeight / 2f
         return RectF(centerX - halfWidth, centerY - halfHeight, centerX + halfWidth, centerY + halfHeight)
     }
 
@@ -800,16 +966,10 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         if (key in bitmaps || key in bitmapTargets || key in failedBitmapKeys || !isAttachedToWindow) {
             return
         }
-        val source: Any = when (image.sourceKind) {
-            BusinessCardImageSourceKind.LOCAL_PATH -> {
-                val path = assetStore.pathForSource(image.sourceValue)
-                if (path == null) {
-                    failedBitmapKeys.add(key)
-                    return
-                }
-                File(path)
-            }
-            BusinessCardImageSourceKind.REMOTE_URL -> image.sourceValue
+        val source = resolveImageSource(image)
+        if (source == null) {
+            failedBitmapKeys.add(key)
+            return
         }
         val target = object : CustomTarget<Bitmap>() {
             override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
@@ -833,6 +993,7 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         val targetHeight = bounds.height().roundToInt().coerceIn(1, MAX_IMAGE_DECODE_SIZE_PX)
         Glide.with(this)
             .asBitmap()
+            .apply(RequestOptions().downsample(DownsampleStrategy.CENTER_INSIDE))
             .load(source)
             .override(targetWidth, targetHeight)
             .into(target)
@@ -856,6 +1017,14 @@ class BusinessCardCanvasView @JvmOverloads constructor(
             options.outWidth > 0 && options.outHeight > 0
         } catch (_: Exception) {
             false
+        }
+    }
+
+    private fun resolveImageSource(image: BusinessCardImage): Any? {
+        return when (image.sourceKind) {
+            BusinessCardImageSourceKind.LOCAL_PATH ->
+                assetStore.pathForSource(image.sourceValue)?.let(::File)
+            BusinessCardImageSourceKind.REMOTE_URL -> image.sourceValue
         }
     }
 
@@ -896,6 +1065,11 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         private const val RESIZE_HANDLE_RADIUS_DP = 7f
         private const val RESIZE_HANDLE_HIT_RADIUS_DP = 24f
         private const val MAX_IMAGE_DECODE_SIZE_PX = 2048
+        private const val MAX_EXPORT_PIXELS = 8_000_000L
+        private const val MAX_EXPORT_IMAGE_REQUESTS = 64
+        private const val MAX_EXPORT_IMAGE_PIXELS = 16_000_000L
+        private const val EXPORT_IMAGE_BATCH_TIMEOUT_MILLIS = 30_000L
+        private const val EXPORT_ASPECT_TOLERANCE = 0.001f
         private const val FLOAT_EPSILON = 0.00001f
         private const val SELECTION_COLOR = 0xFF1976D2.toInt()
     }

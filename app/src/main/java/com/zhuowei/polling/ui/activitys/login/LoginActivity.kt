@@ -64,6 +64,7 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
         mBinding.btnLogin.setOnClickListener {
 //            val createIntent = TestTemplateBusinessCardActivity.createIntent(this@LoginActivity)
 //            startActivity(createIntent)
+//            return@setOnClickListener
 //            TestFormActivity.newInstance(this@LoginActivity)
             if (mBinding.etUsername.text.isNullOrEmpty() || mBinding.etPassword.text.isNullOrEmpty()) {
                 showInfo(R.string.username_or_password_empty)

@@ -26,6 +26,10 @@
     <string name="business_card_complete">完成</string>
     <string name="business_card_preview_title">名片预览</string>
     <string name="business_card_close_preview">关闭预览</string>
+    <string name="business_card_save_preview">保存到相册</string>
+    <string name="business_card_preview_saved">名片图片已保存到相册</string>
+    <string name="business_card_preview_save_failed">名片图片保存失败，请重试</string>
+    <string name="business_card_preview_permission_denied">需要存储权限才能保存到相册</string>
     <string name="business_card_choose_color">选择颜色</string>
     <string name="business_card_preset_colors">常用颜色</string>
     <string name="business_card_custom_color">自定义颜色</string>
