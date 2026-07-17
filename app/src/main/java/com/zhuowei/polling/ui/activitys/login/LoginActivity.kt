@@ -23,7 +23,6 @@ import com.zhuowei.polling.base.MyBaseActivity
 import com.zhuowei.polling.constants.HttpConstants
 import com.zhuowei.polling.contract.vm.LoginVm
 import com.zhuowei.polling.databinding.ActivityLoginBinding
-import com.zhuowei.polling.ui.activitys.test.TestTemplateBusinessCardActivity
 import com.zhuowei.polling.utils.AppCrashHandleCallback
 import com.zhuowei.polling.utils.SpManager
 
@@ -63,27 +62,27 @@ class LoginActivity : MyBaseActivity<LoginVm, ActivityLoginBinding>() {
         requestFilePermission()
 
         mBinding.btnLogin.setOnClickListener {
-            val createIntent = TestTemplateBusinessCardActivity.createIntent(this@LoginActivity)
-            startActivity(createIntent)
+//            val createIntent = TestTemplateBusinessCardActivity.createIntent(this@LoginActivity)
+//            startActivity(createIntent)
 //            TestFormActivity.newInstance(this@LoginActivity)
-//            if (mBinding.etUsername.text.isNullOrEmpty() || mBinding.etPassword.text.isNullOrEmpty()) {
-//                showInfo(R.string.username_or_password_empty)
-//                return@setOnClickListener
-//            }
-//
-//
-//            showLoading()
-//            SpManager.setUserName(mBinding.etUsername.text.toString())
-//            if (mBinding.cbRemember.isChecked) {
-//                SpManager.setUserPwd(mBinding.etPassword.text.toString())
-//            } else {
-//                SpManager.setUserPwd("")
-//            }
-//            SpManager.setUserRemember(mBinding.cbRemember.isChecked)
-//
-//            mViewModel!!.getTsId(
-//                mBinding.etUsername.text.toString(), mBinding.etPassword.text.toString()
-//            )
+            if (mBinding.etUsername.text.isNullOrEmpty() || mBinding.etPassword.text.isNullOrEmpty()) {
+                showInfo(R.string.username_or_password_empty)
+                return@setOnClickListener
+            }
+
+
+            showLoading()
+            SpManager.setUserName(mBinding.etUsername.text.toString())
+            if (mBinding.cbRemember.isChecked) {
+                SpManager.setUserPwd(mBinding.etPassword.text.toString())
+            } else {
+                SpManager.setUserPwd("")
+            }
+            SpManager.setUserRemember(mBinding.cbRemember.isChecked)
+
+            mViewModel!!.getTsId(
+                mBinding.etUsername.text.toString(), mBinding.etPassword.text.toString()
+            )
         }
     }
 
