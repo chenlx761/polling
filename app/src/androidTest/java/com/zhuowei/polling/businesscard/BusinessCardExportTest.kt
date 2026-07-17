@@ -96,6 +96,30 @@ class BusinessCardExportTest {
         }
     }
 
+    @Test
+    fun exportBitmap_withCornerRadius_makesCornersTransparent() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val canvasView = withContext(Dispatchers.Main) {
+            BusinessCardCanvasView(context).apply {
+                setState(BusinessCardState())
+                measure(
+                    View.MeasureSpec.makeMeasureSpec(500, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(300, View.MeasureSpec.EXACTLY)
+                )
+                layout(0, 0, 500, 300)
+            }
+        }
+
+        val bitmap = canvasView.exportBitmap(500, 300, cornerRadiusPx = 20f)
+        try {
+            assertEquals(0, Color.alpha(bitmap.getPixel(0, 0)))
+            assertEquals(255, Color.alpha(bitmap.getPixel(bitmap.width / 2, 0)))
+            assertEquals(255, Color.alpha(bitmap.getPixel(bitmap.width / 2, bitmap.height / 2)))
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
     private fun createBlueJpeg(file: File) {
         val bitmap = Bitmap.createBitmap(40, 20, Bitmap.Config.ARGB_8888).apply {
             eraseColor(Color.BLUE)

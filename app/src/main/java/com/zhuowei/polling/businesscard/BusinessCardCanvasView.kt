@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
@@ -152,9 +153,16 @@ class BusinessCardCanvasView @JvmOverloads constructor(
 
     fun isEditingEnabled(): Boolean = editingEnabled
 
-    suspend fun exportBitmap(targetWidthPx: Int, targetHeightPx: Int): Bitmap {
+    suspend fun exportBitmap(
+        targetWidthPx: Int,
+        targetHeightPx: Int,
+        cornerRadiusPx: Float = 0f
+    ): Bitmap {
         require(targetWidthPx > 0 && targetHeightPx > 0) {
             "Export dimensions must be greater than zero"
+        }
+        require(cornerRadiusPx.isFinite() && cornerRadiusPx >= 0f) {
+            "Export corner radius must be finite and non-negative"
         }
         require(targetWidthPx.toLong() * targetHeightPx <= MAX_EXPORT_PIXELS) {
             "Export dimensions are too large"
@@ -231,6 +239,13 @@ class BusinessCardCanvasView @JvmOverloads constructor(
                 )
                 try {
                     val outputCanvas = Canvas(output)
+                    if (cornerRadiusPx > 0f) {
+                        val bounds = RectF(0f, 0f, targetWidthPx.toFloat(), targetHeightPx.toFloat())
+                        val clipPath = Path().apply {
+                            addRoundRect(bounds, cornerRadiusPx, cornerRadiusPx, Path.Direction.CW)
+                        }
+                        outputCanvas.clipPath(clipPath)
+                    }
                     drawState(
                         canvas = outputCanvas,
                         state = stateSnapshot,

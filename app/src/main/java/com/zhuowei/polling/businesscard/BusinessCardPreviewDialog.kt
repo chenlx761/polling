@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.min
 
 class BusinessCardPreviewDialog : DialogFragment() {
 
@@ -32,6 +33,7 @@ class BusinessCardPreviewDialog : DialogFragment() {
         private const val LANDSCAPE_EXPORT_HEIGHT = 900
         private const val PORTRAIT_EXPORT_WIDTH = 900
         private const val PORTRAIT_EXPORT_HEIGHT = 1500
+        private const val EXPORT_CORNER_RADIUS_RATIO = 4f / 300f
 
         fun newInstance(templateJson: String): BusinessCardPreviewDialog {
             return BusinessCardPreviewDialog().apply {
@@ -123,7 +125,8 @@ class BusinessCardPreviewDialog : DialogFragment() {
         saveJob = lifecycleScope.launch {
             var exportedBitmap: Bitmap? = null
             try {
-                val bitmap = canvasView.exportBitmap(targetWidth, targetHeight)
+                val cornerRadius = min(targetWidth, targetHeight) * EXPORT_CORNER_RADIUS_RATIO
+                val bitmap = canvasView.exportBitmap(targetWidth, targetHeight, cornerRadius)
                 exportedBitmap = bitmap
                 withContext(Dispatchers.IO) {
                     BusinessCardGallerySaver.savePng(appContext, bitmap)
