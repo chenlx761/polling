@@ -327,7 +327,7 @@ class TicketDetailActivity : MyBaseActivity<TicketDetailVm, ActivityTicketDetail
         if (mIsCreateMode) {
             mBinding.myTitleBar.setTitle(getString(R.string.illegal_add_title))
         }
-        mBinding.btnEditUserInfo.visibility = if (mIsCreateMode) View.GONE else View.VISIBLE
+        mBinding.btnEditUserInfo.visibility = if (mIsCreateMode) View.GONE else View.GONE
         mAddPhotoAdapter = AddFileAdapter(this, mScenePhotos, MAX_PHOTO_COUNT)
         mGovernmentPhotoAdapter =
             AddFileAdapter(this, mGovernmentPhotos, MAX_PHOTO_COUNT, supportFilePlaceholder = true)
