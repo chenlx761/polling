@@ -55,6 +55,7 @@
 | `canvas.orientation` | `landscape` | 横版画布 |
 | `canvas.aspectRatio` | `1.666667` | 画布宽高比约为 `5:3` |
 | `canvas.backgroundColor` | `#FFFFFFFF` | ARGB 格式的不透明白色 |
+| `canvas.backgroundImage` | 可选 | 铺满画布并居中裁剪的背景图片；未设置时不输出 |
 | `elements` | 2 个图片元素 | 按 `zIndex` 从底层到顶层排列 |
 
 当前示例是一张白色横版名片，包含两张本地图片，没有文字元素。
@@ -138,6 +139,19 @@ bottom = centerYRatio + heightRatio / 2
 
 ## 图片来源
 
+画布背景图片使用与图片元素相同的来源结构，但 `contentScale` 固定为 `crop`：
+
+```json
+{
+  "sourceKind": "local_path",
+  "sourceValue": "/data/data/com.zhuowei.polling/files/business_card_assets/background.jpg",
+  "intrinsicAspectRatio": 1.777778,
+  "contentScale": "crop"
+}
+```
+
+该对象保存在 `canvas.backgroundImage`；普通图片元素的 `contentScale` 仍固定为 `fit`。
+
 JSON v2 只支持以下两种图片来源：
 
 ### 本地图片
@@ -186,7 +200,7 @@ val localPaths = TestTemplateBusinessCardActivity.getLocalAssetPaths(data)
 
 1. 遍历 `localPaths`，使用 `File(path)` 上传图片。
 2. 获取后台返回的 HTTP(S) 地址。
-3. 在模板 JSON 中找到 `sourceValue == path` 的图片元素。
+3. 在模板 JSON 中找到 `sourceValue == path` 的图片元素或 `canvas.backgroundImage`。
 4. 将 `sourceKind` 改为 `remote_url`。
 5. 将 `sourceValue` 替换为后台图片地址。
 6. 再把替换完成的 JSON 提交后台。

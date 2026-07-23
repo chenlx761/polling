@@ -48,6 +48,28 @@ class BusinessCardStateCodecTest {
     }
 
     @Test
+    fun backgroundImage_roundTripUsesCropAndIsIncludedInLocalAssets() {
+        val background = BusinessCardImage(
+            sourceKind = BusinessCardImageSourceKind.LOCAL_PATH,
+            sourceValue = SECOND_LOCAL_IMAGE_PATH,
+            intrinsicAspectRatio = 2f,
+            contentScale = BusinessCardContentScale.CROP
+        )
+        val state = BusinessCardState(
+            canvas = BusinessCardCanvas(backgroundImage = background),
+            elements = mutableListOf(imageElement(sourceValue = LOCAL_IMAGE_PATH))
+        )
+
+        val decoded = BusinessCardStateCodec.decode(BusinessCardStateCodec.encode(state))
+
+        assertEquals(background, decoded.canvas.backgroundImage)
+        assertEquals(
+            listOf(SECOND_LOCAL_IMAGE_PATH, LOCAL_IMAGE_PATH),
+            BusinessCardStateCodec.localAssetPaths(decoded)
+        )
+    }
+
+    @Test
     fun fromJson_httpSourceNormalizesDeclaredLocalPathToRemoteUrl() {
         val remoteJson = BusinessCardStateCodec.encode(
             BusinessCardState(
@@ -224,6 +246,30 @@ class BusinessCardStateCodecTest {
 
         val oversized = textElement().apply { text?.fontSizeRatio = 0.21f }
         assertInvalid { BusinessCardStateCodec.validate(BusinessCardState(elements = mutableListOf(oversized))) }
+    }
+
+    @Test
+    fun validation_rejectsWrongContentScaleForBackgroundAndElementImages() {
+        val fitBackground = BusinessCardState(
+            canvas = BusinessCardCanvas(
+                backgroundImage = BusinessCardImage(
+                    BusinessCardImageSourceKind.LOCAL_PATH,
+                    LOCAL_IMAGE_PATH,
+                    1f,
+                    BusinessCardContentScale.FIT
+                )
+            )
+        )
+        assertInvalid { BusinessCardStateCodec.validate(fitBackground) }
+
+        val croppedElement = imageElement().apply {
+            image?.contentScale = BusinessCardContentScale.CROP
+        }
+        assertInvalid {
+            BusinessCardStateCodec.validate(
+                BusinessCardState(elements = mutableListOf(croppedElement))
+            )
+        }
     }
 
     @Test

@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
@@ -176,6 +177,16 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         }
 
         val requestsByKey = linkedMapOf<String, ExportImageRequest>()
+        stateSnapshot.canvas.backgroundImage?.let { image ->
+            val source = resolveImageSource(image)
+                ?: throw IllegalStateException("The local business card background is unavailable")
+            requestsByKey[image.cacheKey()] = ExportImageRequest(
+                key = image.cacheKey(),
+                source = source,
+                widthPx = targetWidthPx.coerceAtMost(MAX_IMAGE_DECODE_SIZE_PX),
+                heightPx = targetHeightPx.coerceAtMost(MAX_IMAGE_DECODE_SIZE_PX)
+            )
+        }
         stateSnapshot.elements.forEach { element ->
             val image = element.image ?: return@forEach
             val source = resolveImageSource(image)
@@ -216,7 +227,7 @@ class BusinessCardCanvasView @JvmOverloads constructor(
                             .asBitmap()
                             .apply(
                                 RequestOptions()
-                                    .downsample(DownsampleStrategy.CENTER_INSIDE)
+                                    .downsample(DownsampleStrategy.CENTER_OUTSIDE)
                                     .disallowHardwareConfig()
                             )
                             .load(request.source)
@@ -478,6 +489,35 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         setCanvasBackgroundColor(color.toArgbHex())
     }
 
+    fun setCanvasBackgroundImage(
+        sourceKind: BusinessCardImageSourceKind,
+        sourceValue: String,
+        intrinsicAspectRatio: Float
+    ) {
+        require(intrinsicAspectRatio.isFinite() && intrinsicAspectRatio > 0f) {
+            "intrinsicAspectRatio must be finite and greater than zero"
+        }
+        val image = BusinessCardImage(
+            sourceKind = sourceKind,
+            sourceValue = sourceValue,
+            intrinsicAspectRatio = intrinsicAspectRatio,
+            contentScale = BusinessCardContentScale.CROP
+        )
+        if (cardState.canvas.backgroundImage == image) return
+        cardState.canvas.backgroundImage = image
+        failedBitmapKeys.remove(image.cacheKey())
+        cancelObsoleteImageRequests()
+        dispatchStateChanged(selectionMayHaveChanged = false)
+    }
+
+    fun clearCanvasBackgroundImage(): Boolean {
+        if (cardState.canvas.backgroundImage == null) return false
+        cardState.canvas.backgroundImage = null
+        cancelObsoleteImageRequests()
+        dispatchStateChanged(selectionMayHaveChanged = false)
+        return true
+    }
+
     fun setBackgroundColor(color: String) {
         setCanvasBackgroundColor(color)
     }
@@ -493,6 +533,17 @@ class BusinessCardCanvasView @JvmOverloads constructor(
 
     /** Returns a user-facing validation error, or null when the state can be completed. */
     fun getValidationError(checkLocalImages: Boolean = false): String? {
+        cardState.canvas.backgroundImage?.let { image ->
+            if (image.sourceValue.isBlank()) {
+                return "背景图片资源无效，请重新选择"
+            }
+            if (checkLocalImages &&
+                image.sourceKind == BusinessCardImageSourceKind.LOCAL_PATH &&
+                !canDecodeLocalImage(image.sourceValue)
+            ) {
+                return "本地背景图片无法读取，请重新选择"
+            }
+        }
         cardState.elements.forEach { element ->
             when (element.type) {
                 BusinessCardElementType.TEXT -> {
@@ -587,6 +638,16 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         renderHeight: Float
     ) {
         canvas.drawColor(parseColor(state.canvas.backgroundColor, Color.WHITE))
+        state.canvas.backgroundImage?.let { image ->
+            drawBackgroundImage(
+                canvas = canvas,
+                image = image,
+                availableBitmaps = availableBitmaps,
+                loadMissingImage = loadMissingImages,
+                renderWidth = renderWidth,
+                renderHeight = renderHeight
+            )
+        }
         state.elements.sortedBy { it.zIndex }.forEach { element ->
             when (element.type) {
                 BusinessCardElementType.TEXT -> drawTextElement(
@@ -814,6 +875,39 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         canvas.drawBitmap(bitmap, null, destination, null)
     }
 
+    private fun drawBackgroundImage(
+        canvas: Canvas,
+        image: BusinessCardImage,
+        availableBitmaps: Map<String, Bitmap>,
+        loadMissingImage: Boolean,
+        renderWidth: Float,
+        renderHeight: Float
+    ) {
+        val bounds = RectF(0f, 0f, renderWidth, renderHeight)
+        val bitmap = availableBitmaps[image.cacheKey()]
+        if (bitmap == null || bitmap.isRecycled) {
+            if (loadMissingImage) ensureBitmapLoaded(image, bounds)
+            return
+        }
+
+        val bitmapAspect = bitmap.width.toFloat() / bitmap.height.coerceAtLeast(1)
+        val targetAspect = renderWidth / renderHeight.coerceAtLeast(1f)
+        val source = if (bitmapAspect > targetAspect) {
+            val sourceWidth = (bitmap.height * targetAspect)
+                .roundToInt()
+                .coerceIn(1, bitmap.width)
+            val left = (bitmap.width - sourceWidth) / 2
+            Rect(left, 0, left + sourceWidth, bitmap.height)
+        } else {
+            val sourceHeight = (bitmap.width / targetAspect)
+                .roundToInt()
+                .coerceIn(1, bitmap.height)
+            val top = (bitmap.height - sourceHeight) / 2
+            Rect(0, top, bitmap.width, top + sourceHeight)
+        }
+        canvas.drawBitmap(bitmap, source, bounds, null)
+    }
+
     private fun drawImagePlaceholder(canvas: Canvas, bounds: RectF) {
         canvas.drawRect(bounds, imagePlaceholderPaint)
         canvas.drawLine(bounds.left, bounds.top, bounds.right, bounds.bottom, imagePlaceholderStrokePaint)
@@ -1008,14 +1102,25 @@ class BusinessCardCanvasView @JvmOverloads constructor(
         val targetHeight = bounds.height().roundToInt().coerceIn(1, MAX_IMAGE_DECODE_SIZE_PX)
         Glide.with(this)
             .asBitmap()
-            .apply(RequestOptions().downsample(DownsampleStrategy.CENTER_INSIDE))
+            .apply(
+                RequestOptions().downsample(
+                    if (image.contentScale == BusinessCardContentScale.CROP) {
+                        DownsampleStrategy.CENTER_OUTSIDE
+                    } else {
+                        DownsampleStrategy.CENTER_INSIDE
+                    }
+                )
+            )
             .load(source)
             .override(targetWidth, targetHeight)
             .into(target)
     }
 
     private fun cancelObsoleteImageRequests() {
-        val activeKeys = cardState.elements.mapNotNull { it.image?.cacheKey() }.toSet()
+        val activeKeys = buildSet {
+            cardState.canvas.backgroundImage?.let { add(it.cacheKey()) }
+            cardState.elements.mapNotNullTo(this) { it.image?.cacheKey() }
+        }
         bitmapTargets.filterKeys { it !in activeKeys }.values.toList().forEach { target ->
             Glide.with(context).clear(target)
         }
@@ -1055,7 +1160,7 @@ class BusinessCardCanvasView @JvmOverloads constructor(
     private fun BusinessCardImage.cacheKey(): String = "$sourceKind|$sourceValue"
 
     private fun BusinessCardState.deepCopy(): BusinessCardState = copy(
-        canvas = canvas.copy(),
+        canvas = canvas.copy(backgroundImage = canvas.backgroundImage?.copy()),
         elements = elements.map { it.deepCopy() }.toMutableList()
     )
 

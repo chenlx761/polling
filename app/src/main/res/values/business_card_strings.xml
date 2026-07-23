@@ -6,7 +6,9 @@
     <string name="business_card_orientation_portrait">竖版</string>
     <string name="business_card_add_text">添加文字</string>
     <string name="business_card_add_image">添加图片</string>
+    <string name="business_card_canvas_image">背景图片</string>
     <string name="business_card_canvas_color">画布颜色</string>
+    <string name="business_card_clear_canvas_image">清除背景图片</string>
     <string name="business_card_property_section">元素属性</string>
     <string name="business_card_no_selection">未选择元素</string>
     <string name="business_card_selected_text">已选择文字元素</string>

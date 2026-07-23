@@ -29,6 +29,7 @@ import com.zhuowei.polling.base.MyBaseActivity
 import com.zhuowei.polling.businesscard.BUSINESS_CARD_SCHEMA_VERSION
 import com.zhuowei.polling.businesscard.BusinessCardAssetStore
 import com.zhuowei.polling.businesscard.BusinessCardCanvasView
+import com.zhuowei.polling.businesscard.BusinessCardContentScale
 import com.zhuowei.polling.businesscard.BusinessCardElement
 import com.zhuowei.polling.businesscard.BusinessCardElementType
 import com.zhuowei.polling.businesscard.BusinessCardImageSourceKind
@@ -103,47 +104,27 @@ class TestTemplateBusinessCardActivity :
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri ?: return@registerForActivityResult
-        lifecycleScope.launch {
-            showLoading(false)
-            var createdPath: String? = null
-            var importedImage: ImportedImage? = null
-            try {
-                importedImage = withContext(Dispatchers.IO) {
-                    importSelectedImage(uri).also { imported ->
-                        createdPath = imported?.absolutePath
-                    }
-                }
-            } finally {
-                if (importedImage == null) createdPath?.let(assetStore::deletePath)
-                dismissDialog()
-            }
-            val image = importedImage
-            if (image == null) {
-                Toast.makeText(
-                    this@TestTemplateBusinessCardActivity,
-                    R.string.business_card_image_save_failed,
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@launch
-            }
-            newlyCreatedAssetPaths.add(image.absolutePath)
-            var addedToCanvas = false
-            try {
-                lifecycle.whenResumed {
-                    verifiedLocalPaths.add(image.absolutePath)
-                    mBinding.businessCardCanvas.addImageElement(
-                        sourceKind = BusinessCardImageSourceKind.LOCAL_PATH,
-                        sourceValue = image.absolutePath,
-                        intrinsicAspectRatio = image.aspectRatio
-                    )
-                    addedToCanvas = true
-                }
-            } finally {
-                if (!addedToCanvas) {
-                    newlyCreatedAssetPaths.remove(image.absolutePath)
-                    assetStore.deletePath(image.absolutePath)
-                }
-            }
+        importPickedImage(uri) { image ->
+            mBinding.businessCardCanvas.addImageElement(
+                sourceKind = BusinessCardImageSourceKind.LOCAL_PATH,
+                sourceValue = image.absolutePath,
+                intrinsicAspectRatio = image.aspectRatio
+            )
+        }
+    }
+
+    private val pickBackgroundImageLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri ?: return@registerForActivityResult
+        importPickedImage(uri) { image ->
+            val previousPath = localBackgroundPath()
+            mBinding.businessCardCanvas.setCanvasBackgroundImage(
+                sourceKind = BusinessCardImageSourceKind.LOCAL_PATH,
+                sourceValue = image.absolutePath,
+                intrinsicAspectRatio = image.aspectRatio
+            )
+            previousPath?.let(::deleteNewPrivateAssetIfUnused)
         }
     }
 
@@ -195,8 +176,13 @@ class TestTemplateBusinessCardActivity :
                 element.type == BusinessCardElementType.IMAGE &&
                     element.image?.sourceKind == null
             }
+            val restoredBackground = restoredState.canvas.backgroundImage
+            val hasUnsupportedBackground = restoredBackground != null &&
+                (restoredBackground.sourceKind !in BusinessCardImageSourceKind.values() ||
+                    restoredBackground.contentScale != BusinessCardContentScale.CROP)
             initialState = if (restoredState.schemaVersion == BUSINESS_CARD_SCHEMA_VERSION &&
-                !hasUnsupportedImage
+                !hasUnsupportedImage &&
+                !hasUnsupportedBackground
             ) {
                 restoredState
             } else {
@@ -231,11 +217,13 @@ class TestTemplateBusinessCardActivity :
 
             override fun onStateChanged(state: BusinessCardState) {
                 updateCanvasRatio(state.canvas.orientation)
+                syncCanvasBackgroundActions(state)
             }
         })
         mBinding.businessCardCanvas.setState(initialState)
         syncOrientation(initialState.canvas.orientation)
         updateCanvasRatio(initialState.canvas.orientation)
+        syncCanvasBackgroundActions(initialState)
         bindSelectedElement(null)
 
         loadError?.let {
@@ -257,10 +245,19 @@ class TestTemplateBusinessCardActivity :
         mBinding.btnAddImage.setOnClickListener {
             pickImageLauncher.launch(arrayOf("image/*"))
         }
+        mBinding.btnCanvasImage.setOnClickListener {
+            pickBackgroundImageLauncher.launch(arrayOf("image/*"))
+        }
+        mBinding.btnClearCanvasImage.setOnClickListener {
+            clearCanvasBackgroundImage()
+        }
         mBinding.btnCanvasColor.setOnClickListener {
             val current = mBinding.businessCardCanvas.getState().canvas.backgroundColor
             showColorDialog(getString(R.string.business_card_canvas_color), current) { color ->
+                val previousPath = localBackgroundPath()
                 mBinding.businessCardCanvas.setCanvasBackgroundColor(color)
+                mBinding.businessCardCanvas.clearCanvasBackgroundImage()
+                previousPath?.let(::deleteNewPrivateAssetIfUnused)
             }
         }
         mBinding.btnTextColor.setOnClickListener {
@@ -275,11 +272,7 @@ class TestTemplateBusinessCardActivity :
                 ?.takeIf { it.sourceKind == BusinessCardImageSourceKind.LOCAL_PATH }
                 ?.sourceValue
             if (mBinding.businessCardCanvas.deleteSelected() && removedSource != null) {
-                val stillUsed = mBinding.businessCardCanvas.getState().elements
-                    .any { it.image?.sourceValue == removedSource }
-                if (!stillUsed) {
-                    deleteNewPrivateAsset(removedSource)
-                }
+                deleteNewPrivateAssetIfUnused(removedSource)
             }
         }
         mBinding.btnMoveDown.setOnClickListener {
@@ -403,6 +396,10 @@ class TestTemplateBusinessCardActivity :
             mBinding.cardCanvasContainer.layoutParams = params
             mBinding.cardCanvasContainer.requestLayout()
         }
+    }
+
+    private fun syncCanvasBackgroundActions(state: BusinessCardState) {
+        mBinding.btnClearCanvasImage.isEnabled = state.canvas.backgroundImage != null
     }
 
     private fun previewCard() {
@@ -569,6 +566,53 @@ class TestTemplateBusinessCardActivity :
         view.backgroundTintList = ColorStateList.valueOf(Color.parseColor(color))
     }
 
+    private fun importPickedImage(uri: Uri, applyImage: (ImportedImage) -> Unit) {
+        lifecycleScope.launch {
+            showLoading(false)
+            val image = try {
+                withContext(Dispatchers.IO) { importSelectedImage(uri) }
+            } finally {
+                dismissDialog()
+            }
+            if (image == null) {
+                Toast.makeText(
+                    this@TestTemplateBusinessCardActivity,
+                    R.string.business_card_image_save_failed,
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@launch
+            }
+
+            newlyCreatedAssetPaths.add(image.absolutePath)
+            var appliedToCanvas = false
+            try {
+                lifecycle.whenResumed {
+                    verifiedLocalPaths.add(image.absolutePath)
+                    applyImage(image)
+                    appliedToCanvas = true
+                }
+            } finally {
+                if (!appliedToCanvas) {
+                    newlyCreatedAssetPaths.remove(image.absolutePath)
+                    verifiedLocalPaths.remove(image.absolutePath)
+                    assetStore.deletePath(image.absolutePath)
+                }
+            }
+        }
+    }
+
+    private fun clearCanvasBackgroundImage() {
+        val previousPath = localBackgroundPath()
+        if (mBinding.businessCardCanvas.clearCanvasBackgroundImage()) {
+            previousPath?.let(::deleteNewPrivateAssetIfUnused)
+        }
+    }
+
+    private fun localBackgroundPath(): String? =
+        mBinding.businessCardCanvas.getState().canvas.backgroundImage
+            ?.takeIf { it.sourceKind == BusinessCardImageSourceKind.LOCAL_PATH }
+            ?.sourceValue
+
     private fun importSelectedImage(sourceUri: Uri): ImportedImage? {
         val asset = try {
             assetStore.importImage(sourceUri)
@@ -692,8 +736,16 @@ class TestTemplateBusinessCardActivity :
     private fun deleteNewPrivateAsset(sourceValue: String) {
         val path = assetStore.pathForSource(sourceValue) ?: return
         if (newlyCreatedAssetPaths.remove(path)) {
+            verifiedLocalPaths.remove(path)
             assetStore.deletePath(path)
         }
+    }
+
+    private fun deleteNewPrivateAssetIfUnused(sourceValue: String) {
+        val state = mBinding.businessCardCanvas.getState()
+        val stillUsed = state.canvas.backgroundImage?.sourceValue == sourceValue ||
+            state.elements.any { it.image?.sourceValue == sourceValue }
+        if (!stillUsed) deleteNewPrivateAsset(sourceValue)
     }
 
     private fun deleteAllNewPrivateAssets() {

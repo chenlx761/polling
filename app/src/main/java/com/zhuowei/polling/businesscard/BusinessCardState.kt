@@ -15,7 +15,8 @@ data class BusinessCardState(
 data class BusinessCardCanvas(
     var orientation: BusinessCardOrientation = BusinessCardOrientation.LANDSCAPE,
     var aspectRatio: Float = BUSINESS_CARD_LANDSCAPE_ASPECT_RATIO,
-    var backgroundColor: String = "#FFFFFFFF"
+    var backgroundColor: String = "#FFFFFFFF",
+    var backgroundImage: BusinessCardImage? = null
 )
 
 data class BusinessCardElement(
@@ -90,7 +91,10 @@ enum class BusinessCardImageSourceKind(val wireValue: String) {
 
 enum class BusinessCardContentScale(val wireValue: String) {
     @SerializedName("fit")
-    FIT("fit");
+    FIT("fit"),
+
+    @SerializedName("crop")
+    CROP("crop");
 
     companion object {
         fun fromWireValue(value: String): BusinessCardContentScale? =

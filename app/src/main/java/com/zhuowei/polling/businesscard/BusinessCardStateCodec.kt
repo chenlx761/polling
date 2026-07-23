@@ -65,9 +65,9 @@ object BusinessCardStateCodec {
 
     fun localAssetPaths(state: BusinessCardState): List<String> {
         val normalized = normalizeAndValidate(state)
-        return normalized.elements
-            .asSequence()
-            .mapNotNull { it.image }
+        return sequenceOf(normalized.canvas.backgroundImage)
+            .plus(normalized.elements.asSequence().mapNotNull { it.image })
+            .filterNotNull()
             .filter { it.sourceKind == BusinessCardImageSourceKind.LOCAL_PATH }
             .map { it.sourceValue }
             .distinct()
@@ -123,7 +123,12 @@ object BusinessCardStateCodec {
                 json,
                 "backgroundColor",
                 "root.canvas.backgroundColor"
-            )
+            ),
+            backgroundImage = optionalObject(
+                json,
+                "backgroundImage",
+                "root.canvas.backgroundImage"
+            )?.let { parseImage(it, "root.canvas.backgroundImage") }
         )
     }
 
@@ -190,6 +195,7 @@ object BusinessCardStateCodec {
 
     private fun normalizeAndValidate(state: BusinessCardState): BusinessCardState {
         val canMigrateRemoteOnlyV1 = state.schemaVersion == LEGACY_SCHEMA_VERSION &&
+            state.canvas.backgroundImage == null &&
             state.elements.all { element ->
                 element.type != BusinessCardElementType.IMAGE ||
                     element.image?.sourceKind == BusinessCardImageSourceKind.REMOTE_URL
@@ -231,7 +237,16 @@ object BusinessCardStateCodec {
         if (abs(canvas.aspectRatio - canvas.orientation.expectedAspectRatio) > ASPECT_RATIO_TOLERANCE) {
             fail("canvas.aspectRatio does not match canvas.orientation")
         }
-        return canvas.copy(backgroundColor = normalizeColor(canvas.backgroundColor))
+        return canvas.copy(
+            backgroundColor = normalizeColor(canvas.backgroundColor),
+            backgroundImage = canvas.backgroundImage?.let {
+                normalizeImage(
+                    image = it,
+                    path = "canvas.backgroundImage",
+                    requiredContentScale = BusinessCardContentScale.CROP
+                )
+            }
+        )
     }
 
     private fun normalizeElement(
@@ -265,7 +280,14 @@ object BusinessCardStateCodec {
                     fail("$path must not contain text data for an image element")
                 }
                 val image = element.image ?: fail("$path.image is required for an image element")
-                element.copy(text = null, image = normalizeImage(image, "$path.image"))
+                element.copy(
+                    text = null,
+                    image = normalizeImage(
+                        image = image,
+                        path = "$path.image",
+                        requiredContentScale = BusinessCardContentScale.FIT
+                    )
+                )
             }
         }
     }
@@ -290,7 +312,11 @@ object BusinessCardStateCodec {
         return text.copy(color = normalizeColor(text.color))
     }
 
-    private fun normalizeImage(image: BusinessCardImage, path: String): BusinessCardImage {
+    private fun normalizeImage(
+        image: BusinessCardImage,
+        path: String,
+        requiredContentScale: BusinessCardContentScale
+    ): BusinessCardImage {
         if (image.sourceValue.isBlank()) {
             fail("$path.sourceValue must not be blank")
         }
@@ -302,6 +328,9 @@ object BusinessCardStateCodec {
             sourceKind = inferSourceKind(image.sourceKind, image.sourceValue)
                 ?: fail("$path.sourceKind is not supported")
         )
+        if (normalized.contentScale != requiredContentScale) {
+            fail("$path.contentScale must be ${requiredContentScale.wireValue}")
+        }
         validateImageLocation(normalized, path)
         return normalized
     }
@@ -465,7 +494,12 @@ object BusinessCardStateCodec {
     private fun fail(message: String): Nothing = throw BusinessCardStateException(message)
 
     private val ROOT_KEYS = setOf("schemaVersion", "canvas", "elements")
-    private val CANVAS_KEYS = setOf("orientation", "aspectRatio", "backgroundColor")
+    private val CANVAS_KEYS = setOf(
+        "orientation",
+        "aspectRatio",
+        "backgroundColor",
+        "backgroundImage"
+    )
     private val ELEMENT_KEYS = setOf(
         "id",
         "type",

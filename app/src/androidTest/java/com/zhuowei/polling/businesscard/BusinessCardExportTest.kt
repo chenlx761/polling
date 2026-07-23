@@ -21,6 +21,54 @@ import java.util.UUID
 @RunWith(AndroidJUnit4::class)
 class BusinessCardExportTest {
     @Test
+    fun exportBitmap_rendersLocalBackgroundImageWithCenterCrop() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val directory = File(context.filesDir, BusinessCardAssetStore.DIRECTORY_NAME).apply {
+            assertTrue(exists() || mkdirs())
+        }
+        val imageFile = File(directory, "background_${UUID.randomUUID()}.jpg")
+        createBlueJpeg(imageFile)
+        var exported: Bitmap? = null
+        try {
+            val state = BusinessCardState(
+                canvas = BusinessCardCanvas(
+                    backgroundImage = BusinessCardImage(
+                        sourceKind = BusinessCardImageSourceKind.LOCAL_PATH,
+                        sourceValue = imageFile.canonicalPath,
+                        intrinsicAspectRatio = 2f,
+                        contentScale = BusinessCardContentScale.CROP
+                    )
+                )
+            )
+            val canvasView = withContext(Dispatchers.Main) {
+                BusinessCardCanvasView(context).apply {
+                    setEditingEnabled(false)
+                    setState(state)
+                    measure(
+                        View.MeasureSpec.makeMeasureSpec(500, View.MeasureSpec.EXACTLY),
+                        View.MeasureSpec.makeMeasureSpec(300, View.MeasureSpec.EXACTLY)
+                    )
+                    layout(0, 0, 500, 300)
+                }
+            }
+
+            val bitmap = canvasView.exportBitmap(1500, 900)
+            exported = bitmap
+            listOf(
+                bitmap.getPixel(0, 0),
+                bitmap.getPixel(bitmap.width / 2, bitmap.height / 2),
+                bitmap.getPixel(bitmap.width - 1, bitmap.height - 1)
+            ).forEach { color ->
+                assertTrue(Color.blue(color) > Color.red(color) + 80)
+                assertTrue(Color.blue(color) > Color.green(color) + 80)
+            }
+        } finally {
+            exported?.recycle()
+            imageFile.delete()
+        }
+    }
+
+    @Test
     fun exportBitmap_rendersLocalImageAtFixedLandscapeSize() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val directory = File(context.filesDir, BusinessCardAssetStore.DIRECTORY_NAME).apply {

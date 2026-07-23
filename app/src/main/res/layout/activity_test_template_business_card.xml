@@ -149,11 +149,26 @@
                             android:text="@string/business_card_add_image" />
 
                         <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_canvas_image"
+                            style="@style/BusinessCard.ToolbarButton"
+                            android:layout_marginStart="8dp"
+                            android:drawableStart="@drawable/ic_business_card_image"
+                            android:text="@string/business_card_canvas_image" />
+
+                        <androidx.appcompat.widget.AppCompatButton
                             android:id="@+id/btn_canvas_color"
                             style="@style/BusinessCard.ToolbarButton"
                             android:layout_marginStart="8dp"
                             android:drawableStart="@drawable/ic_business_card_palette"
                             android:text="@string/business_card_canvas_color" />
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btn_clear_canvas_image"
+                            style="@style/BusinessCard.ToolbarButton"
+                            android:layout_marginStart="8dp"
+                            android:drawableStart="@drawable/ic_business_card_delete"
+                            android:enabled="false"
+                            android:text="@string/business_card_clear_canvas_image" />
                     </LinearLayout>
                 </HorizontalScrollView>
 
