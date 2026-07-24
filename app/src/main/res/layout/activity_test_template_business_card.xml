@@ -409,7 +409,6 @@
                 android:id="@+id/btn_preview"
                 style="@style/BusinessCard.BottomButton"
                 android:background="@drawable/bg_business_card_secondary"
-                android:drawableStart="@drawable/ic_business_card_preview"
                 android:text="@string/business_card_preview"
                 android:textColor="@color/business_card_primary" />
 
@@ -421,7 +420,6 @@
                 android:id="@+id/btn_complete"
                 style="@style/BusinessCard.BottomButton"
                 android:background="@drawable/bg_business_card_primary"
-                android:drawableStart="@drawable/ic_business_card_done"
                 android:text="@string/business_card_complete"
                 android:textColor="@color/white" />
         </LinearLayout>

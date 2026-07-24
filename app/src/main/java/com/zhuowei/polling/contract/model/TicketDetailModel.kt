@@ -65,7 +65,7 @@ class TicketDetailModel : BaseModel(), TicketDetailContract.ITicketDetailModel {
             RetrofitUtil.Builder(HttpConstants.UPDATE_TICKET_USER_INFO_URL)
                 .addPara(bean)
                 .build()
-                .putJson(Objects::class.java, callBack)
+                .postJson(Objects::class.java, callBack)
         )
     }
 

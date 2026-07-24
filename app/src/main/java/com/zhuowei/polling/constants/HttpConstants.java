@@ -22,7 +22,7 @@ public class HttpConstants {
     public static final String POST_FILE_2 = "app/system/buildRecord/uploadWithFileName";//上传文件接口信息
     public static final String ADD_TICKET_DETAIL_URL = "app/system/buildRecord/add";//新增台账信息
     public static final String EDIT_TICKET_DETAIL_URL = "app/system/buildRecord";//修改台账信息
-    public static final String UPDATE_TICKET_USER_INFO_URL = "app/system/buildRecord";//单独修改台账用户信息
+    public static final String UPDATE_TICKET_USER_INFO_URL = "system/buildRecord/update";//单独修改台账用户信息
     public static final String GET_TICKET_DETAIL_URL = "app/system/buildRecord/getById";//获取详情
     public static final String GET_AREA_URL = "system/powerOrg/topDepts";//获取区域详情
     public static final String UPLOAD_TICKET_FILE_URL = "app/system/buildRecord/import";//上传文件
