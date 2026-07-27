@@ -23,7 +23,7 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
 
     private var mMainOrderAdapter: MainOrderAdapter? = null
     private var mTicketStaus: String = "0"
-    private var mSearchType: Int = 0 // 0=用户名, 1=地址,2户号
+    private var mSearchType: Int = 1 // 0=用户名, 1=地址,2户号
     private var mIsInitializing: Boolean = true
 
     companion object {
@@ -66,6 +66,7 @@ class TicketFragment : BaseFragment<MainVm, FragmentTicketBinding>() {
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         mBinding!!.spSearchType.adapter = adapter
+        mBinding!!.spSearchType.setSelection(1) // 默认选中地址
     }
 
     override fun setListener() {
