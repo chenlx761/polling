@@ -90,14 +90,14 @@ class TicketDetailVm : BaseViewModel<TicketDetailContract.ITicketDetailModel>(),
     }
 
     override fun updateTicketUserInfo(bean: TicketUserInfoUpdateBean?) {
-        if (bean == null) return
+        val updateBean = bean ?: return
         mStartLoadingDialog.postValue(true)
         mModel.updateTicketUserInfo(
-            bean,
+            updateBean,
             object : BaseCallBack<BaseBean<Objects>>(HttpConstants.UPDATE_TICKET_USER_INFO_URL) {
                 override fun onSuccessful(t: BaseBean<Objects>?) {
                     mStartLoadingDialog.postValue(false)
-                    mUserInfoUpdateFinish.postValue(bean)
+                    mUserInfoUpdateFinish.postValue(updateBean)
                 }
             }
         )

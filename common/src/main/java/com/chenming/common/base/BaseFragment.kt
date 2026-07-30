@@ -108,7 +108,7 @@ abstract class BaseFragment<P : BaseViewModel<*>?, VB : ViewDataBinding?> : Frag
         setListener()
     }
 
-    protected fun <T : BaseViewModel<*>?> createViewModel(clas: Class<T>): T {
+    protected fun <T : BaseViewModel<*>> createViewModel(clas: Class<T>): T {
         val viewModel = ViewModelProvider(this).get(clas)
         initLiveDataListener(viewModel)
         return viewModel

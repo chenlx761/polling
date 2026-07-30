@@ -50,7 +50,7 @@ abstract class BaseFragmentDialog<P : BaseViewModel<*>?, VB : ViewDataBinding?> 
     protected val isUseDataBinding: Boolean
         protected get() = true
 
-    protected fun <T : BaseViewModel<*>?> createViewModel(clas: Class<T>): T {
+    protected fun <T : BaseViewModel<*>> createViewModel(clas: Class<T>): T {
         val viewModel = ViewModelProvider(this).get(clas)
         initLiveDataListener(viewModel)
         return viewModel

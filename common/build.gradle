@@ -1,16 +1,16 @@
 plugins {
     id 'com.android.library'
-    id 'kotlin-android'
-    id 'kotlin-kapt'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.kapt'
 }
 
 
 android {
+    namespace 'com.chenming.common'
     compileSdk rootProject.ext.compileSdkVersion
 
     defaultConfig {
         minSdk rootProject.ext.minSdkVersion
-        targetSdk rootProject.ext.targetSdkVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -23,18 +23,15 @@ android {
         }
     }
 
-    dataBinding {
-        enabled = true
+    buildFeatures {
+        dataBinding true
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = '1.8'
-    }
-    dataBinding {
-        enabled = true
+        jvmTarget = '17'
     }
 }
 
@@ -61,10 +58,8 @@ dependencies {
 
     implementation 'com.guolindev.permissionx:permissionx:1.6.0'
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version" // (可选)
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
     //viewmodel依赖
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
@@ -79,7 +74,6 @@ dependencies {
     //implementation 'com.github.chenlx761:http_lib:v1.0.0'
     //databinding用的
     api project(path: ':http_lib')
-    kapt "com.android.databinding:compiler:3.1.4"
     implementation 'com.alibaba:fastjson:1.2.49'//json解析
     //下拉属性
     implementation 'io.github.scwang90:refresh-layout-kernel:2.0.5'      //核心必须依赖
